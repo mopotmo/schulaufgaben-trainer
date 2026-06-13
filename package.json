@@ -33,6 +33,9 @@
 		"marked": "^18.0.5",
 		"puppeteer": "^25.1.0"
 	},
+	"engines": {
+		"node": ">=22.12.0"
+	},
 	"allowScripts": {
 		"fsevents@2.3.3": true,
 		"puppeteer@25.1.0": true

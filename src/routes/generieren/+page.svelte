@@ -391,7 +391,7 @@
 							<div>
 								<p class="text-sm font-semibold text-gray-800 mb-1">{ex.title}</p>
 								{#if ex.body}
-									<p class="text-sm text-gray-600 whitespace-pre-wrap mb-2">{ex.body}</p>
+									<div class="prose prose-sm max-w-none text-gray-600 mb-2">{@html marked(ex.body) as string}</div>
 								{/if}
 								<textarea
 									bind:value={answers[i]}

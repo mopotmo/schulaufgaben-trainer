@@ -9,8 +9,8 @@
 	let { data }: { data: PageData } = $props();
 
 	// Generation form
-	let subject = $state('');
-	let topic = $state('');
+	let subject = $state(data.prefill?.subject ?? '');
+	let topic = $state(data.prefill?.topic ?? '');
 	let teacherNotes = $state('');
 	let count = $state(5);
 	let difficulty = $state('mittel');

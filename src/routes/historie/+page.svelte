@@ -100,6 +100,28 @@
 									>
 										Lösung einreichen
 									</a>
+									<form method="POST" action="?/replace">
+										<input type="hidden" name="exerciseId" value={ex.id} />
+										<input type="hidden" name="profilId" value={data.profile.id} />
+										<input type="hidden" name="subject" value={ex.subject} />
+										<input type="hidden" name="topic" value={ex.topic} />
+										<button
+											type="submit"
+											class="text-xs bg-amber-500 hover:bg-amber-600 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
+										>
+											Neu generieren
+										</button>
+									</form>
+									<form method="POST" action="?/delete" onsubmit={(e) => { if (!confirm('Übung wirklich löschen?')) e.preventDefault(); }}>
+										<input type="hidden" name="exerciseId" value={ex.id} />
+										<input type="hidden" name="profilId" value={data.profile.id} />
+										<button
+											type="submit"
+											class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
+										>
+											Löschen
+										</button>
+									</form>
 								{/if}
 								<a
 									href="/api/pdf?exerciseId={ex.id}"

@@ -12,5 +12,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	if (!profile) error(404, 'Profil nicht gefunden');
 	if (profile.family_id !== locals.familyId) error(403, 'Kein Zugriff auf dieses Profil');
 
-	return { profile };
+	return {
+		profile,
+		prefill: {
+			subject: url.searchParams.get('subject') ?? '',
+			topic: url.searchParams.get('topic') ?? ''
+		}
+	};
 };

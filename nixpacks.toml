@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ['chromium']
+
+[start]
+cmd = 'PUPPETEER_EXECUTABLE_PATH=$(which chromium) node build/index.js'

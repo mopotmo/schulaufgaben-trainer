@@ -5,6 +5,7 @@
 	import Stopwatch from '$lib/components/Stopwatch.svelte';
 	import { parseExercises } from '$lib/parseExercises';
 	import { marked } from 'marked';
+	import { onMount } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -45,12 +46,46 @@
 	let chatError = $state('');
 	let chatContainer = $state<HTMLDivElement | null>(null);
 
+	// localStorage key for draft answers
+	const draftKey = $derived(exerciseId ? `draft_answers_${exerciseId}` : null);
+
 	function startBrowserMode() {
 		solveMode = 'browser';
-		answers = parsedExercises.map(() => '');
+		// Restore saved draft if available
+		const saved = draftKey ? localStorage.getItem(draftKey) : null;
+		answers = saved ? JSON.parse(saved) : parsedExercises.map(() => '');
 		correctionResult = '';
 		submitError = '';
 	}
+
+	// Persist answers to localStorage on every change
+	$effect(() => {
+		if (solveMode === 'browser' && draftKey && answers.length > 0) {
+			localStorage.setItem(draftKey, JSON.stringify(answers));
+		}
+	});
+
+	// Warn before leaving if answers are in progress
+	$effect(() => {
+		const hasAnswers = solveMode === 'browser' && answers.some((a) => a.trim());
+		function handleBeforeUnload(e: BeforeUnloadEvent) {
+			if (hasAnswers && !correctionResult) {
+				e.preventDefault();
+			}
+		}
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+	});
+
+	// If loading an existing exercise, populate state
+	onMount(() => {
+		if (data.existingExercise) {
+			exerciseId = data.existingExercise.id;
+			generatedContent = data.existingExercise.content;
+			// Small delay so parsedExercises is derived before startBrowserMode reads it
+			setTimeout(startBrowserMode, 0);
+		}
+	});
 
 	async function submitAnswers() {
 		if (!exerciseId) return;
@@ -77,6 +112,7 @@
 			if (!res.ok) throw new Error(json.message ?? 'Fehler bei der Korrektur');
 			correctionResult = json.result;
 			stopwatch?.stop();
+			if (draftKey) localStorage.removeItem(draftKey);
 		} catch (e: any) {
 			submitError = e.message;
 		} finally {

@@ -5,8 +5,18 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	const AVATARS = ['🦊', '🐼', '🦁', '🐸', '🦋', '🐙', '🦄', '🐧', '🦖', '🐯',
-	                 '🌟', '🚀', '⚽', '🎸', '🎨', '🍕', '🎮', '🦈', '🌈', '🐉'];
+	const AVATARS = [
+		// Tiere
+		'🦊', '🐼', '🦁', '🐸', '🦋', '🐙', '🦄', '🐧', '🦖', '🐯',
+		'🦈', '🐉', '🐨', '🦥', '🦦', '🦔', '🐺', '🦝', '🐮', '🐷',
+		'🐸', '🐊', '🦜', '🦩', '🦚', '🦋', '🐝', '🐞', '🦎', '🐢',
+		'🐬', '🦭', '🐘', '🦏', '🦛', '🦒', '🦓', '🦘', '🦙', '🐓',
+		'🐍', '🦠',
+		// Lustige & Sonstiges
+		'👾', '🤖', '👻', '🎃', '🦸', '🧙', '🧚', '🧜', '🧝', '🪄',
+		'🌟', '🚀', '⚽', '🎸', '🎨', '🍕', '🎮', '🌈', '🍦', '🎯',
+		'🏆', '🎲', '🧩', '🎪', '🎠', '🪀', '🛸', '🌋', '🏔️', '🌊',
+	];
 
 	type LastExercise = {
 		exerciseId: string;
@@ -42,38 +52,42 @@
 	}
 </script>
 
-<main class="max-w-2xl mx-auto px-4 py-12">
-	<div class="flex items-start justify-between mb-10">
-		<div>
-			<h1 class="text-4xl font-bold text-gray-800 mb-1">Schulaufgaben Trainer</h1>
-			<p class="text-gray-500">Wer übt heute, <strong>{data.family.name}</strong>?</p>
-		</div>
-		<div class="flex items-center gap-4 mt-1">
-			<a href="/einstellungen" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-				Einstellungen
-			</a>
-			<form method="POST" action="/logout">
-				<button type="submit" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-					Abmelden
-				</button>
-			</form>
+<main class="max-w-2xl mx-auto px-4 py-8">
+	<div class="mb-8">
+		<div class="flex items-start justify-between gap-4">
+			<div class="min-w-0">
+				<h1 class="text-2xl sm:text-4xl font-bold text-gray-800 mb-1 leading-tight">Schulaufgaben Trainer</h1>
+				<p class="text-gray-500 text-sm sm:text-base">Wer übt heute, <strong>{data.family.name}</strong>?</p>
+			</div>
+			<div class="flex items-center gap-3 shrink-0 mt-1">
+				<a href="/einstellungen" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+					Einstellungen
+				</a>
+				<form method="POST" action="/logout">
+					<button type="submit" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+						Abmelden
+					</button>
+				</form>
+			</div>
 		</div>
 	</div>
 
 	{#if lastExercise}
-		<div class="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4">
-			<span class="text-2xl">📋</span>
-			<div class="flex-1 min-w-0">
-				<p class="text-sm font-semibold text-amber-800">Letzte Aufgabe weitermachen</p>
-				<p class="text-xs text-amber-600 truncate">{lastExercise.subject} – {lastExercise.topic} · {lastExerciseAge(lastExercise.savedAt)}</p>
+		<div class="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+			<div class="flex items-start gap-3">
+				<span class="text-2xl shrink-0">📋</span>
+				<div class="flex-1 min-w-0">
+					<p class="text-sm font-semibold text-amber-800">Letzte Aufgabe weitermachen</p>
+					<p class="text-xs text-amber-600 truncate">{lastExercise.subject} – {lastExercise.topic} · {lastExerciseAge(lastExercise.savedAt)}</p>
+					<a
+						href="/korrigieren?aufgabe={lastExercise.exerciseId}"
+						class="inline-block mt-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+					>
+						Lösung einreichen
+					</a>
+				</div>
+				<button onclick={dismissLast} class="text-amber-300 hover:text-amber-500 text-xl leading-none shrink-0" aria-label="Schließen">×</button>
 			</div>
-			<a
-				href="/korrigieren?aufgabe={lastExercise.exerciseId}"
-				class="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-			>
-				Lösung einreichen
-			</a>
-			<button onclick={dismissLast} class="text-amber-300 hover:text-amber-500 text-xl leading-none" aria-label="Schließen">×</button>
 		</div>
 	{/if}
 

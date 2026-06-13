@@ -10,6 +10,6 @@
 	<title>Schulaufgaben Trainer</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-gray-50 overflow-x-hidden">
 	{@render children()}
 </div>

@@ -79,12 +79,20 @@
 				<div class="flex-1 min-w-0">
 					<p class="text-sm font-semibold text-amber-800">Letzte Aufgabe weitermachen</p>
 					<p class="text-xs text-amber-600 truncate">{lastExercise.subject} – {lastExercise.topic} · {lastExerciseAge(lastExercise.savedAt)}</p>
-					<a
-						href="/korrigieren?aufgabe={lastExercise.exerciseId}"
-						class="inline-block mt-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-					>
-						Lösung einreichen
-					</a>
+					<div class="flex gap-2 mt-2 flex-wrap">
+						<a
+							href="/generieren?aufgabe={lastExercise.exerciseId}"
+							class="inline-block bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+						>
+							Im Browser weitermachen
+						</a>
+						<a
+							href="/korrigieren?aufgabe={lastExercise.exerciseId}"
+							class="inline-block bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+						>
+							Lösung einreichen
+						</a>
+					</div>
 				</div>
 				<button onclick={dismissLast} class="text-amber-300 hover:text-amber-500 text-xl leading-none shrink-0" aria-label="Schließen">×</button>
 			</div>

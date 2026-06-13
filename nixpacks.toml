@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['chromium']
+nixPkgs = ['nodejs_22', 'chromium']
 
 [start]
 cmd = 'PUPPETEER_EXECUTABLE_PATH=$(which chromium) node build/index.js'

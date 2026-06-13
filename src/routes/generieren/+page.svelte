@@ -35,6 +35,7 @@
 	let submitError = $state('');
 	let correctionResult = $state('');
 	let correctionHtml = $derived(correctionResult ? (marked(correctionResult) as string) : '');
+	let generatedHtml = $derived(generatedContent ? (marked(generatedContent) as string) : '');
 
 	// Chat
 	type ChatMessage = { role: 'user' | 'assistant'; text: string };
@@ -326,8 +327,8 @@
 			<!-- Exercise preview -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 				<h2 class="text-xl font-semibold text-gray-800 mb-4">Generierte Aufgaben</h2>
-				<div class="text-gray-700 whitespace-pre-wrap font-mono text-sm bg-gray-50 rounded-lg p-4 overflow-auto max-h-80">
-					{generatedContent}
+				<div class="prose prose-sm max-w-none text-gray-700 bg-gray-50 rounded-lg p-4 overflow-auto max-h-80">
+					{@html generatedHtml}
 				</div>
 
 				<!-- Feedback -->

@@ -5,8 +5,6 @@
 	import Stopwatch from '$lib/components/Stopwatch.svelte';
 	import { parseExercises } from '$lib/parseExercises';
 	import { marked } from 'marked';
-	import { onMount } from 'svelte';
-
 	let { data }: { data: PageData } = $props();
 
 	// Generation form
@@ -77,15 +75,6 @@
 		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
 	});
 
-	// If loading an existing exercise, populate state
-	onMount(() => {
-		if (data.existingExercise) {
-			exerciseId = data.existingExercise.id;
-			generatedContent = data.existingExercise.content;
-			// Small delay so parsedExercises is derived before startBrowserMode reads it
-			setTimeout(startBrowserMode, 0);
-		}
-	});
 
 	async function submitAnswers() {
 		if (!exerciseId) return;

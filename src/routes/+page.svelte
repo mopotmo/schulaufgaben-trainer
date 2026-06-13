@@ -81,7 +81,7 @@
 					<p class="text-xs text-amber-600 truncate">{lastExercise.subject} – {lastExercise.topic} · {lastExerciseAge(lastExercise.savedAt)}</p>
 					<div class="flex gap-2 mt-2 flex-wrap">
 						<a
-							href="/generieren?aufgabe={lastExercise.exerciseId}"
+							href="/loesen?aufgabe={lastExercise.exerciseId}"
 							class="inline-block bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
 						>
 							Im Browser weitermachen

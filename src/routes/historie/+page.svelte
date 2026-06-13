@@ -95,7 +95,7 @@
 								</a>
 								{#if !correction}
 									<a
-										href="/generieren?aufgabe={ex.id}"
+										href="/loesen?aufgabe={ex.id}"
 										class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
 									>
 										Im Browser lösen

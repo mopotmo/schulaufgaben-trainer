@@ -4,6 +4,7 @@ import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
 import { logError } from '$lib/logger';
+import { upsertInsight } from '$lib/learnerInsights';
 import type { RequestHandler } from './$types';
 
 const GRADE_SCALE = `
@@ -126,6 +127,10 @@ Sei konstruktiv und ermutigend.`;
 			tokens_used: tokensUsed
 		})
 	);
+
+	// Insights asynchron extrahieren — nicht auf Ergebnis warten
+	const insightInput = `Korrektur der Aufgabe:\n${exercise.generated_content}\n\nKorrekturbericht:\n${result}`;
+	upsertInsight(exercise.profile_id, exercise.subject, exercise.topic, insightInput).catch(() => {});
 
 	return json({ result, tokensUsed });
 };

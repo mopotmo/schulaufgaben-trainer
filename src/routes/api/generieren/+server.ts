@@ -4,6 +4,7 @@ import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
 import { logError } from '$lib/logger';
+import { getInsightPrompt } from '$lib/learnerInsights';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -21,6 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const directus = getDirectus();
 	const profile = await directus.request(readItem('profiles', profilId));
+	const insightPrompt = await getInsightPrompt(profilId, subject, topic);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -72,7 +74,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			model: 'claude-opus-4-8',
 			max_tokens: 4096,
 			thinking: { type: 'adaptive' },
-			system: `Du bist ein erfahrener Lehrer für ${subject} an einem ${profile.school_type} in ${profile.state}, Klasse ${profile.grade}. Erstelle Übungsaufgaben, die sich zum Ausdrucken eignen (klare Struktur, ausreichend Platz zum Schreiben).`,
+			system: [
+			`Du bist ein erfahrener Lehrer für ${subject} an einem ${profile.school_type} in ${profile.state}, Klasse ${profile.grade}. Erstelle Übungsaufgaben, die sich zum Ausdrucken eignen (klare Struktur, ausreichend Platz zum Schreiben).`,
+			insightPrompt
+		].filter(Boolean).join('\n\n'),
 			messages: [{ role: 'user', content: userContentParts }]
 		});
 

@@ -1,8 +1,9 @@
 import { getDirectus } from '$lib/directus';
-import { createItem } from '@directus/sdk';
+import { createItem, readItem } from '@directus/sdk';
 import { json, error } from '@sveltejs/kit';
 import { logError } from '$lib/logger';
 import { saveFeatureRequest } from '$lib/featureRequests';
+import { upsertInsight } from '$lib/learnerInsights';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -27,6 +28,23 @@ export const POST: RequestHandler = async ({ request }) => {
 		// If comment contains a feature request, save it
 		if (featureRequest?.title) {
 			await saveFeatureRequest(directus, featureRequest.title, featureRequest.description ?? null, profileId ?? null, 'feedback_comment');
+		}
+
+		// Freitext-Kommentar zu Learner Insights destillieren
+		if (comment?.trim() && profileId && refId && (type === 'generation' || type === 'correction')) {
+			try {
+				const exercise = await directus.request(
+					readItem(type === 'generation' ? 'exercises' : 'corrections', refId)
+				) as any;
+				const exerciseId = type === 'generation' ? refId : exercise?.exercise_id;
+				if (exerciseId) {
+					const ex = await directus.request(readItem('exercises', exerciseId)) as any;
+					if (ex?.subject && ex?.topic) {
+						const insightInput = `Feedback (${rating === 'positive' ? 'positiv' : 'negativ'}) zu einer Übung über "${ex.topic}":\n${comment.trim()}`;
+						upsertInsight(profileId, ex.subject, ex.topic, insightInput).catch(() => {});
+					}
+				}
+			} catch (_) {}
 		}
 	} catch (e) {
 		await logError('api/feedback', e, { type, refId });

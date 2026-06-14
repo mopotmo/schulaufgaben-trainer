@@ -72,6 +72,18 @@ export type FeatureRequest = {
 	updated_at: string;
 };
 
+export type LearnerInsight = {
+	id: string;
+	profile_id: string;
+	subject: string;
+	topic: string;
+	strengths: string[];
+	weaknesses: string[];
+	style_notes: string | null;
+	difficulty: 'leichter' | 'passend' | 'schwerer';
+	updated_at: string;
+};
+
 type Schema = {
 	families: Family[];
 	profiles: Profile[];
@@ -80,6 +92,7 @@ type Schema = {
 	logs: Log[];
 	feedback: Feedback[];
 	feature_requests: FeatureRequest[];
+	learner_insights: LearnerInsight[];
 };
 
 export function getDirectus() {

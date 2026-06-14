@@ -30,6 +30,7 @@
 		"@directus/sdk": "^22.0.0",
 		"@sveltejs/adapter-node": "^5.5.4",
 		"bcryptjs": "^3.0.3",
+		"katex": "^0.17.0",
 		"marked": "^18.0.5",
 		"puppeteer": "^25.1.0"
 	},

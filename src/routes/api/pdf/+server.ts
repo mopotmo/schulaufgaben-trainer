@@ -3,6 +3,7 @@ import { readItem } from '@directus/sdk';
 import { error } from '@sveltejs/kit';
 import puppeteer from 'puppeteer';
 import { marked } from 'marked';
+import { renderMath } from '$lib/renderMath';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -15,12 +16,13 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	const profile = await directus.request(readItem('profiles', exercise.profile_id));
 
-	const contentHtml = await marked(exercise.generated_content ?? '');
+	const contentHtml = renderMath(await marked(exercise.generated_content ?? ''));
 
 	const html = `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -78,6 +80,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	try {
 		const page = await browser.newPage();
 		await page.setContent(html, { waitUntil: 'load' });
+		await page.evaluateHandle('document.fonts.ready');
 		const pdf = await page.pdf({
 			format: 'A4',
 			printBackground: true,

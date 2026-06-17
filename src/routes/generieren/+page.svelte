@@ -4,7 +4,9 @@
 	import FeedbackWidget from '$lib/components/FeedbackWidget.svelte';
 	import Stopwatch from '$lib/components/Stopwatch.svelte';
 	import { parseExercises } from '$lib/parseExercises';
+	import { renderMath } from '$lib/renderMath';
 	import { marked } from 'marked';
+	import 'katex/dist/katex.min.css';
 	let { data }: { data: PageData } = $props();
 
 	// Generation form
@@ -33,8 +35,8 @@
 	let submitting = $state(false);
 	let submitError = $state('');
 	let correctionResult = $state('');
-	let correctionHtml = $derived(correctionResult ? (marked(correctionResult) as string) : '');
-	let generatedHtml = $derived(generatedContent ? (marked(generatedContent) as string) : '');
+	let correctionHtml = $derived(correctionResult ? renderMath(marked(correctionResult) as string) : '');
+	let generatedHtml = $derived(generatedContent ? renderMath(marked(generatedContent) as string) : '');
 
 	// Chat
 	type ChatMessage = { role: 'user' | 'assistant'; text: string };
@@ -416,7 +418,7 @@
 							<div>
 								<p class="text-sm font-semibold text-gray-800 mb-1">{ex.title}</p>
 								{#if ex.body}
-									<div class="prose prose-sm max-w-none text-gray-600 mb-2">{@html marked(ex.body) as string}</div>
+									<div class="prose prose-sm max-w-none text-gray-600 mb-2">{@html renderMath(marked(ex.body) as string)}</div>
 								{/if}
 								<textarea
 									bind:value={answers[i]}

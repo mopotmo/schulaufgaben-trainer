@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { marked } from 'marked';
+	import { renderMath } from '$lib/renderMath';
+	import 'katex/dist/katex.min.css';
 	import FileUpload from '$lib/components/FileUpload.svelte';
 	import FeedbackWidget from '$lib/components/FeedbackWidget.svelte';
 
@@ -12,7 +14,7 @@
 
 	let loading = $state(false);
 	let correctionResult = $state('');
-	let correctionHtml = $derived(correctionResult ? (marked(correctionResult) as string) : '');
+	let correctionHtml = $derived(correctionResult ? renderMath(marked(correctionResult) as string) : '');
 	let error = $state('');
 
 	// Nachschärfen
@@ -21,7 +23,7 @@
 	let nachschaerpenError = $state('');
 	let newExerciseId = $state<string | null>(null);
 	let newContent = $state('');
-	let newContentHtml = $derived(newContent ? (marked(newContent) as string) : '');
+	let newContentHtml = $derived(newContent ? renderMath(marked(newContent) as string) : '');
 
 	async function nachschaerpen(mode: NachschaerpenMode) {
 		if (!selectedExerciseId || !correctionResult) return;
@@ -57,7 +59,7 @@
 	let chatHtml = $derived(
 		chatMessages.map((m) => ({
 			...m,
-			html: m.role === 'assistant' ? (marked(m.text) as string) : null
+			html: m.role === 'assistant' ? renderMath(marked(m.text) as string) : null
 		}))
 	);
 

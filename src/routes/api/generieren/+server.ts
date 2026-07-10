@@ -13,6 +13,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const subject = form.get('subject') as string;
 	const topic = form.get('topic') as string;
 	const teacherNotes = (form.get('teacherNotes') as string) ?? '';
+	const book = (form.get('book') as string) ?? '';
 	const count = parseInt(form.get('count') as string) || 5;
 	const difficulty = (form.get('difficulty') as string) ?? 'mittel';
 	const durationMinutes = parseInt(form.get('durationMinutes') as string) || 0;
@@ -54,6 +55,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		text: [
 			`Thema: ${topic}`,
 			teacherNotes ? `Hinweis vom Lehrer: ${teacherNotes}` : '',
+			book ? `Lehrbuch/Quelle: ${book}` : '',
 			`Erstelle ${count} Übungsaufgaben, Schwierigkeitsgrad ${difficulty}.`,
 			durationMinutes > 0
 				? `Die Aufgaben sollen in ${durationMinutes} Minuten lösbar sein – passe Anzahl und Umfang der Aufgaben entsprechend an, auch wenn das von der gewünschten Anzahl abweicht.`
@@ -74,18 +76,23 @@ export const POST: RequestHandler = async ({ request }) => {
 			model: 'claude-opus-4-8',
 			max_tokens: 4096,
 			thinking: { type: 'adaptive' },
+			tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
 			system: [
 			`Du bist ein erfahrener Lehrer für ${subject} an einem ${profile.school_type} in ${profile.state}, Klasse ${profile.grade}. Erstelle Übungsaufgaben, die sich zum Ausdrucken eignen (klare Struktur, ausreichend Platz zum Schreiben).`,
+			`Du hast Zugriff auf eine Websuche. Nutze sie, wenn es hilfreich ist, um zum angegebenen Thema oder Lehrbuch zu recherchieren (z.B. Kapitelstruktur, Lehrplanbezug in ${profile.state}, typische Aufgabenstellungen), damit die Aufgaben besser zum tatsächlichen Stoff passen. Suche nur bei Bedarf, nicht bei trivialen Themen.`,
+			book ? `Als Quelle wurde "${book}" angegeben – recherchiere gezielt danach, bevor du Aufgaben erstellst.` : '',
+			`Gib am Ende ausschließlich die fertigen Aufgaben aus – keine Kommentare zur Recherche, keine Zwischenschritte.`,
 			insightPrompt
 		].filter(Boolean).join('\n\n'),
 			messages: [{ role: 'user', content: userContentParts }]
 		});
 
 		const message = await stream.finalMessage();
-		generatedContent = message.content.find((b) => b.type === 'text')?.text ?? '';
+		const textBlocks = message.content.filter((b) => b.type === 'text');
+		generatedContent = textBlocks[textBlocks.length - 1]?.text ?? '';
 		tokensUsed = (message.usage.input_tokens ?? 0) + (message.usage.output_tokens ?? 0);
 	} catch (e) {
-		await logError('api/generieren', e, { profilId, subject, topic });
+		await logError('api/generieren', e, { profilId, subject, topic, book });
 		error(502, 'Fehler bei der Aufgabengenerierung');
 	}
 

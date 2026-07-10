@@ -13,6 +13,7 @@
 	let subject = $state(data.prefill?.subject ?? '');
 	let topic = $state(data.prefill?.topic ?? '');
 	let teacherNotes = $state('');
+	let book = $state('');
 	let count = $state(5);
 	let difficulty = $state('mittel');
 	let sourceFiles = $state<File[]>([]);
@@ -139,6 +140,7 @@
 		form.append('subject', subject);
 		form.append('topic', topic);
 		form.append('teacherNotes', teacherNotes);
+		form.append('book', book);
 		form.append('count', String(count));
 		form.append('difficulty', difficulty);
 		form.append('durationMinutes', stopwatchEnabled ? String(durationMinutes) : '0');
@@ -259,6 +261,23 @@
 				disabled={!!exerciseId}
 				class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
 			/>
+		</div>
+
+		<div>
+			<label class="block text-sm font-medium text-gray-700 mb-1" for="book">
+				Lehrbuch / Quelle (optional)
+			</label>
+			<input
+				id="book"
+				bind:value={book}
+				type="text"
+				placeholder="z.B. Mathematik 8, Bayern, Cornelsen"
+				disabled={!!exerciseId}
+				class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
+			/>
+			<p class="text-xs text-gray-400 mt-1">
+				Claude recherchiert dazu im Internet, um passendere Aufgaben zu erstellen.
+			</p>
 		</div>
 
 		<div class="flex gap-4">

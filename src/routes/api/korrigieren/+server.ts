@@ -24,10 +24,24 @@ export const POST: RequestHandler = async ({ request }) => {
 	const solutionFiles = form.getAll('solutionFiles') as File[];
 	const validFiles = solutionFiles.filter((f) => f && f.size > 0);
 
+	// Structured per-exercise answers (browser solve mode: mixed typing + stylus).
+	type AnswerMeta = { title: string; kind: 'text' | 'draw'; text?: string };
+	let answersMeta: AnswerMeta[] | null = null;
+	const answersMetaRaw = form.get('answersMeta') as string | null;
+	if (answersMetaRaw) {
+		try {
+			const parsed = JSON.parse(answersMetaRaw);
+			if (Array.isArray(parsed) && parsed.length > 0) answersMeta = parsed;
+		} catch {
+			// ignore malformed metadata, fall through to legacy handling
+		}
+	}
+
+	const hasMeta = !!answersMeta;
 	const hasText = textAnswers.length > 0;
 	const hasFiles = validFiles.length > 0;
 
-	if (!exerciseId || (!hasText && !hasFiles)) {
+	if (!exerciseId || (!hasMeta && !hasText && !hasFiles)) {
 		error(400, 'Aufgabe und Lösung (Text oder Datei) erforderlich');
 	}
 
@@ -54,8 +68,40 @@ Sei konstruktiv und ermutigend.`;
 
 	let userContent: Anthropic.MessageParam['content'];
 
-	if (hasText) {
-		// Browser mode: text answers
+	if (hasMeta) {
+		// Browser mode: per-exercise answers, typed and/or handwritten (stylus).
+		userContent = [
+			{
+				type: 'text',
+				text: `Hier sind die Originalaufgaben:\n\n${exercise.generated_content}\n\nEs folgen die Antworten des Schülers, aufgabenweise. Handschriftliche (mit dem Stift geschriebene) Antworten sind jeweils als Bild angehängt.`
+			}
+		];
+
+		let imgIdx = 0;
+		for (const m of answersMeta!) {
+			if (m.kind === 'draw') {
+				const file = validFiles[imgIdx++];
+				userContent.push({ type: 'text', text: `${m.title} (handschriftlich):` });
+				if (file) {
+					const mediaType = (file.type || 'image/png') as
+						| 'image/jpeg'
+						| 'image/png'
+						| 'image/gif'
+						| 'image/webp';
+					const base64 = Buffer.from(await file.arrayBuffer()).toString('base64');
+					userContent.push({
+						type: 'image',
+						source: { type: 'base64', media_type: mediaType, data: base64 }
+					});
+				}
+			} else {
+				userContent.push({ type: 'text', text: `${m.title}:\n${m.text ?? ''}` });
+			}
+		}
+
+		userContent.push({ type: 'text', text: correctionInstruction });
+	} else if (hasText) {
+		// Browser mode: text answers (legacy / other pages)
 		userContent = [
 			{
 				type: 'text',
@@ -103,7 +149,10 @@ Sei konstruktiv und ermutigend.`;
 		result = message.content.find((b) => b.type === 'text')?.text ?? '';
 		tokensUsed = (message.usage.input_tokens ?? 0) + (message.usage.output_tokens ?? 0);
 	} catch (e) {
-		await logError('api/korrigieren', e, { exerciseId, mode: hasText ? 'text' : 'scan' });
+		await logError('api/korrigieren', e, {
+			exerciseId,
+			mode: hasMeta ? 'browser' : hasText ? 'text' : 'scan'
+		});
 		error(502, 'Fehler bei der Korrektur');
 	}
 

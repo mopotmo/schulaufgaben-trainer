@@ -3,11 +3,16 @@
 	import FileUpload from '$lib/components/FileUpload.svelte';
 	import FeedbackWidget from '$lib/components/FeedbackWidget.svelte';
 	import Stopwatch from '$lib/components/Stopwatch.svelte';
+	import DrawCanvas from '$lib/components/DrawCanvas.svelte';
 	import { parseExercises } from '$lib/parseExercises';
 	import { renderMath } from '$lib/renderMath';
 	import { marked } from 'marked';
 	import 'katex/dist/katex.min.css';
 	let { data }: { data: PageData } = $props();
+
+	type Point = { x: number; y: number; p: number };
+	type Stroke = Point[];
+	type Mode = 'text' | 'draw';
 
 	// Generation form
 	let subject = $state(data.prefill?.subject ?? '');
@@ -53,6 +58,9 @@
 	let durationSeconds = $derived(stopwatchEnabled ? durationMinutes * 60 : 0);
 	let parsedExercises = $derived(generatedContent ? parseExercises(generatedContent) : []);
 	let answers = $state<string[]>([]);
+	let modes = $state<Mode[]>([]);
+	let drawings = $state<Stroke[][]>([]);
+	let canvasRefs = $state<(DrawCanvas | null)[]>([]);
 	let showGrade = $state(false);
 	let submitting = $state(false);
 	let submitError = $state('');
@@ -75,23 +83,51 @@
 		solveMode = 'browser';
 		// Restore saved draft if available
 		const saved = draftKey ? localStorage.getItem(draftKey) : null;
-		answers = saved ? JSON.parse(saved) : parsedExercises.map(() => '');
+		let savedAnswers: string[] = [];
+		let savedModes: Mode[] = [];
+		let savedDrawings: Stroke[][] = [];
+		if (saved) {
+			const parsed = JSON.parse(saved);
+			if (Array.isArray(parsed)) {
+				// Legacy format: plain array of text answers.
+				savedAnswers = parsed;
+			} else {
+				savedAnswers = parsed.answers ?? [];
+				savedModes = parsed.modes ?? [];
+				savedDrawings = parsed.drawings ?? [];
+			}
+		}
+		const n = parsedExercises.length;
+		answers = Array.from({ length: n }, (_, i) => savedAnswers[i] ?? '');
+		modes = Array.from({ length: n }, (_, i) => savedModes[i] ?? 'text');
+		drawings = Array.from({ length: n }, (_, i) => savedDrawings[i] ?? []);
 		correctionResult = '';
 		submitError = '';
 	}
 
+	function hasContent(i: number): boolean {
+		return modes[i] === 'draw' ? (drawings[i]?.length ?? 0) > 0 : !!answers[i]?.trim();
+	}
+
+	function setAllModes(m: Mode) {
+		modes = parsedExercises.map(() => m);
+	}
+
+	let allDraw = $derived(modes.length > 0 && modes.every((m) => m === 'draw'));
+
 	// Persist answers to localStorage on every change
 	$effect(() => {
 		if (solveMode === 'browser' && draftKey && answers.length > 0) {
-			localStorage.setItem(draftKey, JSON.stringify(answers));
+			localStorage.setItem(draftKey, JSON.stringify({ answers, modes, drawings }));
 		}
 	});
 
 	// Warn before leaving if answers are in progress
 	$effect(() => {
-		const hasAnswers = solveMode === 'browser' && answers.some((a) => a.trim());
+		const anyContent =
+			solveMode === 'browser' && parsedExercises.some((_, i) => hasContent(i));
 		function handleBeforeUnload(e: BeforeUnloadEvent) {
-			if (hasAnswers && !correctionResult) {
+			if (anyContent && !correctionResult) {
 				e.preventDefault();
 			}
 		}
@@ -102,22 +138,35 @@
 
 	async function submitAnswers() {
 		if (!exerciseId) return;
-		if (answers.some((a) => !a.trim())) {
-			submitError = 'Bitte alle Aufgaben beantworten.';
+		if (parsedExercises.some((_, i) => !hasContent(i))) {
+			submitError = 'Bitte alle Aufgaben beantworten (tippen oder zeichnen).';
 			return;
 		}
 		submitError = '';
 		submitting = true;
 		correctionResult = '';
 
-		const textAnswers = parsedExercises
-			.map((ex, i) => `${ex.title}:\n${answers[i]}`)
-			.join('\n\n');
+		// Build per-exercise answer metadata; drawings go as image files in order.
+		const meta: { title: string; kind: Mode; text?: string }[] = [];
+		const files: File[] = [];
+		for (let i = 0; i < parsedExercises.length; i++) {
+			const title = parsedExercises[i].title;
+			if (modes[i] === 'draw') {
+				const blob = await canvasRefs[i]?.toBlob();
+				if (blob) {
+					files.push(new File([blob], `aufgabe-${i + 1}.png`, { type: 'image/png' }));
+					meta.push({ title, kind: 'draw' });
+				}
+			} else {
+				meta.push({ title, kind: 'text', text: answers[i] });
+			}
+		}
 
 		const form = new FormData();
 		form.append('exerciseId', exerciseId);
-		form.append('textAnswers', textAnswers);
+		form.append('answersMeta', JSON.stringify(meta));
 		form.append('showGrade', String(showGrade));
+		for (const f of files) form.append('solutionFiles', f);
 
 		try {
 			const res = await fetch('/api/korrigieren', { method: 'POST', body: form });
@@ -545,23 +594,58 @@
 			{#if solveMode === 'browser' && parsedExercises.length > 0}
 				<div class="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
 					<div class="px-6 py-4 border-b border-blue-100 bg-blue-50">
-						<h3 class="font-semibold text-gray-800 text-sm">Aufgaben lösen</h3>
-						<p class="text-xs text-gray-500 mt-0.5">Trag deine Antworten ein und klick auf „Korrektur starten".</p>
+						<div class="flex items-start justify-between gap-3">
+							<div>
+								<h3 class="font-semibold text-gray-800 text-sm">Aufgaben lösen</h3>
+								<p class="text-xs text-gray-500 mt-0.5">Tippe deine Antworten oder schreib sie pro Aufgabe mit dem Stift, dann klick auf „Korrektur starten".</p>
+							</div>
+							<!-- Global toggle: switch the whole sheet to typing or stylus at once -->
+							<button
+								type="button"
+								onclick={() => setAllModes(allDraw ? 'text' : 'draw')}
+								class="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors {allDraw ? 'border-blue-200 text-blue-600 bg-white hover:bg-blue-50' : 'border-blue-500 bg-blue-500 text-white hover:bg-blue-600'}"
+							>
+								{allDraw ? '⌨ Ganzes Blatt tippen' : '✏️ Ganzes Blatt mit Stift'}
+							</button>
+						</div>
 					</div>
 
 					<div class="p-6 space-y-6">
 						{#each parsedExercises as ex, i}
 							<div>
-								<p class="text-sm font-semibold text-gray-800 mb-1">{ex.title}</p>
+								<div class="flex items-start justify-between gap-3 mb-1">
+									<p class="text-sm font-semibold text-gray-800">{ex.title}</p>
+									<!-- Per-exercise input toggle: type or draw with a stylus -->
+									<div class="flex rounded-lg border border-gray-200 overflow-hidden shrink-0 text-xs">
+										<button
+											type="button"
+											onclick={() => (modes[i] = 'text')}
+											class="px-2.5 py-1 transition-colors {modes[i] === 'text' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}"
+										>
+											⌨ Tippen
+										</button>
+										<button
+											type="button"
+											onclick={() => (modes[i] = 'draw')}
+											class="px-2.5 py-1 transition-colors {modes[i] === 'draw' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}"
+										>
+											✏️ Zeichnen
+										</button>
+									</div>
+								</div>
 								{#if ex.body}
 									<div class="prose prose-sm max-w-none text-gray-600 mb-2">{@html renderMath(marked(ex.body) as string)}</div>
 								{/if}
-								<textarea
-									bind:value={answers[i]}
-									rows="3"
-									placeholder="Deine Antwort…"
-									class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-y"
-								></textarea>
+								{#if modes[i] === 'draw'}
+									<DrawCanvas bind:this={canvasRefs[i]} bind:strokes={drawings[i]} />
+								{:else}
+									<textarea
+										bind:value={answers[i]}
+										rows="3"
+										placeholder="Deine Antwort…"
+										class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-y"
+									></textarea>
+								{/if}
 							</div>
 						{/each}
 

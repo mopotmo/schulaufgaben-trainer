@@ -18,8 +18,8 @@
 
 	<h1 class="text-3xl font-bold text-gray-800 mb-1">Schulbücher</h1>
 	<p class="text-gray-500 mb-8">
-		Hinterlegte Bücher stehen beim Generieren als Quelle zur Verfügung – Claude nutzt dann direkt
-		die Kapitelinhalte statt einer Websuche.
+		Hinterlegte Bücher stehen beim Generieren als Quelle zur Verfügung – der Trainer nutzt dann
+		direkt die Kapitelinhalte statt einer Websuche.
 	</p>
 
 	{#if form?.success}

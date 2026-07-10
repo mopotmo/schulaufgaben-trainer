@@ -371,9 +371,9 @@
 					</div>
 					<p class="text-xs mt-1 {totalBookPages > MAX_BOOK_PAGES ? 'text-red-500' : 'text-gray-400'}">
 						{#if totalBookPages > 0}
-							{totalBookPages} Seiten ausgewählt (max. {MAX_BOOK_PAGES}) – sie werden Claude direkt als Vorlage mitgegeben.
+							{totalBookPages} Seiten ausgewählt (max. {MAX_BOOK_PAGES}) – sie dienen direkt als Vorlage für die Aufgaben.
 						{:else}
-							Kapitel auswählen – die Seiten werden Claude direkt als Vorlage mitgegeben.
+							Kapitel auswählen – die Seiten dienen direkt als Vorlage für die Aufgaben.
 						{/if}
 					</p>
 				{/if}
@@ -393,7 +393,7 @@
 				class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
 			/>
 			<p class="text-xs text-gray-400 mt-1">
-				Claude recherchiert dazu im Internet, um passendere Aufgaben zu erstellen.
+				Der Trainer recherchiert dazu im Internet, um passendere Aufgaben zu erstellen.
 			</p>
 		</div>
 

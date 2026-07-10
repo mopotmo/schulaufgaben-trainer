@@ -32,7 +32,7 @@
 						name="slug"
 						type="text"
 						autocomplete="username"
-						placeholder="z.B. robledos"
+						placeholder="z.B. meier"
 						required
 						class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
 					/>

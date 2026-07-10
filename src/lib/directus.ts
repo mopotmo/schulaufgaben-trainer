@@ -84,6 +84,29 @@ export type LearnerInsight = {
 	updated_at: string;
 };
 
+export type BookChapter = {
+	title: string;
+	pageStart: number;
+	pageEnd: number;
+};
+
+export type Book = {
+	id: string;
+	title: string;
+	subject: string;
+	grade: number;
+	school_type: string | null;
+	publisher: string | null;
+	isbn: string | null;
+	file: string | null;
+	chapters: BookChapter[] | null;
+	page_count: number | null;
+	page_offset: number;
+	owner_family: string | null;
+	visibility: 'family' | 'shared';
+	created_at: string;
+};
+
 type Schema = {
 	families: Family[];
 	profiles: Profile[];
@@ -93,6 +116,7 @@ type Schema = {
 	feedback: Feedback[];
 	feature_requests: FeatureRequest[];
 	learner_insights: LearnerInsight[];
+	books: Book[];
 };
 
 export function getDirectus() {

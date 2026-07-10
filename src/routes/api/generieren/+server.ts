@@ -5,15 +5,27 @@ import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
 import { logError } from '$lib/logger';
 import { getInsightPrompt } from '$lib/learnerInsights';
+import { fetchBookPdf, slicePdfPages, canAccessBook } from '$lib/books';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const profilId = form.get('profilId') as string;
 	const subject = form.get('subject') as string;
 	const topic = form.get('topic') as string;
 	const teacherNotes = (form.get('teacherNotes') as string) ?? '';
 	const book = (form.get('book') as string) ?? '';
+	const bookId = (form.get('bookId') as string) ?? '';
+	let bookRanges: { from: number; to: number; title: string }[] = [];
+	try {
+		const raw = form.get('bookRanges') as string;
+		if (raw) bookRanges = JSON.parse(raw);
+	} catch {
+		error(400, 'Ungültige Kapitelauswahl');
+	}
+	bookRanges = bookRanges.filter(
+		(r) => Number.isFinite(r.from) && Number.isFinite(r.to) && r.from >= 1 && r.from <= r.to
+	);
 	const count = parseInt(form.get('count') as string) || 5;
 	const difficulty = (form.get('difficulty') as string) ?? 'mittel';
 	const durationMinutes = parseInt(form.get('durationMinutes') as string) || 0;
@@ -28,6 +40,50 @@ export const POST: RequestHandler = async ({ request }) => {
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 	const userContentParts: Anthropic.MessageParam['content'] = [];
+
+	// Hinterlegtes Buch: gewählte Seitenbereiche aus dem PDF schneiden und als Dokumente mitgeben.
+	// Claude akzeptiert max. 100 PDF-Seiten pro Request (über alle Dokumente hinweg).
+	const MAX_BOOK_PAGES = 100;
+	let storedBookNote = '';
+	if (bookId && bookRanges.length > 0) {
+		const totalPages = bookRanges.reduce((sum, r) => sum + (r.to - r.from + 1), 0);
+		if (totalPages > MAX_BOOK_PAGES) {
+			error(400, `Maximal ${MAX_BOOK_PAGES} Buchseiten pro Generierung (aktuell ${totalPages})`);
+		}
+
+		const storedBook = await directus.request(readItem('books', bookId)).catch(() => null);
+		if (!storedBook || !canAccessBook(storedBook, locals.familyId)) {
+			error(403, 'Kein Zugriff auf dieses Buch');
+		}
+		if (!storedBook.file) error(400, 'Für dieses Buch ist kein PDF hinterlegt');
+		try {
+			const pdfBytes = await fetchBookPdf(storedBook.file);
+			const offset = storedBook.page_offset ?? 0;
+			const noteParts: string[] = [];
+			for (const range of bookRanges) {
+				const slice = await slicePdfPages(pdfBytes, range.from + offset, range.to + offset);
+				noteParts.push(
+					range.title
+						? `Kapitel „${range.title}" (Buchseiten ${range.from}–${range.to})`
+						: `Buchseiten ${range.from}–${range.to}`
+				);
+				userContentParts.push({
+					type: 'document',
+					source: { type: 'base64', media_type: 'application/pdf', data: slice.base64 }
+				});
+			}
+			// Cache-Breakpoint auf dem letzten Dokument deckt alle Buch-Auszüge davor mit ab
+			const lastDoc = userContentParts[userContentParts.length - 1];
+			if (lastDoc && typeof lastDoc !== 'string' && lastDoc.type === 'document') {
+				lastDoc.cache_control = { type: 'ephemeral' };
+			}
+			storedBookNote = `Auszüge aus dem Schulbuch „${storedBook.title}": ${noteParts.join('; ')}`;
+			userContentParts.push({ type: 'text', text: `Anbei: ${storedBookNote}.` });
+		} catch (e) {
+			await logError('api/generieren/buch', e, { bookId, bookRanges });
+			error(502, 'Die Buchseiten konnten nicht geladen werden');
+		}
+	}
 
 	if (sourceFiles.length > 0) {
 		if (sourceFiles.length > 1) {
@@ -56,6 +112,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			`Thema: ${topic}`,
 			teacherNotes ? `Hinweis vom Lehrer: ${teacherNotes}` : '',
 			book ? `Lehrbuch/Quelle: ${book}` : '',
+			storedBookNote ? `Als PDF angehängt: ${storedBookNote}.` : '',
 			`Erstelle ${count} Übungsaufgaben, Schwierigkeitsgrad ${difficulty}.`,
 			durationMinutes > 0
 				? `Die Aufgaben sollen in ${durationMinutes} Minuten lösbar sein – passe Anzahl und Umfang der Aufgaben entsprechend an, auch wenn das von der gewünschten Anzahl abweicht.`
@@ -81,6 +138,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			`Du bist ein erfahrener Lehrer für ${subject} an einem ${profile.school_type} in ${profile.state}, Klasse ${profile.grade}. Erstelle Übungsaufgaben, die sich zum Ausdrucken eignen (klare Struktur, ausreichend Platz zum Schreiben).`,
 			`Du hast Zugriff auf eine Websuche. Nutze sie, wenn es hilfreich ist, um zum angegebenen Thema oder Lehrbuch zu recherchieren (z.B. Kapitelstruktur, Lehrplanbezug in ${profile.state}, typische Aufgabenstellungen), damit die Aufgaben besser zum tatsächlichen Stoff passen. Suche nur bei Bedarf, nicht bei trivialen Themen.`,
 			book ? `Als Quelle wurde "${book}" angegeben – recherchiere gezielt danach, bevor du Aufgaben erstellst.` : '',
+			storedBookNote
+				? `Ein Kapitel aus dem tatsächlichen Schulbuch ist als PDF angehängt. Nutze es als primäre Vorlage für Aufgabentypen, Notation, Begriffe und Schwierigkeitsgrad – die Aufgaben sollen sich anfühlen wie aus diesem Buch. Nutze die Websuche höchstens ergänzend.`
+				: '',
 			`Gib am Ende ausschließlich die fertigen Aufgaben aus – keine Kommentare zur Recherche, keine Zwischenschritte.`,
 			insightPrompt
 		].filter(Boolean).join('\n\n'),

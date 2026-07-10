@@ -14,6 +14,27 @@
 	let topic = $state(data.prefill?.topic ?? '');
 	let teacherNotes = $state('');
 	let book = $state('');
+	let bookId = $state('');
+	let selectedChapters = $state<number[]>([]);
+	let customRangeEnabled = $state(false);
+	let customPageFrom = $state<number | null>(null);
+	let customPageTo = $state<number | null>(null);
+	let selectedBook = $derived(data.books.find((b) => b.id === bookId) ?? null);
+	// Claude akzeptiert max. 100 PDF-Seiten pro Request
+	const MAX_BOOK_PAGES = 100;
+	let bookRanges = $derived.by(() => {
+		if (!selectedBook) return [];
+		const ranges: { from: number; to: number; title: string }[] = [];
+		for (const i of selectedChapters) {
+			const chapter = selectedBook.chapters?.[i];
+			if (chapter) ranges.push({ from: chapter.pageStart, to: chapter.pageEnd, title: chapter.title });
+		}
+		if (customRangeEnabled && customPageFrom && customPageTo && customPageFrom <= customPageTo) {
+			ranges.push({ from: customPageFrom, to: customPageTo, title: '' });
+		}
+		return ranges;
+	});
+	let totalBookPages = $derived(bookRanges.reduce((sum, r) => sum + (r.to - r.from + 1), 0));
 	let count = $state(5);
 	let difficulty = $state('mittel');
 	let sourceFiles = $state<File[]>([]);
@@ -141,6 +162,20 @@
 		form.append('topic', topic);
 		form.append('teacherNotes', teacherNotes);
 		form.append('book', book);
+		if (selectedBook) {
+			if (bookRanges.length === 0) {
+				genError = 'Bitte mindestens ein Kapitel oder einen gültigen Seitenbereich für das Buch wählen.';
+				generating = false;
+				return;
+			}
+			if (totalBookPages > MAX_BOOK_PAGES) {
+				genError = `Maximal ${MAX_BOOK_PAGES} Buchseiten pro Generierung – bitte weniger Kapitel auswählen (aktuell ${totalBookPages}).`;
+				generating = false;
+				return;
+			}
+			form.append('bookId', selectedBook.id);
+			form.append('bookRanges', JSON.stringify(bookRanges));
+		}
 		form.append('count', String(count));
 		form.append('difficulty', difficulty);
 		form.append('durationMinutes', stopwatchEnabled ? String(durationMinutes) : '0');
@@ -262,6 +297,88 @@
 				class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
 			/>
 		</div>
+
+		{#if data.books.length > 0}
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1" for="book-select">
+					Hinterlegtes Buch (optional)
+				</label>
+				<select
+					id="book-select"
+					bind:value={bookId}
+					onchange={() => { selectedChapters = []; customRangeEnabled = false; customPageFrom = null; customPageTo = null; }}
+					disabled={!!exerciseId}
+					class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
+				>
+					<option value="">– kein Buch –</option>
+					{#each data.books as b}
+						<option value={b.id}>{b.subject} {b.grade} · {b.title}</option>
+					{/each}
+				</select>
+
+				{#if selectedBook}
+					<div class="mt-2 border border-gray-200 rounded-lg p-3 space-y-2">
+						{#if selectedBook.chapters && selectedBook.chapters.length > 0}
+							{#each selectedBook.chapters as chapter, i}
+								<label class="flex items-center gap-2 cursor-pointer select-none">
+									<input
+										type="checkbox"
+										value={i}
+										bind:group={selectedChapters}
+										disabled={!!exerciseId}
+										class="rounded border-gray-300 text-blue-600 focus:ring-blue-300"
+									/>
+									<span class="text-sm text-gray-700 flex-1">{chapter.title}</span>
+									<span class="text-xs text-gray-400 shrink-0">S. {chapter.pageStart}–{chapter.pageEnd}</span>
+								</label>
+							{/each}
+						{/if}
+
+						<label class="flex items-center gap-2 cursor-pointer select-none">
+							<input
+								type="checkbox"
+								bind:checked={customRangeEnabled}
+								disabled={!!exerciseId}
+								class="rounded border-gray-300 text-blue-600 focus:ring-blue-300"
+							/>
+							<span class="text-sm text-gray-700">Eigener Seitenbereich</span>
+						</label>
+
+						{#if customRangeEnabled}
+							<div class="flex items-center gap-2 pl-6">
+								<input
+									type="number"
+									bind:value={customPageFrom}
+									min="1"
+									placeholder="von"
+									disabled={!!exerciseId}
+									aria-label="Seite von"
+									class="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
+								/>
+								<span class="text-sm text-gray-400">bis</span>
+								<input
+									type="number"
+									bind:value={customPageTo}
+									min="1"
+									placeholder="bis"
+									disabled={!!exerciseId}
+									aria-label="Seite bis"
+									class="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
+								/>
+								<span class="text-xs text-gray-400">gedruckte Seitenzahlen</span>
+							</div>
+						{/if}
+					</div>
+					<p class="text-xs mt-1 {totalBookPages > MAX_BOOK_PAGES ? 'text-red-500' : 'text-gray-400'}">
+						{#if totalBookPages > 0}
+							{totalBookPages} Seiten ausgewählt (max. {MAX_BOOK_PAGES}) – sie werden Claude direkt als Vorlage mitgegeben.
+						{:else}
+							Kapitel auswählen – die Seiten werden Claude direkt als Vorlage mitgegeben.
+						{/if}
+					</p>
+				{/if}
+			</div>
+		{/if}
 
 		<div>
 			<label class="block text-sm font-medium text-gray-700 mb-1" for="book">

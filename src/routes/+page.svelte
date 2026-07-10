@@ -60,6 +60,9 @@
 				<p class="text-gray-500 text-sm sm:text-base">Wer übt heute, <strong>{data.family.name}</strong>?</p>
 			</div>
 			<div class="flex items-center gap-3 shrink-0 mt-1">
+				<a href="/buecher" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+					Bücher
+				</a>
 				<a href="/einstellungen" class="text-sm text-gray-400 hover:text-gray-600 transition-colors">
 					Einstellungen
 				</a>

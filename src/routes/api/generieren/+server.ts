@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { logError } from '$lib/logger';
 import { getInsightPrompt } from '$lib/learnerInsights';
 import { fetchBookPdf, slicePdfPages, canAccessBook } from '$lib/books';
+import { requireFamilyId, assertProfileInFamily, requireUuid } from '$lib/server/scope';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -33,9 +34,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (!profilId || !subject || !topic) error(400, 'Pflichtfelder fehlen');
 
+	const familyId = requireFamilyId(locals);
+	const profile = await assertProfileInFamily(profilId, familyId);
+
 	const directus = getDirectus();
-	const profile = await directus.request(readItem('profiles', profilId));
-	const insightPrompt = await getInsightPrompt(profilId, subject, topic);
+	const insightPrompt = await getInsightPrompt(profile.id, subject, topic);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -51,8 +54,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			error(400, `Maximal ${MAX_BOOK_PAGES} Buchseiten pro Generierung (aktuell ${totalPages})`);
 		}
 
-		const storedBook = await directus.request(readItem('books', bookId)).catch(() => null);
-		if (!storedBook || !canAccessBook(storedBook, locals.familyId)) {
+		const storedBook = await directus
+			.request(readItem('books', requireUuid(bookId, 'Buch-ID')))
+			.catch(() => null);
+		if (!storedBook || !canAccessBook(storedBook, familyId)) {
 			error(403, 'Kein Zugriff auf dieses Buch');
 		}
 		if (!storedBook.file) error(400, 'Für dieses Buch ist kein PDF hinterlegt');
@@ -170,7 +175,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const exercise = await directus.request(
 		createItem('exercises', {
-			profile_id: profilId,
+			profile_id: profile.id,
 			subject,
 			topic,
 			teacher_notes: teacherNotes,

@@ -1,11 +1,17 @@
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
+import { requireFamilyId, assertCorrectionInFamily } from '$lib/server/scope';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request }) => {
-	const { exerciseContent, correctionResult, question } = await request.json();
-	if (!question || !correctionResult) error(400, 'Fehlende Parameter');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const { correctionId, question } = await request.json();
+	if (!question || typeof question !== 'string') error(400, 'Fehlende Parameter');
+
+	// Aufgabe und Korrektur kommen aus der Datenbank, nicht aus dem Request:
+	// sonst bestimmt der Client den kompletten Prompt-Inhalt.
+	const familyId = requireFamilyId(locals);
+	const { correction, exercise } = await assertCorrectionInFamily(correctionId, familyId);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -17,7 +23,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			messages: [
 				{
 					role: 'user',
-					content: `Aufgabenstellung:\n${exerciseContent}\n\nKorrektur:\n${correctionResult}\n\nRückfrage des Schülers: ${question}`
+					content: `Aufgabenstellung:\n${exercise.generated_content ?? ''}\n\nKorrektur:\n${correction.correction_result}\n\nRückfrage des Schülers: ${question}`
 				}
 			]
 		});

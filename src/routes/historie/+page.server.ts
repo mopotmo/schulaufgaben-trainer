@@ -1,27 +1,22 @@
 import { getDirectus } from '$lib/directus';
-import { readItems, readItem, deleteItem } from '@directus/sdk';
+import { readItems, deleteItem } from '@directus/sdk';
 import { error, redirect } from '@sveltejs/kit';
+import { requireFamilyId, assertProfileInFamily, assertExerciseInFamily } from '$lib/server/scope';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
-	const profilId = url.searchParams.get('profil');
-	if (!profilId) error(400, 'Kein Profil angegeben');
+	const familyId = requireFamilyId(locals);
+	// Erst den Scope prüfen, dann laden — nicht umgekehrt.
+	const profile = await assertProfileInFamily(url.searchParams.get('profil'), familyId);
 
 	const directus = getDirectus();
-
-	const [profile, exercises] = await Promise.all([
-		directus.request(readItem('profiles', profilId)),
-		directus.request(
-			readItems('exercises', {
-				filter: { profile_id: { _eq: profilId } },
-				sort: ['-created_at'],
-				limit: 50
-			})
-		)
-	]);
-
-	if (!profile) error(404, 'Profil nicht gefunden');
-	if (profile.family_id !== locals.familyId) error(403, 'Kein Zugriff');
+	const exercises = await directus.request(
+		readItems('exercises', {
+			filter: { profile_id: { _eq: profile.id } },
+			sort: ['-created_at'],
+			limit: 50
+		})
+	);
 
 	// Load corrections for all exercises
 	const exerciseIds = exercises.map((e) => e.id);
@@ -49,17 +44,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	};
 };
 
-async function guardExercise(exerciseId: string, familyId: string) {
+async function guardExercise(exerciseId: unknown, familyId: string) {
+	const { exercise } = await assertExerciseInFamily(exerciseId, familyId);
+
 	const directus = getDirectus();
-	const [exercise, corrections] = await Promise.all([
-		directus.request(readItem('exercises', exerciseId)),
-		directus.request(
-			readItems('corrections', { filter: { exercise_id: { _eq: exerciseId } }, limit: 1 })
-		)
-	]);
-	if (!exercise) error(404, 'Übung nicht gefunden');
-	const profile = await directus.request(readItem('profiles', exercise.profile_id));
-	if (!profile || profile.family_id !== familyId) error(403, 'Kein Zugriff');
+	const corrections = await directus.request(
+		readItems('corrections', { filter: { exercise_id: { _eq: exercise.id } }, limit: 1 })
+	);
 	if (corrections.length > 0) error(400, 'Übung wurde bereits bearbeitet');
 	return { directus, exercise };
 }
@@ -71,10 +62,10 @@ export const actions: Actions = {
 		const profilId = data.get('profilId') as string;
 		if (!exerciseId || !profilId) error(400, 'Fehlende Parameter');
 
-		const { directus } = await guardExercise(exerciseId, locals.familyId);
-		await directus.request(deleteItem('exercises', exerciseId));
+		const { directus, exercise } = await guardExercise(exerciseId, requireFamilyId(locals));
+		await directus.request(deleteItem('exercises', exercise.id));
 
-		redirect(303, `/historie?profil=${profilId}`);
+		redirect(303, `/historie?profil=${encodeURIComponent(profilId)}`);
 	},
 
 	replace: async ({ request, locals }) => {
@@ -85,8 +76,8 @@ export const actions: Actions = {
 		const topic = data.get('topic') as string;
 		if (!exerciseId || !profilId) error(400, 'Fehlende Parameter');
 
-		const { directus } = await guardExercise(exerciseId, locals.familyId);
-		await directus.request(deleteItem('exercises', exerciseId));
+		const { directus, exercise } = await guardExercise(exerciseId, requireFamilyId(locals));
+		await directus.request(deleteItem('exercises', exercise.id));
 
 		const params = new URLSearchParams({ profil: profilId });
 		if (subject) params.set('subject', subject);

@@ -4,8 +4,7 @@
 	import MathToolbar from '$lib/components/MathToolbar.svelte';
 	import DrawCanvas from '$lib/components/DrawCanvas.svelte';
 	import { parseExercises } from '$lib/parseExercises';
-	import { renderMath } from '$lib/renderMath';
-	import { marked } from 'marked';
+	import { renderMarkdown } from '$lib/renderMarkdown';
 	import { onMount } from 'svelte';
 	import 'katex/dist/katex.min.css';
 
@@ -35,8 +34,9 @@
 	let submitting = $state(false);
 	let submitError = $state('');
 	let correctionResult = $state('');
+	let correctionId = $state('');
 	let correctionHtml = $derived(
-		correctionResult ? renderMath(marked(correctionResult) as string) : ''
+		correctionResult ? renderMarkdown(correctionResult) : ''
 	);
 
 	// Post-correction grade
@@ -130,6 +130,7 @@
 		submitError = '';
 		submitting = true;
 		correctionResult = '';
+		correctionId = '';
 
 		// Build per-exercise answer metadata; drawings go as image files in order.
 		const meta: { title: string; kind: Mode; text?: string }[] = [];
@@ -158,6 +159,7 @@
 			const json = await res.json();
 			if (!res.ok) throw new Error(json.message ?? 'Fehler bei der Korrektur');
 			correctionResult = json.result;
+			correctionId = json.correctionId ?? '';
 			stopwatch?.stop();
 			localStorage.removeItem(draftKey);
 		} catch (e: any) {
@@ -173,7 +175,7 @@
 			const res = await fetch('/api/note', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ correctionResult })
+				body: JSON.stringify({ correctionId })
 			});
 			const json = await res.json();
 			gradeText = json.grade ?? '';
@@ -194,11 +196,7 @@
 			const res = await fetch('/api/folgefrage', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					exerciseContent: data.exercise.content,
-					correctionResult,
-					question: q
-				})
+				body: JSON.stringify({ correctionId, question: q })
 			});
 			const json = await res.json();
 			chatMessages = [...chatMessages, { role: 'assistant', text: json.answer ?? '' }];
@@ -285,7 +283,7 @@
 						</div>
 						{#if ex.body}
 							<div class="prose prose-sm max-w-none text-gray-600 mb-2">
-								{@html renderMath(marked(ex.body) as string)}
+								{@html renderMarkdown(ex.body)}
 							</div>
 						{/if}
 						{#if modes[i] === 'draw'}
@@ -360,7 +358,7 @@
 											? 'bg-blue-500 text-white'
 											: 'bg-gray-100 text-gray-800'}">
 										{#if msg.role === 'assistant'}
-											<div class="prose prose-sm max-w-none">{@html renderMath(marked(msg.text) as string)}</div>
+											<div class="prose prose-sm max-w-none">{@html renderMarkdown(msg.text)}</div>
 										{:else}
 											{msg.text}
 										{/if}

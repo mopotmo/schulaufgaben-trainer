@@ -1,10 +1,11 @@
 import { getDirectus } from '$lib/directus';
-import { readItem, createItem, uploadFiles } from '@directus/sdk';
+import { createItem, uploadFiles } from '@directus/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
 import { logError } from '$lib/logger';
 import { upsertInsight } from '$lib/learnerInsights';
+import { requireFamilyId, assertExerciseInFamily } from '$lib/server/scope';
 import type { RequestHandler } from './$types';
 
 const GRADE_SCALE = `
@@ -16,7 +17,7 @@ Notenschlüssel (bayerisches Gymnasium):
 - Note 5 (mangelhaft):     ≥ 20 %
 - Note 6 (ungenügend):     < 20 %`;
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const exerciseId = form.get('exerciseId') as string;
 	const showGrade = form.get('showGrade') === 'true';
@@ -45,9 +46,10 @@ export const POST: RequestHandler = async ({ request }) => {
 		error(400, 'Aufgabe und Lösung (Text oder Datei) erforderlich');
 	}
 
+	const familyId = requireFamilyId(locals);
+	const { exercise } = await assertExerciseInFamily(exerciseId, familyId);
+
 	const directus = getDirectus();
-	const exercise = await directus.request(readItem('exercises', exerciseId));
-	if (!exercise) error(404, 'Aufgabe nicht gefunden');
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -168,9 +170,9 @@ Sei konstruktiv und ermutigend.`;
 		}
 	}
 
-	await directus.request(
+	const correction = await directus.request(
 		createItem('corrections', {
-			exercise_id: exerciseId,
+			exercise_id: exercise.id,
 			solution_file: solutionFileId,
 			correction_result: result,
 			tokens_used: tokensUsed
@@ -181,5 +183,5 @@ Sei konstruktiv und ermutigend.`;
 	const insightInput = `Korrektur der Aufgabe:\n${exercise.generated_content}\n\nKorrekturbericht:\n${result}`;
 	upsertInsight(exercise.profile_id, exercise.subject, exercise.topic, insightInput).catch(() => {});
 
-	return json({ result, tokensUsed });
+	return json({ result, tokensUsed, correctionId: correction.id });
 };

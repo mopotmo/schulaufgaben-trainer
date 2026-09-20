@@ -1,25 +1,28 @@
 import { getDirectus } from '$lib/directus';
 import { createItem, deleteItem, readItem, readItems, updateItem, uploadFiles, deleteFile } from '@directus/sdk';
 import { fail } from '@sveltejs/kit';
+import { requireFamilyId } from '$lib/server/scope';
 import { extractChapters, getPdfPageCount } from '$lib/books';
 import { logError } from '$lib/logger';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
+	const familyId = requireFamilyId(locals);
 	const directus = getDirectus();
 	const books = await directus.request(
 		readItems('books', {
 			filter: {
-				_or: [{ owner_family: { _eq: locals.familyId! } }, { visibility: { _eq: 'shared' } }]
+				_or: [{ owner_family: { _eq: familyId } }, { visibility: { _eq: 'shared' } }]
 			},
 			sort: ['subject', 'grade', 'title']
 		})
 	);
-	return { books, familyId: locals.familyId };
+	return { books, familyId };
 };
 
 export const actions: Actions = {
 	upload: async ({ request, locals }) => {
+		const familyId = requireFamilyId(locals);
 		const form = await request.formData();
 		const title = (form.get('title') as string)?.trim();
 		const subject = (form.get('subject') as string)?.trim();
@@ -77,7 +80,7 @@ export const actions: Actions = {
 				chapters,
 				page_count: pageCount,
 				page_offset: 0,
-				owner_family: locals.familyId,
+				owner_family: familyId,
 				visibility: 'family'
 			})
 		);
@@ -91,6 +94,7 @@ export const actions: Actions = {
 	},
 
 	updateOffset: async ({ request, locals }) => {
+		const familyId = requireFamilyId(locals);
 		const form = await request.formData();
 		const id = form.get('id') as string;
 		const offset = parseInt(form.get('page_offset') as string);
@@ -98,20 +102,21 @@ export const actions: Actions = {
 
 		const directus = getDirectus();
 		const book = await directus.request(readItem('books', id));
-		if (!book || book.owner_family !== locals.familyId) return fail(403, { error: 'Kein Zugriff auf dieses Buch.' });
+		if (!book || book.owner_family !== familyId) return fail(403, { error: 'Kein Zugriff auf dieses Buch.' });
 
 		await directus.request(updateItem('books', id, { page_offset: offset }));
 		return { success: 'Seiten-Versatz gespeichert.' };
 	},
 
 	delete: async ({ request, locals }) => {
+		const familyId = requireFamilyId(locals);
 		const form = await request.formData();
 		const id = form.get('id') as string;
 		if (!id) return fail(400, { error: 'Ungültige Eingabe.' });
 
 		const directus = getDirectus();
 		const book = await directus.request(readItem('books', id));
-		if (!book || book.owner_family !== locals.familyId) return fail(403, { error: 'Kein Zugriff auf dieses Buch.' });
+		if (!book || book.owner_family !== familyId) return fail(403, { error: 'Kein Zugriff auf dieses Buch.' });
 
 		await directus.request(deleteItem('books', id));
 		if (book.file) {

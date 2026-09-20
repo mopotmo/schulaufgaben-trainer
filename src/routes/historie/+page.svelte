@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { marked } from 'marked';
-	import { renderMath } from '$lib/renderMath';
+	import { renderMarkdown } from '$lib/renderMarkdown';
 	import 'katex/dist/katex.min.css';
 
 	let { data }: { data: PageData } = $props();
@@ -145,7 +144,7 @@
 								<div>
 									<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Korrektur</p>
 									<div class="prose prose-sm max-w-none bg-gray-50 rounded-xl p-4 overflow-auto max-h-64">
-										{@html renderMath(marked(correction.correction_result) as string)}
+										{@html renderMarkdown(correction.correction_result)}
 									</div>
 								</div>
 							{/if}

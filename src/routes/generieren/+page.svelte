@@ -5,8 +5,7 @@
 	import Stopwatch from '$lib/components/Stopwatch.svelte';
 	import DrawCanvas from '$lib/components/DrawCanvas.svelte';
 	import { parseExercises } from '$lib/parseExercises';
-	import { renderMath } from '$lib/renderMath';
-	import { marked } from 'marked';
+	import { renderMarkdown } from '$lib/renderMarkdown';
 	import 'katex/dist/katex.min.css';
 	let { data }: { data: PageData } = $props();
 
@@ -65,8 +64,8 @@
 	let submitting = $state(false);
 	let submitError = $state('');
 	let correctionResult = $state('');
-	let correctionHtml = $derived(correctionResult ? renderMath(marked(correctionResult) as string) : '');
-	let generatedHtml = $derived(generatedContent ? renderMath(marked(generatedContent) as string) : '');
+	let correctionHtml = $derived(correctionResult ? renderMarkdown(correctionResult) : '');
+	let generatedHtml = $derived(generatedContent ? renderMarkdown(generatedContent) : '');
 
 	// Chat
 	type ChatMessage = { role: 'user' | 'assistant'; text: string };
@@ -634,7 +633,7 @@
 									</div>
 								</div>
 								{#if ex.body}
-									<div class="prose prose-sm max-w-none text-gray-600 mb-2">{@html renderMath(marked(ex.body) as string)}</div>
+									<div class="prose prose-sm max-w-none text-gray-600 mb-2">{@html renderMarkdown(ex.body)}</div>
 								{/if}
 								{#if modes[i] === 'draw'}
 									<DrawCanvas bind:this={canvasRefs[i]} bind:strokes={drawings[i]} />

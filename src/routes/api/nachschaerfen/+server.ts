@@ -1,14 +1,15 @@
 import { getDirectus } from '$lib/directus';
-import { readItem, createItem } from '@directus/sdk';
+import { createItem } from '@directus/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
 import { logError } from '$lib/logger';
+import { requireFamilyId, assertExerciseInFamily } from '$lib/server/scope';
 import type { RequestHandler } from './$types';
 
 export type NachschaerpenMode = 'weak_areas' | 'easier' | 'harder';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	const body = await request.json();
 	const { exerciseId, correctionResult, mode }: {
 		exerciseId: string;
@@ -18,10 +19,10 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	if (!exerciseId || !correctionResult || !mode) error(400, 'Pflichtfelder fehlen');
 
+	const familyId = requireFamilyId(locals);
+	const { exercise, profile } = await assertExerciseInFamily(exerciseId, familyId);
+
 	const directus = getDirectus();
-	const exercise = await directus.request(readItem('exercises', exerciseId));
-	if (!exercise) error(404, 'Aufgabe nicht gefunden');
-	const profile = await directus.request(readItem('profiles', exercise.profile_id));
 
 	const modeInstructions: Record<NachschaerpenMode, string> = {
 		weak_areas: `Analysiere die Korrektur und identifiziere die Schwachstellen und Fehler des Schülers. Erstelle dann neue Übungsaufgaben, die gezielt diese schwachen Bereiche trainieren. Erkläre kurz am Anfang (1-2 Sätze), worauf die Aufgaben abzielen.`,

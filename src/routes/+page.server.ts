@@ -1,18 +1,20 @@
 import { getDirectus } from '$lib/directus';
 import { readItems, readItem, createItem } from '@directus/sdk';
 import { fail } from '@sveltejs/kit';
+import { requireFamilyId } from '$lib/server/scope';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
+	const familyId = requireFamilyId(locals);
 	const directus = getDirectus();
 	const [profiles, family] = await Promise.all([
 		directus.request(
 			readItems('profiles', {
-				filter: { family_id: { _eq: locals.familyId! } },
+				filter: { family_id: { _eq: familyId } },
 				sort: ['name']
 			})
 		),
-		directus.request(readItem('families', locals.familyId!))
+		directus.request(readItem('families', familyId))
 	]);
 	return { profiles, family };
 };
@@ -30,6 +32,7 @@ export const actions: Actions = {
 			return fail(400, { error: 'Bitte alle Felder ausfüllen.' });
 		}
 
+		const familyId = requireFamilyId(locals);
 		const directus = getDirectus();
 		await directus.request(
 			createItem('profiles', {
@@ -38,7 +41,7 @@ export const actions: Actions = {
 				grade,
 				state,
 				avatar,
-				family_id: locals.familyId!
+				family_id: familyId
 			})
 		);
 	}

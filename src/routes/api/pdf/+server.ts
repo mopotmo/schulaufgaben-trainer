@@ -1,28 +1,32 @@
-import { getDirectus } from '$lib/directus';
-import { readItem } from '@directus/sdk';
-import { error } from '@sveltejs/kit';
 import puppeteer from 'puppeteer';
-import { marked } from 'marked';
-import { renderMath } from '$lib/renderMath';
+import purifySource from 'dompurify/dist/purify.min.js?raw';
+import { renderMarkdown } from '$lib/renderMarkdown';
+import { requireFamilyId, assertExerciseInFamily } from '$lib/server/scope';
+import { getKatexCss } from '$lib/server/katexCss';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ url }) => {
-	const exerciseId = url.searchParams.get('exerciseId');
-	if (!exerciseId) error(400, 'Keine Aufgaben-ID');
+function escapeHtml(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;');
+}
 
-	const directus = getDirectus();
-	const exercise = await directus.request(readItem('exercises', exerciseId));
-	if (!exercise) error(404, 'Aufgabe nicht gefunden');
+export const GET: RequestHandler = async ({ url, locals }) => {
+	const familyId = requireFamilyId(locals);
+	const { exercise, profile } = await assertExerciseInFamily(
+		url.searchParams.get('exerciseId'),
+		familyId
+	);
 
-	const profile = await directus.request(readItem('profiles', exercise.profile_id));
-
-	const contentHtml = renderMath(await marked(exercise.generated_content ?? ''));
+	const contentHtml = renderMarkdown(exercise.generated_content);
 
 	const html = `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
+<style>${getKatexCss()}</style>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -60,14 +64,14 @@ export const GET: RequestHandler = async ({ url }) => {
 </head>
 <body>
   <div class="header">
-    <h1>${exercise.subject} – Übungsaufgaben</h1>
-    <div class="meta">Thema: ${exercise.topic} · Klasse ${profile?.grade ?? ''} · ${new Date(exercise.created_at).toLocaleDateString('de-DE')}</div>
+    <h1>${escapeHtml(exercise.subject ?? '')} – Übungsaufgaben</h1>
+    <div class="meta">Thema: ${escapeHtml(exercise.topic ?? '')} · Klasse ${escapeHtml(String(profile.grade ?? ''))} · ${new Date(exercise.created_at).toLocaleDateString('de-DE')}</div>
     <div class="name-line">
       <div>Name: <span></span></div>
       <div>Datum: <span></span></div>
     </div>
   </div>
-  ${contentHtml}
+  <div id="content"></div>
 </body>
 </html>`;
 
@@ -80,6 +84,20 @@ export const GET: RequestHandler = async ({ url }) => {
 	try {
 		const page = await browser.newPage();
 		await page.setContent(html, { waitUntil: 'load' });
+
+		// Der Aufgabentext ist Markdown aus der Generierung bzw. dem Chat und kann rohes HTML
+		// enthalten (`marked` lässt es durch). Er wird deshalb erst im Browser durch DOMPurify
+		// gereicht und nie in die Seitenquelle geschrieben – sonst liefe fremdes Markup im
+		// Renderer mit `--no-sandbox` und hätte Netzzugriff auf interne Dienste.
+		await page.addScriptTag({ content: purifySource });
+		await page.evaluate((raw: string) => {
+			const purify = (globalThis as unknown as {
+				DOMPurify: { sanitize: (dirty: string) => string };
+			}).DOMPurify;
+			const target = document.getElementById('content');
+			if (target) target.innerHTML = purify.sanitize(raw);
+		}, contentHtml);
+
 		await page.evaluateHandle('document.fonts.ready');
 		const pdf = await page.pdf({
 			format: 'A4',
@@ -90,7 +108,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		return new Response(pdf.buffer as ArrayBuffer, {
 			headers: {
 				'Content-Type': 'application/pdf',
-				'Content-Disposition': `inline; filename="aufgaben-${exerciseId}.pdf"`
+				'Content-Disposition': `inline; filename="aufgaben-${exercise.id}.pdf"`
 			}
 		});
 	} finally {

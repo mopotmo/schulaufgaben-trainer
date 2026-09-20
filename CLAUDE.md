@@ -42,4 +42,7 @@ Vor größeren Änderungen lesen:
 
 ## Bekannte offene Punkte
 
-Siehe `docs/spec-gruppen-rollen-einwilligung.md`, §1 (Berechtigungslücke) und §10 (offene Fragen).
+Die Berechtigungslücke aus `docs/spec-gruppen-rollen-einwilligung.md` §1 ist geschlossen, die
+Fragen aus §10 sind beantwortet. Offen ist Stufe 1: Regel 1 gilt noch nicht — `getDirectus()`
+steht weiterhin in Route-Handlern, bis `authz.ts` und `src/lib/server/repo/*` stehen. Bis dahin
+laufen Scope-Prüfungen über `src/lib/server/scope.ts`.

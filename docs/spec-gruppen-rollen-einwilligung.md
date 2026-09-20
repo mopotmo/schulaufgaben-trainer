@@ -37,8 +37,13 @@ const profile = await directus.request(readItem('profiles', profilId));
 
 **Ohne Prüfung, ob dieses Profil zur eingeloggten Familie gehört.** Jede eingeloggte Familie kann mit
 einer fremden Profil-ID Aufgaben generieren und über `profile.school_type`, `profile.state`,
-`profile.grade` Daten fremder Kinder auslesen. Solange nur eine Familie Zugang hat, folgenlos. Sobald
-Klassenkameradinnen drauf sind, ein echter Datenschutzvorfall.
+`profile.grade` Daten fremder Kinder auslesen.
+
+> **Korrektur vom 20.09.2026:** Der ursprüngliche Satz „Solange nur eine Familie Zugang hat,
+> folgenlos" stimmt nicht. In `families` stehen seit dem 13.06.2026 **drei** Familien — Robledo,
+> Beyer und Bartels — mit eigenen Profilen und Aufgaben. Zwei Haushalte außerhalb des eigenen sind
+> also bereits drauf. Die Lücke war offen, nicht bevorstehend. Deshalb §10.4: erst Hotfix, dann
+> Refactor.
 
 **Zu prüfen und zu fixen in allen API-Routen** (`chat`, `feedback`, `folgefrage`, `generieren`,
 `korrigieren`, `nachschaerfen`, `note`, `pdf`) sowie in den Load-Funktionen von `historie`, `loesen`,
@@ -50,6 +55,22 @@ richtig. Genau dieses Muster braucht es überall — aber zentral, nicht per Han
 
 **Priorität: Dieser Fix ist wichtiger als das saubere Datenmodell.** Wenn die Zeit knapp wird, zuerst
 §4 (authz + repo), dann der Rest.
+
+**Stand 20.09.2026 — Hotfix umgesetzt.** Alle acht API-Routen und alle Load-Funktionen prüfen den
+Scope über `src/lib/server/scope.ts`; Abnahmekriterium §8.1 ist erfüllt (Familie A → Ressource von
+Familie B ⇒ 403, ohne Session ⇒ 401). Drei Befunde aus der Code-Analyse gingen über diese Spec
+hinaus und sind mit erledigt:
+
+- Die Lücke war auch **schreibend** — `api/chat` überschrieb fremde `generated_content`,
+  `korrigieren` und `nachschaerfen` schrieben unter fremdem `profile_id`.
+- `api/feedback` stand in `PUBLIC_PATHS` und nahm `profileId` und `refId` ungeprüft entgegen:
+  ohne Login ließ sich damit über `upsertInsight` der Lernstand eines beliebigen Kindes
+  überschreiben — der später in den Generierungs-Prompt einfließt.
+- `marked`-Ausgabe ging ohne Sanitizing in `{@html}`; zusammen mit dem Schreibzugriff ergab das
+  Stored XSS über Familiengrenzen. Behoben in `src/lib/renderMarkdown.ts`.
+
+`src/lib/server/scope.ts` ist die Vorstufe von §4 und geht in `authz.ts` + `repo/*` auf. **Noch
+offen bleibt harte Regel 1:** `getDirectus()` steht weiterhin in Route-Handlern.
 
 ---
 
@@ -383,11 +404,70 @@ um:    src/lib/session.ts                  (komplett neu)
 
 ---
 
-## 10. Offene Fragen — vor dem Bauen beantworten lassen
+## 10. Offene Fragen — entschieden am 20.09.2026
 
-1. Sollen Eltern künftig ein eigenes `profiles`-Objekt mit `kind='adult'` bekommen, oder bleibt
-   „Eltern" der Session-Typ `family` ohne eigenes Profil? (Spec geht von Letzterem aus — einfacher,
-   aber `memberships` mit `role='parent'` bleibt dann vorerst ungenutzt.)
-2. Klassenbeitritt: in diesen Durchgang rein, oder erst nachdem Gruppen und Rollen stehen?
-   (Spec lässt ihn bewusst weg.)
-3. Migrationsskript als einmaliges Node-Skript gegen die Directus-REST-API — oder als Directus-Flow?
+Die Fragen bleiben samt Begründung stehen, damit nachvollziehbar ist, warum es so und nicht
+anders gebaut wird.
+
+### 10.1 Eltern-Profile
+
+**Frage:** Sollen Eltern ein eigenes `profiles`-Objekt mit `kind='adult'` bekommen, oder bleibt
+„Eltern" der Session-Typ `family` ohne eigenes Profil?
+
+**Entscheidung: Session-Typ `family`, kein Eltern-Profil in Stufe 1.**
+
+- Es gibt fünf Profile, alle Kinder. Ein Eltern-Profil erzeugt UI (Anlegen, Auswählen, Wechseln),
+  ohne dass eine Funktion daran hängt.
+- Der rechtlich relevante Nachweis „welcher Erwachsene hat eingewilligt" steht in
+  `consents.granted_by_name` / `granted_by_email`, nicht in `profiles`.
+- `profiles.kind` wird trotzdem jetzt angelegt (Default `'learner'`, §3.4). Stufe 2 ist dann eine
+  Datenänderung, keine Migration.
+
+**Folge für `memberships`:** `profile_id` ist **not null** (§3.2). Ohne Eltern-Profil kann eine
+Zeile mit `role='parent'` deshalb nicht existieren — die Rolle ist nicht „vorerst ungenutzt",
+sondern strukturell unmöglich. Daraus folgt verbindlich:
+
+> `learner` kommt aus `memberships`. `parent` / `owner` wird aus `session.kind === 'family'`
+> abgeleitet, an genau einer Stelle: beim Bauen des `Actor` in `authz.ts`. Sobald Eltern-Profile
+> existieren, übernimmt `memberships` ohne Schemaänderung.
+
+`memberships.profile_id` wird **nicht** nullable gemacht — das holte die NULL-Falle aus §4.1 zurück.
+
+### 10.2 Klassenbeitritt
+
+**Frage:** In diesen Durchgang rein, oder erst nachdem Gruppen und Rollen stehen?
+
+**Entscheidung: raus aus Stufe 1, nur vorbereiten.**
+
+Der Zweck „für Klassenkameradinnen öffnen" ist mit `type='family'` erfüllt — eine Gruppe pro
+Familie. Eine Klassen-Gruppe fügt jeder Repo-Query eine zweite Scope-Dimension hinzu, bevor die
+erste im Betrieb war. Dazu kommen ungeklärte Fragen: Wer sieht in einer Klasse was? Deckt die
+Familien-Einwilligung die Klassen-Sichtbarkeit ab? (Nach Konzept §3.3 eher nicht — das wäre ein
+eigener `consents`-Typ.)
+
+Mitgebaut wird trotzdem, weil es später teuer wird:
+
+- `groups.invite_code` als Spalte, ungenutzt (§3.1)
+- `Actor.groupIds` konsequent als Array, auch wenn es in Stufe 1 immer genau ein Element hat —
+  dann ändert der Klassenbeitritt später keine einzige Repo-Signatur
+- die Rollen-Matrix so, dass `book:read` für `teacher` bereits ausdrückbar ist (§4.1)
+
+### 10.3 Migration
+
+**Frage:** Einmaliges Node-Skript gegen die Directus-REST-API oder ein Directus-Flow?
+
+**Entscheidung: Node-Skript**, `scripts/migrate-groups.ts` wie in §6.
+
+- Der Bestand ist winzig (3 Familien, 5 Profile, 17 Aufgaben, 0 Bücher) — Laufzeit in Sekunden.
+- Das Skript liegt in git: reviewbar, diffbar, gegen ein wiederhergestelltes Backup wiederholbar.
+  Ein Flow lebt nur in der DB und taucht in keinem Diff auf.
+- Idempotenz lässt sich in Code ausdrücken und testen.
+- Flows sind für Wiederkehrendes: die **30-Tage-Löschung der Uploads** (Konzept, Stufe 0 #4)
+  gehört dorthin, die Migration nicht.
+
+Zwei Auflagen: Das Skript bekommt einen `--dry`-Modus, und der erste echte Lauf geht gegen eine
+wiederhergestellte Kopie des Backups, nicht gegen Produktion.
+
+### 10.4 Reihenfolge
+
+**Entscheidung: erst Hotfix, dann Refactor.** Begründung in §1.

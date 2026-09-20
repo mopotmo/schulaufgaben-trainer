@@ -265,8 +265,12 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 - Aufbewahrungsdauer Uploads: 30 Tage
 - Keine Lehrer-Rolle im ersten Release
 - Onboarding: manuell angelegt + Einwilligung beim ersten Login
+- Die drei technischen Detailfragen am Ende der Spec sind am 20.09.2026 entschieden:
+  keine Eltern-Profile in Stufe 1, kein Klassenbeitritt in Stufe 1, Migration als Node-Skript.
+  Begründungen in der Spec, §10.
+- Reihenfolge korrigiert: erst der IDOR-Hotfix (erledigt), dann Stufe 1, dann Stufe 0.
+  Grund: es sind bereits drei Familien im System, nicht eine — siehe Spec §1.
 
 **Offen:**
 
-- Die drei technischen Detailfragen am Ende der Spec (Eltern-Profile, Klassenbeitritt in Stufe 1?,
-  Migrationsskript vs. Directus-Flow)
+- Stufe 1 ab Aufgabe 10 (Datenmodell, Session, Repo-Layer) und Stufe 0 vollständig

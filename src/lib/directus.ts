@@ -1,6 +1,7 @@
 import { createDirectus, rest, staticToken } from '@directus/sdk';
 import { DIRECTUS_TOKEN, DIRECTUS_URL } from '$env/static/private';
 
+/** @deprecated Geht in `Group` auf. Wird nach der Migration entfernt (Spec §6 Schritt 6). */
 export type Family = {
 	id: string;
 	name: string;
@@ -11,8 +12,60 @@ export type Family = {
 	created_at: string;
 };
 
+export type GroupType = 'family' | 'class' | 'school';
+
+/** Rollen aus `memberships`. In Stufe 1 wird nur `learner` vergeben — siehe Spec §10.1. */
+export type Role = 'owner' | 'parent' | 'learner' | 'teacher' | 'admin';
+
+export type Group = {
+	id: string;
+	type: GroupType;
+	name: string;
+	slug: string;
+	/** Hierarchie Familie → Klasse → Schule. Vorkehrung, in Stufe 1 ungenutzt. */
+	parent_group: string | null;
+	/** Mandanten-Vorkehrung, vorerst immer 'default'. */
+	tenant: string;
+	email: string | null;
+	/** bcrypt-Hash. Nur bei `type: 'family'` gesetzt. */
+	password_hash: string | null;
+	invite_token: string | null;
+	/** Beitrittscode Klasse. In Stufe 1 ungenutzt. */
+	invite_code: string | null;
+	status: 'active' | 'archived';
+	created_at: string;
+};
+
+export type Membership = {
+	id: string;
+	profile_id: string;
+	group_id: string;
+	role: Role;
+	status: 'active' | 'pending' | 'removed';
+	joined_at: string;
+};
+
+export type Consent = {
+	id: string;
+	group_id: string;
+	type: 'privacy' | 'terms';
+	/** Entspricht CONSENT_VERSION in `src/lib/legal.ts`. */
+	version: string;
+	granted_at: string;
+	granted_by_name: string;
+	granted_by_email: string;
+	revoked_at: string | null;
+};
+
 export type Profile = {
 	id: string;
+	/**
+	 * Nach der Migration `NOT NULL` (Spec §6 Schritt 6). Bis dahin nullable —
+	 * deshalb nie ungeprüft in einen Directus-Filter (harte Regel 3).
+	 */
+	group_id: string | null;
+	kind: 'learner' | 'adult';
+	/** @deprecated Ersetzt durch `group_id`. Wird nach der Migration entfernt. */
 	family_id: string | null;
 	name: string;
 	school_type: string;
@@ -102,12 +155,18 @@ export type Book = {
 	chapters: BookChapter[] | null;
 	page_count: number | null;
 	page_offset: number;
+	owner_group: string | null;
+	/** @deprecated Ersetzt durch `owner_group`. Wird nach der Migration entfernt. */
 	owner_family: string | null;
 	visibility: 'family' | 'shared';
 	created_at: string;
 };
 
 type Schema = {
+	groups: Group[];
+	memberships: Membership[];
+	consents: Consent[];
+	/** @deprecated siehe `Family` */
 	families: Family[];
 	profiles: Profile[];
 	exercises: Exercise[];

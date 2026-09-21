@@ -13,6 +13,8 @@ Vor größeren Änderungen lesen:
 - `docs/klassen-freigabe-konzept.md` — rechtlicher Rahmen, Rollenmodell, Gesamtplan
 - `docs/spec-gruppen-rollen-einwilligung.md` — konkrete Umsetzungs-Spec für den aktuellen Umbau
 
+Kleinere Punkte ohne eigenes Konzept stehen in `docs/backlog.md`.
+
 ## Harte Regeln
 
 1. **Kein `getDirectus()` in Route-Handlern.** Jeder Datenzugriff läuft über `src/lib/server/repo/*`.

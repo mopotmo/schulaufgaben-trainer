@@ -11,8 +11,13 @@ import { renderMath } from './renderMath';
  * Bewusst hier und nicht per DOMPurify: Diese Funktion läuft auch im SSR, und DOMPurify
  * braucht ein DOM (`DOMPurify.sanitize` existiert unter Node nicht). So ist das Ergebnis
  * auf Server und Client identisch — kein Hydration-Mismatch.
+ *
+ * `breaks: true`, weil die Generierung mehrzeilige Blöcke ohne Markdown-Zeilenumbruch
+ * ausgibt — Gleichungssysteme als `(I) …` / `(II) …`, Teilaufgaben als `a)` / `b)` / `c)`.
+ * Mit der Voreinstellung landen die alle in einem `<p>` auf einer Sichtzeile. Prosa wird
+ * vom Modell nicht hart umbrochen, deshalb entstehen dadurch keine zerrissenen Absätze.
  */
-const md = new Marked({ async: false });
+const md = new Marked({ async: false, breaks: true });
 md.use({ renderer: { html: () => '' } });
 
 export function renderMarkdown(source: string | null | undefined): string {

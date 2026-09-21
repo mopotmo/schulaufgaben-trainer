@@ -38,7 +38,7 @@ Kleinere Punkte ohne eigenes Konzept stehen in `docs/backlog.md`.
   Code von der Spec abweicht: nachfragen statt raten.
 - Änderungen am Datenmodell immer zuerst in Directus, dann im Code — und die Typen in
   `src/lib/directus.ts` mitziehen.
-- Vor jeder Migration: DB-Backup. Nicht optional.
+- Vor jeder Migration: DB-Backup. Nicht optional — Vorgehen in `docs/backup-und-restore.md`.
 - Nach größeren Änderungen `npm run build` und `npm run check` laufen lassen.
 - Mehrere Lösungsansätze vorschlagen, wenn es mehr als einen sinnvollen gibt.
 

@@ -41,6 +41,15 @@ greifen nie, weil der Generator weder die Klasse noch `<ol>` / `<li>` erzeugt.
 **Dateien.** `src/routes/api/generieren/+server.ts` (Format-Teil des System-Prompts),
 `src/routes/api/pdf/+server.ts` (CSS)
 
+### Backups laufen nur von Hand
+
+`docs/backup-und-restore.md` beschreibt das Vorgehen, aber es stößt niemand an. Entweder
+Coolifys geplante Backups nutzen, falls sie Datenbanken im Service-Stack abdecken, oder ein
+Cronjob mit Rotation. Dazu fehlt eine Entscheidung zur Aufbewahrungsdauer — die berührt die
+Löschzusage aus dem Konzept §3.3.
+
+**Dateien.** keine (Betrieb)
+
 ### Lösen-Ansicht: `**` bleibt als Artefakt stehen, Vorspann wird je Teilaufgabe wiederholt
 
 Beim Zerlegen in einzelne Antwortfelder wird an `Aufgabe \d` getrennt. Die schließenden

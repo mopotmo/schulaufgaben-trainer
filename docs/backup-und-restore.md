@@ -172,17 +172,62 @@ Entschlüsseln dagegen schon: `brew install gnupg`.
 
 ## 7. Uploads sichern
 
-Volume ermitteln:
+Die hochgeladenen Lösungsfotos und Schulbuch-PDFs liegen nicht in Postgres. Der Speicher-Adapter
+ist `local`, die Dateien liegen also auf der Platte und nicht in einem Objektspeicher.
+
+**Directus muss dafür nicht gestoppt werden.** Anders als bei der Datenbank sind hochgeladene
+Dateien nach dem Schreiben unveränderlich — ein `tar` über das laufende Volume ist konsistent.
+Lädt jemand genau währenddessen hoch, fehlt diese eine Datei; das nächste Backup holt sie.
+
+### Sollwerte vorher in Directus holen
+
+Ohne die weiß man hinterher nicht, ob man das richtige Volume erwischt hat. Im Admin unter
+*Dateibibliothek*, oder per API `/files?aggregate[count]=id&aggregate[sum]=filesize`.
+
+Stand 21.09.2026: **5 Dateien, 1.190.292 Bytes (rund 1,19 MB)**, ausschließlich JPEG.
+
+### Volume ermitteln
 
 ```sh
-docker inspect <directus-container> --format '{{json .Mounts}}' | python3 -m json.tool
+docker ps --format '{{.Names}}' | grep -i directus
 ```
 
 ```sh
-docker run --rm -v <volume>:/data -v "$PWD":/backup alpine tar czf /backup/uploads-$(date +%F).tar.gz -C /data .
+docker inspect <directus-container> --format '{{range .Mounts}}{{.Type}}  {{.Name}}  ->  {{.Destination}}{{println}}{{end}}'
 ```
 
-Danach wie in Schritt 4 verschlüsseln und herunterladen.
+Gesucht ist die Zeile mit dem Ziel `/directus/uploads`; der mittlere Wert ist der Volume-Name.
+
+### Archiv ziehen und prüfen
+
+```sh
+docker run --rm -v <volume>:/data:ro -v "$PWD":/backup alpine tar czf /backup/uploads-$(date +%F).tar.gz -C /data .
+```
+
+```sh
+tar tzf uploads-$(date +%F).tar.gz | grep -c .
+```
+
+Gegen die Sollwerte halten. Weicht die Zahl deutlich ab, ist es das falsche Volume — nicht
+einfach weitermachen.
+
+Danach wie in Schritt 4 verschlüsseln und herunterladen, und das unverschlüsselte Archiv auf
+dem Server löschen. Handschriftliche Lösungen sind nach Konzept §3.5 die sensibelste
+Datenkategorie, weil oft der Name des Kindes mit auf dem Blatt steht.
+
+*Kürzerer Weg ohne Volume-Suche:* `docker cp <directus-container>:/directus/uploads ./uploads-backup`
+— funktioniert auch, verliert aber Zeitstempel und Rechte.
+
+### Reihenfolge bedenken
+
+Am 21.09.2026 lagen alle fünf Dateien seit dem 13./14. Juni im Volume — über drei Monate.
+Nach Konzept §3.5 und Stufe 0 #4 sollen Lösungsfotos **nach 30 Tagen automatisch gelöscht**
+werden; diese Automatik existiert noch nicht.
+
+Ein verschlüsseltes Archiv verlängert damit die Aufbewahrung von Daten, die laut eigener
+Zusage längst weg sein müssten. Entweder vorher aufräumen und danach sichern, oder sichern
+und die Löschung als nächsten Schritt setzen — samt der Frage, wie lange die Archive selbst
+aufbewahrt werden.
 
 ---
 
@@ -195,3 +240,6 @@ Danach wie in Schritt 4 verschlüsseln und herunterladen.
 - **Aufbewahrung.** Wie viele Stände, wie lange, wo. Berührt die Löschzusage aus Konzept
   §3.3: Ein Backup, das ein gelöschtes Profil noch monatelang vorhält, ist ein eigener Punkt
   im Verzeichnis der Verarbeitungstätigkeiten.
+- **30-Tage-Löschung der Uploads** (Konzept, Stufe 0 #4) ist nicht umgesetzt. Solange sie
+  fehlt, wächst mit jedem Upload-Backup ein Bestand mit, der längst gelöscht sein sollte.
+  Als Directus-Flow oder Cronjob — siehe Spec §10.3, Flows sind für Wiederkehrendes.

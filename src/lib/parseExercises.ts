@@ -4,8 +4,16 @@ export type ParsedExercise = {
 };
 
 export function parseExercises(content: string): ParsedExercise[] {
+	// Die Generierung setzt Aufgaben-Überschriften fett: `**Aufgabe 1 (4 Punkte): Thema**`.
+	// Getrennt wird aber *vor* dem Wort „Aufgabe" — die öffnenden Sternchen blieben dadurch
+	// am Ende des vorherigen Blocks hängen (ein einsames `**` über dem Antwortfeld) und die
+	// schließenden klebten an der Überschrift („… Architektur** b)").
+	// Deshalb die Hervorhebung der Überschriften vorher entfernen, statt hinterher an beiden
+	// Rändern Sternchen abzuschneiden — das würde legitimes `**Wichtig!**` im Text zerlegen.
+	const normalized = content.replace(/\*\*\s*(Aufgabe\s+\d+[^*\n]*?)\s*\*\*/gi, '$1');
+
 	// Split on "Aufgabe X" headers
-	const parts = content.split(/(?=Aufgabe\s+\d+)/i);
+	const parts = normalized.split(/(?=Aufgabe\s+\d+)/i);
 
 	const exercises: ParsedExercise[] = [];
 

@@ -18,7 +18,22 @@ import { renderMath } from './renderMath';
  * vom Modell nicht hart umbrochen, deshalb entstehen dadurch keine zerrissenen Absätze.
  */
 const md = new Marked({ async: false, breaks: true });
-md.use({ renderer: { html: () => '' } });
+md.use({
+	renderer: {
+		/**
+		 * Rohes HTML wird verworfen — mit **einer** Ausnahme: `<br>`.
+		 *
+		 * Die Generierung setzt `<br><br><br>` als Schreibplatz auf dem Arbeitsblatt. Sie
+		 * pauschal zu verwerfen nahm gedruckten Blättern den Platz zum Antworten, also genau
+		 * das, wofür sie da sind. `<br>` trägt keine Attribute und kann nichts ausführen,
+		 * deshalb ist es die einzige Form, die hier durchgelassen wird — normalisiert, damit
+		 * keine Schreibweise durchrutscht, die nur so aussieht.
+		 */
+		html(token) {
+			return /^<br\s*\/?>$/i.test(token.raw.trim()) ? '<br>' : '';
+		}
+	}
+});
 
 export function renderMarkdown(source: string | null | undefined): string {
 	if (!source) return '';

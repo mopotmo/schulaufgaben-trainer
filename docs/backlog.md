@@ -53,20 +53,33 @@ Löschzusage aus dem Konzept §3.3.
 
 **Dateien.** keine (Betrieb)
 
-### Lösen-Ansicht: `**` bleibt als Artefakt stehen, Vorspann wird je Teilaufgabe wiederholt
+### Lösen-Ansicht: Vorspann wird je Teilaufgabe wiederholt
 
-Beim Zerlegen in einzelne Antwortfelder wird an `Aufgabe \d` getrennt. Die schließenden
-Sternchen der fett gesetzten Überschrift landen dadurch im vorherigen Block und erscheinen
-als eigenständiges `**`. Außerdem wird ein gemeinsamer Vorspann — etwa das Gleichungssystem
-über a) / b) / c) — vor jeder Teilaufgabe erneut ausgegeben.
+Beim Zerlegen in einzelne Antwortfelder wird ein gemeinsamer Vorspann — etwa das
+Gleichungssystem oder der Einleitungssatz über a) / b) / c) — vor jeder Teilaufgabe erneut
+ausgegeben. Inhaltlich richtig, weil jedes Antwortfeld für sich lesbar bleiben muss, aber
+untereinander sichtbar als Dopplung.
 
-Kosmetisch, aber in jeder mehrteiligen Aufgabe sichtbar.
+Denkbar wäre, den Vorspann einmal über die Gruppe zu setzen statt in jede Teilaufgabe.
+Das ändert die Struktur der Lösen-Ansicht, ist also kein Einzeiler.
 
-**Dateien.** `src/lib/parseExercises.ts`
+(Das zugehörige `**`-Artefakt ist am 22.09.2026 behoben.)
+
+**Dateien.** `src/lib/parseExercises.ts`, `src/routes/loesen/+page.svelte`
 
 ---
 
 ## Erledigt
+
+### Schreibplatz stand auch im Browser — 22.09.2026
+
+Die `<br>`-Blöcke sind Platz zum Schreiben auf Papier. Seit sie fürs PDF wieder
+durchgelassen werden, klaffte dieselbe Lücke am Bildschirm zwischen Aufgabenstellung und
+Antwortfeld. `renderMarkdown` unterscheidet die Medien jetzt über `schreibplatz: true`,
+das nur das PDF setzt; der sonst verbleibende leere Absatz wird mitentfernt.
+
+**Dateien.** `src/lib/renderMarkdown.ts`, `src/routes/api/pdf/+server.ts`
+
 
 ### PDF: Aufgaben brachen über Seiten unschön um — 22.09.2026
 

@@ -71,6 +71,20 @@ Das ändert die Struktur der Lösen-Ansicht, ist also kein Einzeiler.
 
 ## Erledigt
 
+### `learner_insights` blieb seit Juni leer — 22.09.2026
+
+Zwei Anläufe, dieselbe Ursache. Das Modell sollte „ausschließlich JSON ohne Markdown-Codeblock"
+antworten und lieferte trotzdem einen Codeblock; das Herausschneiden des ersten JSON-Objekts
+half, bis ein Anführungszeichen *innerhalb* eines Stichpunkts den Wert zerriss
+(`Verwechselt "nodes" und "connections"`).
+
+Die Erkenntnisse kommen jetzt über ein Werkzeug mit Schema zurück, nicht als Text. Damit gibt
+es nichts mehr zu parsen. Was ankommt, wird trotzdem auf die erwartete Form zurechtgestutzt —
+es fließt in den System-Prompt der Generierung.
+
+**Dateien.** `src/lib/server/learnerInsights.ts`
+
+
 ### Schreibplatz stand auch im Browser — 22.09.2026
 
 Die `<br>`-Blöcke sind Platz zum Schreiben auf Papier. Seit sie fürs PDF wieder

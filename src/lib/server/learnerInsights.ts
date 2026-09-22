@@ -14,6 +14,76 @@ import { logError } from '$lib/server/logger';
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
+const DIFFICULTIES = ['leichter', 'passend', 'schwerer'] as const;
+
+/**
+ * Statt „antworte als JSON" das Werkzeug-Schema.
+ *
+ * Die Funktion hat seit Juni nie ein Ergebnis geliefert, in zwei Stufen:
+ * Bis zum 22.09.2026 verpackte das Modell die Antwort trotz gegenteiliger Anweisung in einen
+ * Markdown-Codeblock, an dem `JSON.parse` scheiterte. Das Herausschneiden des ersten
+ * JSON-Objekts löste das — bis am selben Tag ein Anführungszeichen **innerhalb** eines
+ * Stichpunkts den Wert zerriss. Beides sind Symptome derselben Ursache: JSON, das durch
+ * Fließtext transportiert wird, muss geparst werden und kann dabei kaputtgehen.
+ *
+ * Mit einem Werkzeug kommt die Struktur bereits als Objekt zurück — es gibt keinen Text,
+ * der falsch aufgebaut sein könnte.
+ */
+const INSIGHT_TOOL: Anthropic.Tool = {
+	name: 'lernerkenntnisse',
+	description: 'Hält strukturierte Lernerkenntnisse zu einem Schüler fest.',
+	input_schema: {
+		type: 'object',
+		properties: {
+			strengths: {
+				type: 'array',
+				items: { type: 'string' },
+				maxItems: 4,
+				description: 'Kurze Stichpunkte, was der Schüler gut kann.'
+			},
+			weaknesses: {
+				type: 'array',
+				items: { type: 'string' },
+				maxItems: 4,
+				description: 'Kurze Stichpunkte, wo er Schwierigkeiten hat.'
+			},
+			style_notes: {
+				type: 'string',
+				description:
+					'Ein Satz über Arbeitsweise, Tempo, Besonderheiten. Weglassen, wenn nichts erkennbar ist.'
+			},
+			difficulty: {
+				type: 'string',
+				enum: [...DIFFICULTIES],
+				description: 'War die Aufgabe für diesen Schüler angemessen?'
+			}
+		},
+		required: ['strengths', 'weaknesses', 'difficulty']
+	}
+};
+
+/**
+ * Das Werkzeug erzwingt das Schema nicht — es beschreibt es. Was hier ankommt, geht über
+ * `learner_insights` in den System-Prompt der Generierung, deshalb wird es auf die erwartete
+ * Form zurechtgestutzt, statt es durchzureichen.
+ */
+function normalize(input: unknown): InsightUpdate {
+	const obj = (input ?? {}) as Record<string, unknown>;
+	const list = (value: unknown) =>
+		Array.isArray(value)
+			? value.filter((v): v is string => typeof v === 'string' && v.trim() !== '').slice(0, 4)
+			: [];
+	const difficulty = DIFFICULTIES.find((d) => d === obj.difficulty) ?? 'passend';
+	const notes = typeof obj.style_notes === 'string' ? obj.style_notes.trim() : '';
+
+	return {
+		strengths: list(obj.strengths),
+		weaknesses: list(obj.weaknesses),
+		style_notes: notes || null,
+		difficulty
+	};
+}
+
 async function extractInsightsFromText(
 	subject: string,
 	topic: string,
@@ -35,28 +105,22 @@ Merge die neuen Erkenntnisse mit dem bisherigen Stand. Entferne Schwächen, die 
 Neue Information:
 ${inputText}
 
-Extrahiere daraus strukturierte Lernerkenntnisse für das Fach "${subject}", Thema "${topic}".
-Antworte ausschließlich als JSON ohne Markdown-Codeblock:
-{
-  "strengths": ["max. 4 kurze Stichpunkte was der Schüler gut kann"],
-  "weaknesses": ["max. 4 kurze Stichpunkte wo er Schwierigkeiten hat"],
-  "style_notes": "1 Satz über Arbeitsweise, Tempo, Besonderheiten — oder null wenn keine Info vorhanden",
-  "difficulty": "leichter | passend | schwerer (war die Aufgabe angemessen?)"
-}`;
+Extrahiere daraus strukturierte Lernerkenntnisse für das Fach "${subject}", Thema "${topic}"
+und halte sie mit dem Werkzeug \`lernerkenntnisse\` fest.`;
 
 	try {
 		const msg = await anthropic.messages.create({
 			model: 'claude-haiku-4-5-20251001',
-			max_tokens: 512,
+			max_tokens: 1024,
+			tools: [INSIGHT_TOOL],
+			tool_choice: { type: 'tool', name: INSIGHT_TOOL.name },
 			messages: [{ role: 'user', content: prompt }]
 		});
-		const text = msg.content.find((b) => b.type === 'text')?.text ?? '';
-		// Das Modell verpackt die Antwort trotz gegenteiliger Anweisung regelmäßig in einen
-		// Markdown-Codeblock. Deshalb das erste JSON-Objekt herausschneiden, statt den
-		// Rohtext zu parsen — `extractChapters` in books.ts macht es genauso.
-		const json = text.match(/\{[\s\S]*\}/);
-		if (!json) throw new Error(`Keine JSON-Struktur in der Antwort: ${text.slice(0, 80)}`);
-		return JSON.parse(json[0]) as InsightUpdate;
+
+		const call = msg.content.find((b) => b.type === 'tool_use');
+		if (!call) throw new Error(`Keine Werkzeugantwort (stop_reason: ${msg.stop_reason})`);
+
+		return normalize(call.input);
 	} catch (e) {
 		await logError('learnerInsights/extract', e, { subject, topic });
 		return null;

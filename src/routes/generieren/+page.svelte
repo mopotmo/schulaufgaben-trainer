@@ -8,6 +8,7 @@
 	import AiNotice from '$lib/components/AiNotice.svelte';
 	import { parseExercises, allParts } from '$lib/parseExercises';
 	import { renderMarkdown } from '$lib/renderMarkdown';
+	import { tick } from 'svelte';
 	import 'katex/dist/katex.min.css';
 	let { data }: { data: PageData } = $props();
 
@@ -43,9 +44,20 @@
 	let totalBookPages = $derived(bookRanges.reduce((sum, r) => sum + (r.to - r.from + 1), 0));
 	let count = $state(5);
 	let difficulty = $state('mittel');
+	/** `mittel` → `Mittel` — in der Zusammenfassung steht der Wert als Wort, nicht als Schlüssel. */
+	let difficultyLabel = $derived(difficulty.charAt(0).toUpperCase() + difficulty.slice(1));
 	let sourceFiles = $state<File[]>([]);
 
 	let generating = $state(false);
+	/**
+	 * Nach dem Generieren wird das Formular zusammengeklappt.
+	 *
+	 * Die Aufgaben erscheinen unterhalb des Formulars, und das ist lang — auf einem kleinen
+	 * Bildschirm passiert scheinbar nichts. Das Einklappen holt das Ergebnis nach oben und ist
+	 * zugleich das sichtbare Zeichen, dass die Generierung durch ist.
+	 */
+	let formCollapsed = $state(false);
+	let resultEl = $state<HTMLElement | null>(null);
 	let exerciseId = $state<string | null>(null);
 	let generatedContent = $state('');
 	let genError = $state('');
@@ -240,6 +252,11 @@
 			exerciseId = json.exerciseId;
 			generatedContent = json.content;
 			saveLastExercise(json.exerciseId);
+
+			formCollapsed = true;
+			await tick();
+			const ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			resultEl?.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth', block: 'start' });
 		} catch (e: any) {
 			genError = e.message;
 		} finally {
@@ -310,6 +327,41 @@
 
 	<!-- Generation form -->
 	<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+		{#if formCollapsed}
+			<!--
+				Zusammengeklappt: nur noch, was generiert wurde. Die Felder sind nach dem
+				Generieren ohnehin gesperrt — sichtbar bleiben müssen sie also nicht, nachlesbar
+				schon.
+			-->
+			<div class="flex items-start justify-between gap-3">
+				<div class="min-w-0">
+					<p class="text-sm font-semibold text-gray-800 truncate">{subject} · {topic}</p>
+					<p class="text-xs text-gray-400 mt-0.5">
+						{count} Aufgaben · {difficultyLabel} · {stopwatchEnabled
+							? `${durationMinutes} Minuten`
+							: 'ohne Stoppuhr'}
+					</p>
+				</div>
+				<button
+					type="button"
+					onclick={() => (formCollapsed = false)}
+					class="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+				>
+					Einstellungen anzeigen
+				</button>
+			</div>
+		{:else}
+		{#if exerciseId}
+			<div class="flex justify-end -mb-2">
+				<button
+					type="button"
+					onclick={() => (formCollapsed = true)}
+					class="text-xs font-medium text-gray-400 hover:text-gray-600"
+				>
+					Einstellungen ausblenden
+				</button>
+			</div>
+		{/if}
 		<div>
 			<label class="block text-sm font-medium text-gray-700 mb-1" for="subject">Fach</label>
 			<input
@@ -526,6 +578,7 @@
 			</label>
 			<FileUpload bind:files={sourceFiles} disabled={!!exerciseId} label="Dateien auswählen" />
 		</div>
+		{/if}
 
 		{#if genError}
 			<p class="text-red-500 text-sm">{genError}</p>
@@ -541,7 +594,7 @@
 			</button>
 		{:else}
 			<button
-				onclick={() => { exerciseId = null; generatedContent = ''; chatMessages = []; sourceFiles = []; }}
+				onclick={() => { exerciseId = null; generatedContent = ''; chatMessages = []; sourceFiles = []; formCollapsed = false; }}
 				class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2 rounded-xl transition-colors text-sm"
 			>
 				Neu generieren
@@ -551,7 +604,7 @@
 
 	<!-- Result + Chat -->
 	{#if generatedContent}
-		<div class="mt-8 space-y-4">
+		<div class="mt-8 space-y-4" bind:this={resultEl}>
 			<!-- Exercise preview -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 				<h2 class="text-xl font-semibold text-gray-800">Generierte Aufgaben</h2>

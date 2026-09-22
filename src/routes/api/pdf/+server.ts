@@ -58,6 +58,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     margin-top: 0.3cm;
     width: 100%;
   }
+  /* Transparenzhinweis nach Art. 50 KI-VO – das Blatt verlässt die App. */
+  .ai-notice {
+    margin-top: 1cm;
+    padding-top: 0.3cm;
+    border-top: 1px solid #ddd;
+    font-size: 8pt;
+    color: #777;
+  }
 </style>
 </head>
 <body>
@@ -70,6 +78,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     </div>
   </div>
   <div id="content"></div>
+  <div class="ai-notice">Diese Aufgaben wurden von einer KI erstellt und können Fehler enthalten.</div>
 </body>
 </html>`;
 

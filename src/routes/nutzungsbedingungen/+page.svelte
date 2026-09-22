@@ -18,6 +18,26 @@
 		<li>Jede Familie sieht ausschließlich ihre eigenen Profile, Aufgaben und Korrekturen.</li>
 	</ul>
 
+	<h2>Einsatz von künstlicher Intelligenz</h2>
+	<p>
+		Dieses Angebot arbeitet durchgehend mit KI. Konkret heißt das:
+	</p>
+	<ul>
+		<li>Die Übungsaufgaben werden von einem KI-Modell erzeugt, nicht von einer Lehrkraft.</li>
+		<li>Eingereichte Lösungen werden von einer KI gelesen und korrigiert — auch handschriftliche.</li>
+		<li>Die angezeigte Note ist eine Schätzung der KI anhand des Korrekturberichts.</li>
+		<li>Wer im Trainer eine Rückfrage stellt, schreibt mit einer KI und nicht mit einem Menschen.</li>
+		<li>
+			Aus Korrekturen und Rückmeldungen leitet das System Hinweise zum Lernstand ab und nutzt sie,
+			um die nächsten Aufgaben anzupassen.
+		</li>
+	</ul>
+	<p>
+		An allen Stellen, an denen KI-erzeugte Inhalte erscheinen, steht ein entsprechender Hinweis.
+		Welcher Anbieter dahintersteht und wohin die Daten gehen, steht in der
+		<a href="/datenschutz">Datenschutzerklärung</a>.
+	</p>
+
 	<h2>KI-Korrekturen können falsch sein</h2>
 	<p>
 		Aufgaben und Korrekturen werden von einem KI-Modell erzeugt. Sie können <strong>fachlich falsch,

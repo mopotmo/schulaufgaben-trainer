@@ -4,9 +4,6 @@
  * Vorkehrung 4 aus Konzept §5: nichts davon steht in den Rechtsseiten hartkodiert, damit
  * ein zweiter Mandant später nur diese Datei braucht.
  *
- * ⚠️ AUSFÜLLEN VOR DEM AUSROLLEN. Die mit `AUSFÜLLEN` markierten Felder enthalten
- * Platzhalter. Ein Impressum mit Platzhaltern ist schlechter als gar keines — nach § 5 DDG
- * muss eine ladungsfähige Anschrift dort stehen, keine leere Hülle.
  */
 export const PROJECT = {
 	name: 'Schulaufgaben Trainer',
@@ -16,13 +13,13 @@ export const PROJECT = {
 
 export const OPERATOR = {
 	/** Vor- und Nachname der verantwortlichen Privatperson. */
-	name: 'AUSFÜLLEN: Vor- und Nachname',
+	name: 'Manuel Robledo',
 	/** Ladungsfähige Anschrift — kein Postfach, keine reine c/o-Adresse (Konzept §3.1). */
-	street: 'AUSFÜLLEN: Straße und Hausnummer',
-	city: 'AUSFÜLLEN: PLZ und Ort',
+	street: 'Greimersdorfer Str. 15',
+	city: '90556 Cadolzburg',
 	country: 'Deutschland',
 	/** Kontakt für Auskunft, Löschung und Widerruf der Einwilligung. */
-	email: 'AUSFÜLLEN: kontakt@example.org'
+	email: 'manu@mopot.de'
 } as const;
 
 /** Auftragsverarbeiter, in der Datenschutzerklärung namentlich zu nennen (Konzept §3.2). */

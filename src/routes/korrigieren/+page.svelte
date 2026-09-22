@@ -4,6 +4,7 @@
 	import 'katex/dist/katex.min.css';
 	import FileUpload from '$lib/components/FileUpload.svelte';
 	import FeedbackWidget from '$lib/components/FeedbackWidget.svelte';
+	import AiNotice from '$lib/components/AiNotice.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -210,7 +211,8 @@
 		<div class="mt-8 space-y-4">
 			<!-- Correction result -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-				<h2 class="text-xl font-semibold text-gray-800 mb-4">Korrektur-Ergebnis</h2>
+				<h2 class="text-xl font-semibold text-gray-800">Korrektur-Ergebnis</h2>
+				<AiNotice kind="correction" class="mb-4 mt-1" />
 				<div class="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4 overflow-auto">
 					{@html correctionHtml}
 				</div>
@@ -298,6 +300,7 @@
 					<p class="text-xs text-gray-500 mt-0.5">
 						Stell Fragen zur Korrektur, erkläre was du dir gedacht hast, oder bitte um eine andere Erklärung.
 					</p>
+					<AiNotice kind="chat" class="mt-1.5" />
 				</div>
 
 				{#if chatMessages.length > 0}

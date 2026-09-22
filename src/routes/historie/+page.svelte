@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { renderMarkdown } from '$lib/renderMarkdown';
 	import 'katex/dist/katex.min.css';
+	import AiNotice from '$lib/components/AiNotice.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -142,7 +143,8 @@
 							<!-- Correction result -->
 							{#if correction?.correction_result}
 								<div>
-									<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Korrektur</p>
+									<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Korrektur</p>
+									<AiNotice kind="correction" class="mb-2 mt-1" />
 									<div class="prose prose-sm max-w-none bg-gray-50 rounded-xl p-4 overflow-auto max-h-64">
 										{@html renderMarkdown(correction.correction_result)}
 									</div>

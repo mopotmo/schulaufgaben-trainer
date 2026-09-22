@@ -3,6 +3,7 @@
 	import Stopwatch from '$lib/components/Stopwatch.svelte';
 	import MathToolbar from '$lib/components/MathToolbar.svelte';
 	import DrawCanvas from '$lib/components/DrawCanvas.svelte';
+	import AiNotice from '$lib/components/AiNotice.svelte';
 	import { parseExercises } from '$lib/parseExercises';
 	import { renderMarkdown } from '$lib/renderMarkdown';
 	import { onMount } from 'svelte';
@@ -240,6 +241,7 @@
 					<div>
 						<h2 class="font-semibold text-gray-800 text-sm">Aufgaben lösen</h2>
 						<p class="text-xs text-gray-500 mt-0.5">Tippe deine Antworten oder schreib sie pro Aufgabe mit dem Stift. Deine Eingaben werden automatisch gespeichert.</p>
+						<AiNotice kind="exercises" class="mt-1.5" />
 					</div>
 					<!-- Global toggle: switch the whole sheet to typing or stylus at once -->
 					<button
@@ -328,6 +330,7 @@
 		{#if correctionResult}
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
 				<h2 class="text-xl font-semibold text-gray-800">Korrektur-Ergebnis</h2>
+				<AiNotice kind="correction" />
 				<div class="prose prose-sm max-w-none bg-gray-50 rounded-lg p-4 overflow-auto">
 					{@html correctionHtml}
 				</div>
@@ -347,7 +350,8 @@
 
 				<!-- Follow-up chat -->
 				<div class="border-t border-gray-100 pt-4">
-					<h3 class="text-sm font-semibold text-gray-700 mb-3">Rückfragen zur Korrektur</h3>
+					<h3 class="text-sm font-semibold text-gray-700">Rückfragen zur Korrektur</h3>
+					<AiNotice kind="chat" class="mb-3 mt-1" />
 
 					{#if chatMessages.length > 0}
 						<div class="space-y-3 mb-3 max-h-80 overflow-y-auto">

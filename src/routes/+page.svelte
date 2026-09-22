@@ -31,11 +31,33 @@
 	let selectedAvatar = $state('🦊');
 	let addLoading = $state(false);
 
-	onMount(() => {
+	function readLastExercise(): LastExercise | null {
 		try {
 			const raw = localStorage.getItem('lastExercise');
-			if (raw) lastExercise = JSON.parse(raw);
+			return raw ? (JSON.parse(raw) as LastExercise) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	onMount(async () => {
+		const saved = readLastExercise();
+		if (!saved) return;
+
+		// Die Karte liegt im localStorage, die Aufgabe in der Datenbank. Wird sie in der
+		// Historie gelöscht oder ersetzt, erfährt der Browser davon nichts — die Karte bliebe
+		// stehen und führte auf eine 404-Seite. Deshalb vor dem Anzeigen nachfragen.
+		// Nur eine klare Absage räumt den Eintrag weg; scheitert die Anfrage (offline, Server
+		// nicht erreichbar), bleibt die Karte lieber stehen, als einen gültigen Stand zu löschen.
+		try {
+			const res = await fetch(`/api/aufgabe?id=${encodeURIComponent(saved.exerciseId)}`);
+			if (res.ok && !(await res.json()).exists) {
+				localStorage.removeItem('lastExercise');
+				return;
+			}
 		} catch {}
+
+		lastExercise = saved;
 	});
 
 	function dismissLast() {

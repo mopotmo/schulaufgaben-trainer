@@ -1,13 +1,23 @@
-/** Schulbücher. Eigene Gruppe oder `visibility: 'shared'`. */
+/**
+ * Schulbücher. **Ausschließlich die eigene Gruppe.**
+ *
+ * Urheberrecht: Ein hochgeladenes Schulbuch ist eine im Wesentlichen
+ * vollständige Vervielfältigung und damit nach § 53 Abs. 4 lit. b UrhG nicht von der
+ * Privatkopie gedeckt. Solange es im eigenen Haushalt bleibt, ist die Lage diskutabel;
+ * eine Weitergabe an fremde Familien wäre es nicht. Deshalb gibt es hier keinen Pfad,
+ * der ein Buch gruppenübergreifend freigibt.
+ *
+ * Die Spalte `visibility` bleibt in Directus bestehen, wird aber nicht mehr ausgewertet —
+ * ein dort gesetztes 'shared' bleibt wirkungslos.
+ */
 import { readItem, readItems, createItem, updateItem, deleteItem, deleteFile, uploadFiles } from '@directus/sdk';
 import { error } from '@sveltejs/kit';
 import { getDirectus, type Book } from '$lib/server/directus';
 import { assertCan, currentGroupId, type Actor } from '../authz';
 import { requireUuid } from './profiles';
 
-/** Darf dieser Actor das Buch nutzen? Eigenes Buch oder geteilt. */
+/** Darf dieser Actor das Buch nutzen? Nur, wenn es der eigenen Gruppe gehört. */
 export function canAccessBook(book: Book, actor: Actor): boolean {
-	if (book.visibility === 'shared') return true;
 	return !!book.owner_group && actor.groupIds.includes(book.owner_group);
 }
 
@@ -15,9 +25,7 @@ export async function listBooks(actor: Actor, fields?: string[]): Promise<Book[]
 	assertCan(actor, 'book:read');
 	return getDirectus().request(
 		readItems('books', {
-			filter: {
-				_or: [{ owner_group: { _in: actor.groupIds } }, { visibility: { _eq: 'shared' } }]
-			},
+			filter: { owner_group: { _in: actor.groupIds } },
 			...(fields ? { fields: fields as never } : {}),
 			sort: ['subject', 'grade', 'title'],
 			limit: -1
@@ -63,6 +71,7 @@ export async function createBook(actor: Actor, data: NewBook): Promise<Book> {
 			...data,
 			page_offset: 0,
 			owner_group: currentGroupId(actor),
+			// Bleibt aus Gründen der Abwärtskompatibilität gesetzt, wird nicht mehr ausgewertet.
 			visibility: 'family'
 		})
 	);

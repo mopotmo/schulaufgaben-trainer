@@ -173,7 +173,7 @@
 								{#if book.school_type}· {book.school_type}{/if}
 								{#if book.publisher}· {book.publisher}{/if}
 								{#if book.page_count}· {book.page_count} Seiten{/if}
-								{#if book.visibility === 'shared'}· <span class="text-violet-500">geteilt</span>{/if}
+								
 							</p>
 							<div class="flex flex-wrap items-center gap-3 mt-2">
 								{#if book.chapters && book.chapters.length > 0}

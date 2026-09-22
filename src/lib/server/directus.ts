@@ -158,6 +158,10 @@ export type Book = {
 	owner_group: string | null;
 	/** @deprecated Ersetzt durch `owner_group`. Wird nach der Migration entfernt. */
 	owner_family: string | null;
+	/**
+	 * Historisch. Wird seit dem Urheberrechts-Review nicht mehr ausgewertet — Bücher sind
+	 * immer nur für die eigene Gruppe sichtbar. Siehe `repo/books.ts`.
+	 */
 	visibility: 'family' | 'shared';
 	created_at: string;
 };

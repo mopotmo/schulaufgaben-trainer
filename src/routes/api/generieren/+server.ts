@@ -139,7 +139,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			`Du hast Zugriff auf eine Websuche. Nutze sie, wenn es hilfreich ist, um zum angegebenen Thema oder Lehrbuch zu recherchieren (z.B. Kapitelstruktur, Lehrplanbezug in ${profile.state}, typische Aufgabenstellungen), damit die Aufgaben besser zum tatsächlichen Stoff passen. Suche nur bei Bedarf, nicht bei trivialen Themen.`,
 			book ? `Als Quelle wurde "${book}" angegeben – recherchiere gezielt danach, bevor du Aufgaben erstellst.` : '',
 			storedBookNote
-				? `Ein Kapitel aus dem tatsächlichen Schulbuch ist als PDF angehängt. Nutze es als primäre Vorlage für Aufgabentypen, Notation, Begriffe und Schwierigkeitsgrad – die Aufgaben sollen sich anfühlen wie aus diesem Buch. Nutze die Websuche höchstens ergänzend.`
+				? `Ein Kapitel aus dem tatsächlichen Schulbuch ist als PDF angehängt. Orientiere dich daran, welcher Stoff behandelt wird, welche Notation und welche Fachbegriffe verwendet werden und wie anspruchsvoll die Aufgaben sind. Formuliere daraus eigene, neue Aufgaben. Übernimm keine Aufgabentexte, Zahlenbeispiele oder Formulierungen wörtlich oder nahezu wörtlich aus dem Buch. Nutze die Websuche höchstens ergänzend.`
 				: '',
 			`Gib am Ende ausschließlich die fertigen Aufgaben aus – keine Kommentare zur Recherche, keine Zwischenschritte.`,
 			insightPrompt

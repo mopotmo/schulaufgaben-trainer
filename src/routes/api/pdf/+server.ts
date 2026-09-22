@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const actor = requireActor(locals);
 	const { exercise, profile } = await getExercise(actor, url.searchParams.get('exerciseId'));
 
-	const contentHtml = renderMarkdown(exercise.generated_content);
+	const contentHtml = renderMarkdown(exercise.generated_content, { schreibplatz: true });
 
 	const html = `<!DOCTYPE html>
 <html lang="de">

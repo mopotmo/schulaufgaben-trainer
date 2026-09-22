@@ -17,25 +17,52 @@ import { renderMath } from './renderMath';
  * Mit der Voreinstellung landen die alle in einem `<p>` auf einer Sichtzeile. Prosa wird
  * vom Modell nicht hart umbrochen, deshalb entstehen dadurch keine zerrissenen Absätze.
  */
-const md = new Marked({ async: false, breaks: true });
-md.use({
-	renderer: {
-		/**
-		 * Rohes HTML wird verworfen — mit **einer** Ausnahme: `<br>`.
-		 *
-		 * Die Generierung setzt `<br><br><br>` als Schreibplatz auf dem Arbeitsblatt. Sie
-		 * pauschal zu verwerfen nahm gedruckten Blättern den Platz zum Antworten, also genau
-		 * das, wofür sie da sind. `<br>` trägt keine Attribute und kann nichts ausführen,
-		 * deshalb ist es die einzige Form, die hier durchgelassen wird — normalisiert, damit
-		 * keine Schreibweise durchrutscht, die nur so aussieht.
-		 */
-		html(token) {
-			return /^<br\s*\/?>$/i.test(token.raw.trim()) ? '<br>' : '';
+function build(schreibplatz: boolean) {
+	const md = new Marked({ async: false, breaks: true });
+	md.use({
+		renderer: {
+			/**
+			 * Rohes HTML wird verworfen — auf dem Arbeitsblatt mit **einer** Ausnahme: `<br>`.
+			 *
+			 * Die Generierung setzt `<br><br><br>` als Schreibplatz. Sie pauschal zu verwerfen
+			 * nahm gedruckten Blättern den Platz zum Antworten, also genau das, wofür sie da
+			 * sind. `<br>` trägt keine Attribute und kann nichts ausführen, deshalb ist es die
+			 * einzige Form, die durchgelassen wird — normalisiert, damit keine Schreibweise
+			 * durchrutscht, die nur so aussieht.
+			 */
+			html(token) {
+				if (!schreibplatz) return '';
+				return /^<br\s*\/?>$/i.test(token.raw.trim()) ? '<br>' : '';
+			}
 		}
-	}
-});
+	});
+	return md;
+}
 
-export function renderMarkdown(source: string | null | undefined): string {
+const bildschirm = build(false);
+const papier = build(true);
+
+export type RenderOptions = {
+	/**
+	 * Schreibplatz beibehalten. Nur für das PDF.
+	 *
+	 * Auf Papier sind die `<br>`-Blöcke die Linien zum Schreiben. Am Bildschirm steht
+	 * darunter ein Eingabefeld — dort wäre derselbe Platz nur ein rätselhaftes Loch
+	 * zwischen Aufgabenstellung und Antwort.
+	 */
+	schreibplatz?: boolean;
+};
+
+export function renderMarkdown(
+	source: string | null | undefined,
+	{ schreibplatz = false }: RenderOptions = {}
+): string {
 	if (!source) return '';
-	return renderMath(md.parse(source) as string);
+
+	let html = (schreibplatz ? papier : bildschirm).parse(source) as string;
+	// Ohne Schreibplatz bleibt von `<p><br><br><br></p>` ein leerer Absatz übrig — unsichtbar,
+	// aber mit Außenabstand, also weiterhin eine Lücke.
+	if (!schreibplatz) html = html.replace(/<p>\s*<\/p>\s*/g, '');
+
+	return renderMath(html);
 }

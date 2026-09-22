@@ -10,6 +10,7 @@ import { getBook } from '$lib/server/repo/books';
 import { createExercise } from '$lib/server/repo/exercises';
 import { uploadFile } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
+import { finalText } from '$lib/server/anthropic';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
@@ -148,8 +149,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 
 		const message = await stream.finalMessage();
-		const textBlocks = message.content.filter((b) => b.type === 'text');
-		generatedContent = textBlocks[textBlocks.length - 1]?.text ?? '';
+		generatedContent = finalText(message);
 		tokensUsed = (message.usage.input_tokens ?? 0) + (message.usage.output_tokens ?? 0);
 	} catch (e) {
 		await logError('api/generieren', e, { profilId, subject, topic, book });

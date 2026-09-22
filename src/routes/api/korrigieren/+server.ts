@@ -8,6 +8,7 @@ import { getExercise } from '$lib/server/repo/exercises';
 import { createCorrection } from '$lib/server/repo/corrections';
 import { uploadFile } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
+import { finalText } from '$lib/server/anthropic';
 
 const GRADE_SCALE = `
 Notenschlüssel (bayerisches Gymnasium):
@@ -147,7 +148,7 @@ Sei konstruktiv und ermutigend.`;
 		});
 
 		const message = await stream.finalMessage();
-		result = message.content.find((b) => b.type === 'text')?.text ?? '';
+		result = finalText(message);
 		tokensUsed = (message.usage.input_tokens ?? 0) + (message.usage.output_tokens ?? 0);
 	} catch (e) {
 		await logError('api/korrigieren', e, {

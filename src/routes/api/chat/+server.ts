@@ -5,6 +5,7 @@ import { saveFeatureRequest } from '$lib/server/repo/featureRequests';
 import { requireActor } from '$lib/server/actor';
 import { getExercise, updateExerciseContent } from '$lib/server/repo/exercises';
 import type { RequestHandler } from './$types';
+import { finalText } from '$lib/server/anthropic';
 
 export type ChatMessage = {
 	role: 'user' | 'assistant';
@@ -92,7 +93,7 @@ Wenn es eine reine Frage ist, beantworte sie kurz und klar.${featureRequestInstr
 	});
 
 	const message = await stream.finalMessage();
-	const rawReply = message.content.find((b) => b.type === 'text')?.text ?? '';
+	const rawReply = finalText(message);
 
 	// Extract and strip hidden feature request marker
 	const frMatch = rawReply.match(/<!--FR:(\{.*?\})-->/s);

@@ -5,6 +5,7 @@ import { logError } from '$lib/server/logger';
 import { requireActor } from '$lib/server/actor';
 import { getExercise, createExercise } from '$lib/server/repo/exercises';
 import type { RequestHandler } from './$types';
+import { finalText } from '$lib/server/anthropic';
 
 export type NachschaerpenMode = 'weak_areas' | 'easier' | 'harder';
 
@@ -47,7 +48,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 
 		const message = await stream.finalMessage();
-		generatedContent = message.content.find((b) => b.type === 'text')?.text ?? '';
+		generatedContent = finalText(message);
 		tokensUsed = (message.usage.input_tokens ?? 0) + (message.usage.output_tokens ?? 0);
 	} catch (e) {
 		await logError('api/nachschaerfen', e, { exerciseId, mode });

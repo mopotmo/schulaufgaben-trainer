@@ -53,23 +53,43 @@ Löschzusage aus dem Konzept §3.3.
 
 **Dateien.** keine (Betrieb)
 
-### Lösen-Ansicht: Vorspann wird je Teilaufgabe wiederholt
+### Lösen-Ansicht: Der Blatt-Fuß landet in der letzten Teilaufgabe
 
-Beim Zerlegen in einzelne Antwortfelder wird ein gemeinsamer Vorspann — etwa das
-Gleichungssystem oder der Einleitungssatz über a) / b) / c) — vor jeder Teilaufgabe erneut
-ausgegeben. Inhaltlich richtig, weil jedes Antwortfeld für sich lesbar bleiben muss, aber
-untereinander sichtbar als Dopplung.
+Am Ende eines Blatts steht oft eine Zeile wie `Gesamt: 24 Punkte`, durch `---` vom letzten
+Text abgetrennt. Getrennt wird aber am Wort „Aufgabe", und der Trenner steht nicht am Ende —
+also zählt beides zum Text der letzten Teilaufgabe und erscheint dort über dem Antwortfeld.
 
-Denkbar wäre, den Vorspann einmal über die Gruppe zu setzen statt in jede Teilaufgabe.
-Das ändert die Struktur der Lösen-Ansicht, ist also kein Einzeiler.
+Eine allgemeine Regel „nach einem `---` ist die Aufgabe zu Ende" wäre gefährlich: In
+Latein-Blättern trennt derselbe Strich den Übersetzungstext von der Frage. Dann würde die
+eigentliche Aufgabe verschwinden. Der Fuß müsste also am Inhalt erkannt werden, nicht an der
+Struktur — oder die Generierung dürfte ihn gar nicht erst als Teil des letzten Blocks setzen.
 
-(Das zugehörige `**`-Artefakt ist am 22.09.2026 behoben.)
+Eine Zeile am Ende des Blatts, ohne Folgen für die Korrektur.
 
-**Dateien.** `src/lib/parseExercises.ts`, `src/routes/loesen/+page.svelte`
+**Dateien.** `src/lib/parseExercises.ts`
 
 ---
 
 ## Erledigt
+
+### Lösen-Ansicht: Aufgabentitel stand über jeder Teilaufgabe — 22.09.2026
+
+Jede Teilaufgabe trug den vollständigen Titel („Aufgabe 2 (6 Punkte) a)", „… b)") und
+darunter noch einmal den gemeinsamen Vorspann. So schreibt kein Aufgabenblatt.
+
+`parseExercises` liefert jetzt Gruppen statt einer flachen Liste: eine Überschrift, der
+Vorspann einmal, darunter die Teilaufgaben mit `a)` / `b)` und je einem Antwortfeld. Die
+Felder bleiben flach durchnummeriert — Entwürfe im localStorage und die Korrektur hängen an
+dieser Position, und die Korrektur bekommt weiterhin den vollen Titel je Antwort.
+
+Die Darstellung stand in „Lösen" und in der Vorschau nach dem Generieren doppelt im Code.
+Statt die neue Verschachtelung zweimal zu schreiben, liegt sie jetzt in
+`ExerciseFields.svelte`. Nebenbei fällt der `---`-Trenner zwischen zwei Aufgaben nicht mehr
+in die letzte Teilaufgabe.
+
+**Dateien.** `src/lib/parseExercises.ts`, `src/lib/components/ExerciseFields.svelte`,
+`src/routes/loesen/+page.svelte`, `src/routes/generieren/+page.svelte`
+
 
 ### Lernerkenntnisse fanden sich wegen Freitext nicht wieder — 22.09.2026
 

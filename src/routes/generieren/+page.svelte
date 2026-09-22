@@ -4,8 +4,9 @@
 	import FeedbackWidget from '$lib/components/FeedbackWidget.svelte';
 	import Stopwatch from '$lib/components/Stopwatch.svelte';
 	import DrawCanvas from '$lib/components/DrawCanvas.svelte';
+	import ExerciseFields from '$lib/components/ExerciseFields.svelte';
 	import AiNotice from '$lib/components/AiNotice.svelte';
-	import { parseExercises } from '$lib/parseExercises';
+	import { parseExercises, allParts } from '$lib/parseExercises';
 	import { renderMarkdown } from '$lib/renderMarkdown';
 	import 'katex/dist/katex.min.css';
 	let { data }: { data: PageData } = $props();
@@ -57,6 +58,8 @@
 	let stopwatchEnabled = $state(true);
 	let durationSeconds = $derived(stopwatchEnabled ? durationMinutes * 60 : 0);
 	let parsedExercises = $derived(generatedContent ? parseExercises(generatedContent) : []);
+	/** Flach durchnummeriert — Antworten, Entwürfe und Korrektur hängen an dieser Reihenfolge. */
+	let parts = $derived(allParts(parsedExercises));
 	let answers = $state<string[]>([]);
 	let modes = $state<Mode[]>([]);
 	let drawings = $state<Stroke[][]>([]);
@@ -97,7 +100,7 @@
 				savedDrawings = parsed.drawings ?? [];
 			}
 		}
-		const n = parsedExercises.length;
+		const n = parts.length;
 		answers = Array.from({ length: n }, (_, i) => savedAnswers[i] ?? '');
 		modes = Array.from({ length: n }, (_, i) => savedModes[i] ?? 'text');
 		drawings = Array.from({ length: n }, (_, i) => savedDrawings[i] ?? []);
@@ -110,7 +113,7 @@
 	}
 
 	function setAllModes(m: Mode) {
-		modes = parsedExercises.map(() => m);
+		modes = parts.map(() => m);
 	}
 
 	let allDraw = $derived(modes.length > 0 && modes.every((m) => m === 'draw'));
@@ -125,7 +128,7 @@
 	// Warn before leaving if answers are in progress
 	$effect(() => {
 		const anyContent =
-			solveMode === 'browser' && parsedExercises.some((_, i) => hasContent(i));
+			solveMode === 'browser' && parts.some((_, i) => hasContent(i));
 		function handleBeforeUnload(e: BeforeUnloadEvent) {
 			if (anyContent && !correctionResult) {
 				e.preventDefault();
@@ -138,7 +141,7 @@
 
 	async function submitAnswers() {
 		if (!exerciseId) return;
-		if (parsedExercises.some((_, i) => !hasContent(i))) {
+		if (parts.some((_, i) => !hasContent(i))) {
 			submitError = 'Bitte alle Aufgaben beantworten (tippen oder zeichnen).';
 			return;
 		}
@@ -149,8 +152,8 @@
 		// Build per-exercise answer metadata; drawings go as image files in order.
 		const meta: { title: string; kind: Mode; text?: string }[] = [];
 		const files: File[] = [];
-		for (let i = 0; i < parsedExercises.length; i++) {
-			const title = parsedExercises[i].title;
+		for (let i = 0; i < parts.length; i++) {
+			const title = parts[i].title;
 			if (modes[i] === 'draw') {
 				const blob = await canvasRefs[i]?.toBlob();
 				if (blob) {
@@ -625,43 +628,13 @@
 					</div>
 
 					<div class="p-6 space-y-6">
-						{#each parsedExercises as ex, i}
-							<div>
-								<div class="flex items-start justify-between gap-3 mb-1">
-									<p class="text-sm font-semibold text-gray-800">{ex.title}</p>
-									<!-- Per-exercise input toggle: type or draw with a stylus -->
-									<div class="flex rounded-lg border border-gray-200 overflow-hidden shrink-0 text-xs">
-										<button
-											type="button"
-											onclick={() => (modes[i] = 'text')}
-											class="px-2.5 py-1 transition-colors {modes[i] === 'text' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}"
-										>
-											⌨ Tippen
-										</button>
-										<button
-											type="button"
-											onclick={() => (modes[i] = 'draw')}
-											class="px-2.5 py-1 transition-colors {modes[i] === 'draw' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}"
-										>
-											✏️ Zeichnen
-										</button>
-									</div>
-								</div>
-								{#if ex.body}
-									<div class="prose prose-sm max-w-none text-gray-600 mb-2">{@html renderMarkdown(ex.body)}</div>
-								{/if}
-								{#if modes[i] === 'draw'}
-									<DrawCanvas bind:this={canvasRefs[i]} bind:strokes={drawings[i]} />
-								{:else}
-									<textarea
-										bind:value={answers[i]}
-										rows="3"
-										placeholder="Deine Antwort…"
-										class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-y"
-									></textarea>
-								{/if}
-							</div>
-						{/each}
+						<ExerciseFields
+							exercises={parsedExercises}
+							bind:answers
+							bind:modes
+							bind:drawings
+							bind:canvasRefs
+						/>
 
 						<label class="flex items-center gap-3 cursor-pointer select-none">
 							<div class="relative">

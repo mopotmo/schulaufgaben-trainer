@@ -67,6 +67,31 @@ Das ändert die Struktur der Lösen-Ansicht, ist also kein Einzeiler.
 
 **Dateien.** `src/lib/parseExercises.ts`, `src/routes/loesen/+page.svelte`
 
+### Lernerkenntnisse greifen nur bei wortgleichem Fach und Thema
+
+`learner_insights` wird über `profile_id` + `subject` + `topic` gefunden — als exakter
+Zeichenvergleich. Fach und Thema sind aber Freitext aus dem Generieren-Formular, und der
+Bestand zeigt, wie unterschiedlich dasselbe eingetippt wird:
+
+| Fach | Thema |
+|---|---|
+| `Mathe` | `Stochastik` |
+| `mathematik` | `stochastik` |
+| `Latein ` | `Vokabeln bis Lektion 25 \r\nÜbersetzungstext und Grammatik \r\n` |
+| `Latein ` | `Vokabeln (Buch: Campus C1 neu) bis Lektion 25. Übersetzungstext und Grammatik ` |
+
+Groß-/Kleinschreibung, angehängte Leerzeichen, Zeilenumbrüche im Thema. Jede Variante bekommt
+einen eigenen Datensatz, und keiner davon wird beim nächsten Mal wiedergefunden. Die
+Erkenntnisse werden also gesammelt, erreichen die Generierung aber praktisch nie.
+
+Naheliegend wäre, beim Suchen und Schreiben zu normalisieren (trimmen, Kleinschreibung,
+Zeilenumbrüche zu Leerzeichen) und die Altdatensätze einmal zusammenzuführen. Offen bleibt,
+ob das Thema überhaupt das richtige Kriterium ist — „Stochastik" und „Laplace-Experimente und
+Stochastik" sind für einen Schüler dasselbe Gebiet, für den Zeichenvergleich nicht.
+
+**Dateien.** `src/lib/server/repo/insights.ts`
+
+
 ---
 
 ## Erledigt

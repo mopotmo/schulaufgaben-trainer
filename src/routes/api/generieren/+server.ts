@@ -1,12 +1,14 @@
-import { getDirectus } from '$lib/directus';
-import { createItem, uploadFiles, readItem } from '@directus/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
-import { logError } from '$lib/logger';
-import { getInsightPrompt } from '$lib/learnerInsights';
-import { fetchBookPdf, slicePdfPages, canAccessBook } from '$lib/books';
-import { requireFamilyId, assertProfileInFamily, requireUuid } from '$lib/server/scope';
+import { logError } from '$lib/server/logger';
+import { getInsightPrompt } from '$lib/server/learnerInsights';
+import { fetchBookPdf, slicePdfPages } from '$lib/books';
+import { requireActor } from '$lib/server/actor';
+import { getProfile } from '$lib/server/repo/profiles';
+import { getBook } from '$lib/server/repo/books';
+import { createExercise } from '$lib/server/repo/exercises';
+import { uploadFile } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -34,11 +36,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (!profilId || !subject || !topic) error(400, 'Pflichtfelder fehlen');
 
-	const familyId = requireFamilyId(locals);
-	const profile = await assertProfileInFamily(profilId, familyId);
-
-	const directus = getDirectus();
-	const insightPrompt = await getInsightPrompt(profile.id, subject, topic);
+	const actor = requireActor(locals);
+	const profile = await getProfile(actor, profilId);
+	const insightPrompt = await getInsightPrompt(actor, profile.id, subject, topic);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -54,12 +54,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			error(400, `Maximal ${MAX_BOOK_PAGES} Buchseiten pro Generierung (aktuell ${totalPages})`);
 		}
 
-		const storedBook = await directus
-			.request(readItem('books', requireUuid(bookId, 'Buch-ID')))
-			.catch(() => null);
-		if (!storedBook || !canAccessBook(storedBook, familyId)) {
-			error(403, 'Kein Zugriff auf dieses Buch');
-		}
+		const storedBook = await getBook(actor, bookId);
 		if (!storedBook.file) error(400, 'Für dieses Buch ist kein PDF hinterlegt');
 		try {
 			const pdfBytes = await fetchBookPdf(storedBook.file);
@@ -166,24 +161,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		try {
 			const uploadForm = new FormData();
 			uploadForm.append('file', sourceFiles[0]);
-			const uploaded = await directus.request(uploadFiles(uploadForm));
-			sourceFileId = (uploaded as any).id ?? null;
+			sourceFileId = await uploadFile(actor, uploadForm);
 		} catch (e) {
 			await logError('api/generieren/upload', e, { profilId });
 		}
 	}
 
-	const exercise = await directus.request(
-		createItem('exercises', {
-			profile_id: profile.id,
-			subject,
-			topic,
-			teacher_notes: teacherNotes,
-			generated_content: generatedContent,
-			source_file: sourceFileId,
-			tokens_used: tokensUsed
-		})
-	);
+	const exercise = await createExercise(actor, profile.id, {
+		subject,
+		topic,
+		teacher_notes: teacherNotes,
+		generated_content: generatedContent,
+		source_file: sourceFileId,
+		tokens_used: tokensUsed
+	});
 
 	return json({ exerciseId: exercise.id, content: generatedContent, tokensUsed });
 };

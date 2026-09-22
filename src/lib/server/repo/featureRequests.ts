@@ -1,13 +1,13 @@
-import { getDirectus } from './directus';
+import { getDirectus } from '$lib/server/directus';
 import { readItems, createItem, updateItem } from '@directus/sdk';
 
 export async function saveFeatureRequest(
-	directus: ReturnType<typeof getDirectus>,
 	title: string,
 	description: string | null,
 	profileId: string | null,
 	source: 'chat_auto' | 'feedback_comment'
 ) {
+	const directus = getDirectus();
 	const titleLower = title.toLowerCase().trim();
 	const existing = await directus.request(
 		readItems('feature_requests', { limit: 100, fields: ['id', 'title', 'count', 'profile_ids'] })

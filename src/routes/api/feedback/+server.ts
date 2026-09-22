@@ -1,10 +1,12 @@
-import { getDirectus, type Exercise, type Profile } from '$lib/directus';
-import { createItem } from '@directus/sdk';
 import { json, error } from '@sveltejs/kit';
-import { logError } from '$lib/logger';
-import { saveFeatureRequest } from '$lib/featureRequests';
-import { upsertInsight } from '$lib/learnerInsights';
-import { requireFamilyId, assertProfileInFamily, assertExerciseInFamily } from '$lib/server/scope';
+import { logError } from '$lib/server/logger';
+import { saveFeatureRequest } from '$lib/server/repo/featureRequests';
+import { upsertInsight } from '$lib/server/learnerInsights';
+import { requireActor } from '$lib/server/actor';
+import { getExercise } from '$lib/server/repo/exercises';
+import { getProfile } from '$lib/server/repo/profiles';
+import { createFeedback } from '$lib/server/repo/feedback';
+import type { Exercise, Profile } from '$lib/server/directus';
 import type { RequestHandler } from './$types';
 
 const TYPES = ['generation', 'correction', 'chat'] as const;
@@ -17,39 +19,30 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!TYPES.includes(type)) error(400, 'Unbekannter Feedback-Typ');
 	if (!RATINGS.includes(rating)) error(400, 'Unbekannte Bewertung');
 
-	// Bis zum Hotfix war diese Route öffentlich und nahm profileId und refId ungeprüft entgegen.
-	// Damit ließ sich ohne Login in `feedback` schreiben und über upsertInsight der Lernstand
-	// eines beliebigen Kindes überschreiben — der später in den Generierungs-Prompt einfließt.
-	const familyId = requireFamilyId(locals);
+	const actor = requireActor(locals);
 
-	// Der Widget schickt in beiden Fällen eine Aufgaben-ID (siehe FeedbackWidget.svelte).
+	// Das Widget schickt in beiden Fällen eine Aufgaben-ID (siehe FeedbackWidget.svelte).
 	// Profil und Aufgabe werden daraus abgeleitet, nicht aus dem Request übernommen.
 	let profile: Profile | null = null;
 	let exercise: Exercise | null = null;
 
 	if (refId) {
-		({ exercise, profile } = await assertExerciseInFamily(refId, familyId));
+		({ exercise, profile } = await getExercise(actor, refId));
 	} else if (profileId) {
-		profile = await assertProfileInFamily(profileId, familyId);
+		profile = await getProfile(actor, profileId);
 	}
 
-	const directus = getDirectus();
-
 	try {
-		await directus.request(
-			createItem('feedback', {
-				type,
-				ref_id: exercise?.id ?? null,
-				profile_id: profile?.id ?? null,
-				rating,
-				comment: comment?.trim() || null
-			})
-		);
+		await createFeedback(actor, {
+			type,
+			ref_id: exercise?.id ?? null,
+			profile_id: profile?.id ?? null,
+			rating,
+			comment: comment?.trim() || null
+		});
 
-		// If comment contains a feature request, save it
 		if (featureRequest?.title) {
 			await saveFeatureRequest(
-				directus,
 				featureRequest.title,
 				featureRequest.description ?? null,
 				profile?.id ?? null,
@@ -60,7 +53,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// Freitext-Kommentar zu Learner Insights destillieren
 		if (comment?.trim() && profile && exercise?.subject && exercise?.topic) {
 			const insightInput = `Feedback (${rating === 'positive' ? 'positiv' : 'negativ'}) zu einer Übung über "${exercise.topic}":\n${comment.trim()}`;
-			upsertInsight(profile.id, exercise.subject, exercise.topic, insightInput).catch(() => {});
+			upsertInsight(actor, profile.id, exercise.subject, exercise.topic, insightInput).catch(() => {});
 		}
 	} catch (e) {
 		await logError('api/feedback', e, { type, refId });

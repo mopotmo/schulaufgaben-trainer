@@ -1,17 +1,18 @@
-import { readItems, createItem, updateItem } from '@directus/sdk';
+/**
+ * Lernerkenntnisse destillieren und als Prompt-Baustein aufbereiten.
+ *
+ * Der Datenzugriff läuft über `repo/insights`, das den Scope prüft. Das ist hier keine
+ * Formalie: Der Text landet über `getInsightPrompt` im System-Prompt der Generierung.
+ * Wer hier schreiben darf, beeinflusst, welche Aufgaben ein fremdes Kind bekommt.
+ */
 import Anthropic from '@anthropic-ai/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
-import { getDirectus, type LearnerInsight } from './directus';
-import { logError } from './logger';
+import type { LearnerInsight } from '$lib/server/directus';
+import type { Actor } from '$lib/server/authz';
+import { getInsight, upsertInsight as persistInsight, type InsightUpdate } from '$lib/server/repo/insights';
+import { logError } from '$lib/server/logger';
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-
-type InsightUpdate = {
-	strengths: string[];
-	weaknesses: string[];
-	style_notes: string | null;
-	difficulty: 'leichter' | 'passend' | 'schwerer';
-};
 
 async function extractInsightsFromText(
 	subject: string,
@@ -58,57 +59,31 @@ Antworte ausschließlich als JSON ohne Markdown-Codeblock:
 }
 
 export async function upsertInsight(
+	actor: Actor,
 	profileId: string,
 	subject: string,
 	topic: string,
 	inputText: string
 ): Promise<void> {
-	const directus = getDirectus();
-
-	const existing = await directus
-		.request(
-			readItems('learner_insights', {
-				filter: { profile_id: { _eq: profileId }, subject: { _eq: subject }, topic: { _eq: topic } },
-				limit: 1
-			})
-		)
-		.then((r) => r[0] ?? null)
-		.catch(() => null);
-
+	const existing = await getInsight(actor, profileId, subject, topic);
 	const update = await extractInsightsFromText(subject, topic, inputText, existing);
 	if (!update) return;
 
-	if (existing) {
-		await directus
-			.request(updateItem('learner_insights', existing.id, { ...update, updated_at: new Date().toISOString() }))
-			.catch((e) => logError('learnerInsights/update', e, { profileId, subject, topic }));
-	} else {
-		await directus
-			.request(createItem('learner_insights', { profile_id: profileId, subject, topic, ...update }))
-			.catch((e) => logError('learnerInsights/create', e, { profileId, subject, topic }));
-	}
+	await persistInsight(actor, profileId, subject, topic, update).catch((e) =>
+		logError('learnerInsights/persist', e, { profileId, subject, topic })
+	);
 }
 
 export async function getInsightPrompt(
+	actor: Actor,
 	profileId: string,
 	subject: string,
 	topic: string
 ): Promise<string> {
-	const directus = getDirectus();
-
-	const insight = await directus
-		.request(
-			readItems('learner_insights', {
-				filter: { profile_id: { _eq: profileId }, subject: { _eq: subject }, topic: { _eq: topic } },
-				limit: 1
-			})
-		)
-		.then((r) => r[0] ?? null)
-		.catch(() => null);
-
+	const insight = await getInsight(actor, profileId, subject, topic).catch(() => null);
 	if (!insight) return '';
 
-	const lines: string[] = [
+	return [
 		`Lernerkenntnisse zu diesem Schüler (${subject} / ${topic}):`,
 		insight.strengths.length > 0 ? `- Stärken: ${insight.strengths.join(', ')}` : '',
 		insight.weaknesses.length > 0
@@ -116,7 +91,7 @@ export async function getInsightPrompt(
 			: '',
 		insight.style_notes ? `- Arbeitsweise: ${insight.style_notes}` : '',
 		`- Schwierigkeitsgrad zuletzt: ${insight.difficulty} — orientiere dich daran`
-	].filter(Boolean);
-
-	return lines.join('\n');
+	]
+		.filter(Boolean)
+		.join('\n');
 }

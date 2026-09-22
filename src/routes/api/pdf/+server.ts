@@ -1,7 +1,8 @@
 import puppeteer from 'puppeteer';
 import purifySource from 'dompurify/dist/purify.min.js?raw';
 import { renderMarkdown } from '$lib/renderMarkdown';
-import { requireFamilyId, assertExerciseInFamily } from '$lib/server/scope';
+import { requireActor } from '$lib/server/actor';
+import { getExercise } from '$lib/server/repo/exercises';
 import { getKatexCss } from '$lib/server/katexCss';
 import type { RequestHandler } from './$types';
 
@@ -14,11 +15,8 @@ function escapeHtml(value: string): string {
 }
 
 export const GET: RequestHandler = async ({ url, locals }) => {
-	const familyId = requireFamilyId(locals);
-	const { exercise, profile } = await assertExerciseInFamily(
-		url.searchParams.get('exerciseId'),
-		familyId
-	);
+	const actor = requireActor(locals);
+	const { exercise, profile } = await getExercise(actor, url.searchParams.get('exerciseId'));
 
 	const contentHtml = renderMarkdown(exercise.generated_content);
 

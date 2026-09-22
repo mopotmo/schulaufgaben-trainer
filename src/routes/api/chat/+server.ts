@@ -1,10 +1,9 @@
-import { getDirectus } from '$lib/directus';
-import { updateItem } from '@directus/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
-import { saveFeatureRequest } from '$lib/featureRequests';
-import { requireFamilyId, assertExerciseInFamily } from '$lib/server/scope';
+import { saveFeatureRequest } from '$lib/server/repo/featureRequests';
+import { requireActor } from '$lib/server/actor';
+import { getExercise, updateExerciseContent } from '$lib/server/repo/exercises';
 import type { RequestHandler } from './$types';
 
 export type ChatMessage = {
@@ -22,10 +21,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (!exerciseId || !messages?.length) error(400, 'exerciseId und messages erforderlich');
 
-	const familyId = requireFamilyId(locals);
-	const { exercise, profile } = await assertExerciseInFamily(exerciseId, familyId);
+	const actor = requireActor(locals);
+	const { exercise, profile } = await getExercise(actor, exerciseId);
 
-	const directus = getDirectus();
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 	const isCorrectionChat = !!correctionResult;
@@ -104,7 +102,7 @@ Wenn es eine reine Frage ist, beantworte sie kurz und klar.${featureRequestInstr
 		try {
 			const fr = JSON.parse(frMatch[1]);
 			if (fr.title) {
-				await saveFeatureRequest(directus, fr.title, fr.description ?? null, profile.id, 'chat_auto');
+				await saveFeatureRequest(fr.title, fr.description ?? null, profile.id, 'chat_auto');
 			}
 		} catch { /* ignore parse errors */ }
 	}
@@ -118,7 +116,7 @@ Wenn es eine reine Frage ist, beantworte sie kurz und klar.${featureRequestInstr
 			);
 		const looksLikeExercises = /^(#{1,3}\s|\d+\.|Aufgabe\s+\d+)/m.test(replyText) && isUpdateRequest;
 		if (looksLikeExercises) {
-			await directus.request(updateItem('exercises', exercise.id, { generated_content: replyText }));
+			await updateExerciseContent(actor, exercise.id, replyText);
 		}
 		return json({ reply: replyText, exercisesUpdated: looksLikeExercises });
 	}

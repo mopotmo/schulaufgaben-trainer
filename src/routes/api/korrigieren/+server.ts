@@ -1,11 +1,12 @@
-import { getDirectus } from '$lib/directus';
-import { createItem, uploadFiles } from '@directus/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
-import { logError } from '$lib/logger';
-import { upsertInsight } from '$lib/learnerInsights';
-import { requireFamilyId, assertExerciseInFamily } from '$lib/server/scope';
+import { logError } from '$lib/server/logger';
+import { upsertInsight } from '$lib/server/learnerInsights';
+import { requireActor } from '$lib/server/actor';
+import { getExercise } from '$lib/server/repo/exercises';
+import { createCorrection } from '$lib/server/repo/corrections';
+import { uploadFile } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
 
 const GRADE_SCALE = `
@@ -46,10 +47,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(400, 'Aufgabe und Lösung (Text oder Datei) erforderlich');
 	}
 
-	const familyId = requireFamilyId(locals);
-	const { exercise } = await assertExerciseInFamily(exerciseId, familyId);
-
-	const directus = getDirectus();
+	const actor = requireActor(locals);
+	const { exercise } = await getExercise(actor, exerciseId);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -163,25 +162,21 @@ Sei konstruktiv und ermutigend.`;
 		try {
 			const uploadForm = new FormData();
 			uploadForm.append('file', validFiles[0]);
-			const uploaded = await directus.request(uploadFiles(uploadForm));
-			solutionFileId = (uploaded as any).id ?? null;
+			solutionFileId = await uploadFile(actor, uploadForm);
 		} catch (e) {
 			await logError('api/korrigieren/upload', e, { exerciseId });
 		}
 	}
 
-	const correction = await directus.request(
-		createItem('corrections', {
-			exercise_id: exercise.id,
-			solution_file: solutionFileId,
-			correction_result: result,
-			tokens_used: tokensUsed
-		})
-	);
+	const correction = await createCorrection(actor, exercise.id, {
+		solution_file: solutionFileId,
+		correction_result: result,
+		tokens_used: tokensUsed
+	});
 
 	// Insights asynchron extrahieren — nicht auf Ergebnis warten
 	const insightInput = `Korrektur der Aufgabe:\n${exercise.generated_content}\n\nKorrekturbericht:\n${result}`;
-	upsertInsight(exercise.profile_id, exercise.subject, exercise.topic, insightInput).catch(() => {});
+	upsertInsight(actor, exercise.profile_id, exercise.subject, exercise.topic, insightInput).catch(() => {});
 
 	return json({ result, tokensUsed, correctionId: correction.id });
 };

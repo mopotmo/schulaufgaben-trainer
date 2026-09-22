@@ -1,7 +1,8 @@
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
-import { requireFamilyId, assertCorrectionInFamily } from '$lib/server/scope';
+import { requireActor } from '$lib/server/actor';
+import { getCorrection } from '$lib/server/repo/corrections';
 import type { RequestHandler } from './$types';
 
 const GRADE_SCALE = `
@@ -17,8 +18,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const { correctionId } = await request.json();
 
 	// Der Korrekturtext kommt aus der Datenbank, nicht aus dem Request.
-	const familyId = requireFamilyId(locals);
-	const { correction } = await assertCorrectionInFamily(correctionId, familyId);
+	const actor = requireActor(locals);
+	const { correction } = await getCorrection(actor, correctionId);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 

@@ -186,7 +186,7 @@
 								{:else}
 									<span class="text-xs text-amber-600">Keine Kapitel erkannt</span>
 								{/if}
-								{#if book.owner_family === data.familyId}
+								{#if book.owner_group === data.groupId}
 									<form
 										method="POST"
 										action="?/delete"
@@ -214,7 +214,7 @@
 										{/each}
 									</ul>
 
-									{#if book.owner_family === data.familyId}
+									{#if book.owner_group === data.groupId}
 										<form method="POST" action="?/updateOffset" use:enhance class="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2">
 											<input type="hidden" name="id" value={book.id} />
 											<label class="text-xs text-gray-500" for="offset-{book.id}">Seiten-Versatz</label>

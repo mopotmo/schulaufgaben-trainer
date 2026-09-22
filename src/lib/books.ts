@@ -1,7 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
 import Anthropic from '@anthropic-ai/sdk';
 import { ANTHROPIC_API_KEY, DIRECTUS_TOKEN, DIRECTUS_URL } from '$env/static/private';
-import type { Book, BookChapter } from './directus';
+import type { BookChapter } from '$lib/server/directus';
 
 // Claude-API-Limit: max. 100 Seiten pro PDF-Dokument im Request
 const MAX_CLAUDE_PAGES = 100;
@@ -99,7 +99,3 @@ export async function extractChapters(
 	}
 }
 
-/** Darf diese Familie das Buch nutzen? (eigenes Buch oder geteilt) */
-export function canAccessBook(book: Book, familyId: string | null): boolean {
-	return book.visibility === 'shared' || (!!familyId && book.owner_family === familyId);
-}

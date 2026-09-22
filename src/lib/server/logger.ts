@@ -1,4 +1,4 @@
-import { getDirectus } from './directus';
+import { getDirectus } from '$lib/server/directus';
 import { createItem } from '@directus/sdk';
 
 type LogLevel = 'error' | 'warn' | 'info';

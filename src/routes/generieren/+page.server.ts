@@ -1,21 +1,14 @@
-import { getDirectus } from '$lib/directus';
-import { readItems } from '@directus/sdk';
-import { requireFamilyId, assertProfileInFamily } from '$lib/server/scope';
+import { requireActor } from '$lib/server/actor';
+import { getProfile } from '$lib/server/repo/profiles';
+import { listBooks } from '$lib/server/repo/books';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
-	const familyId = requireFamilyId(locals);
-	const profile = await assertProfileInFamily(url.searchParams.get('profil'), familyId);
-
-	const books = await getDirectus().request(
-		readItems('books', {
-			filter: {
-				_or: [{ owner_family: { _eq: familyId } }, { visibility: { _eq: 'shared' } }]
-			},
-			fields: ['id', 'title', 'subject', 'grade', 'chapters', 'page_count', 'page_offset'],
-			sort: ['subject', 'grade', 'title']
-		})
-	);
+	const actor = requireActor(locals);
+	const profile = await getProfile(actor, url.searchParams.get('profil'));
+	const books = await listBooks(actor, [
+		'id', 'title', 'subject', 'grade', 'chapters', 'page_count', 'page_offset'
+	]);
 
 	return {
 		profile,

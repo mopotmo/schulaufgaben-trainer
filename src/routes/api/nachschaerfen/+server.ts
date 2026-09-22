@@ -1,10 +1,9 @@
-import { getDirectus } from '$lib/directus';
-import { createItem } from '@directus/sdk';
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
-import { logError } from '$lib/logger';
-import { requireFamilyId, assertExerciseInFamily } from '$lib/server/scope';
+import { logError } from '$lib/server/logger';
+import { requireActor } from '$lib/server/actor';
+import { getExercise, createExercise } from '$lib/server/repo/exercises';
 import type { RequestHandler } from './$types';
 
 export type NachschaerpenMode = 'weak_areas' | 'easier' | 'harder';
@@ -19,10 +18,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (!exerciseId || !correctionResult || !mode) error(400, 'Pflichtfelder fehlen');
 
-	const familyId = requireFamilyId(locals);
-	const { exercise, profile } = await assertExerciseInFamily(exerciseId, familyId);
-
-	const directus = getDirectus();
+	const actor = requireActor(locals);
+	const { exercise, profile } = await getExercise(actor, exerciseId);
 
 	const modeInstructions: Record<NachschaerpenMode, string> = {
 		weak_areas: `Analysiere die Korrektur und identifiziere die Schwachstellen und Fehler des Schülers. Erstelle dann neue Übungsaufgaben, die gezielt diese schwachen Bereiche trainieren. Erkläre kurz am Anfang (1-2 Sätze), worauf die Aufgaben abzielen.`,
@@ -57,17 +54,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(502, 'Fehler beim Generieren');
 	}
 
-	const newExercise = await directus.request(
-		createItem('exercises', {
-			profile_id: exercise.profile_id,
+	const newExercise = await createExercise(actor, exercise.profile_id, {
 			subject: exercise.subject,
 			topic: `${exercise.topic} (Nachschärfen: ${mode === 'weak_areas' ? 'Schwache Bereiche' : mode === 'easier' ? 'Leichter' : 'Schwerer'})`,
 			teacher_notes: exercise.teacher_notes,
 			generated_content: generatedContent,
 			source_file: null,
 			tokens_used: tokensUsed
-		})
-	);
+	});
 
 	return json({ exerciseId: newExercise.id, content: generatedContent });
 };

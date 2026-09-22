@@ -1,28 +1,23 @@
-import { getDirectus } from '$lib/directus';
-import { createItem, deleteItem, readItem, readItems, updateItem, uploadFiles, deleteFile } from '@directus/sdk';
 import { fail } from '@sveltejs/kit';
-import { requireFamilyId } from '$lib/server/scope';
 import { extractChapters, getPdfPageCount } from '$lib/books';
-import { logError } from '$lib/logger';
+import { logError } from '$lib/server/logger';
+import { requireActor } from '$lib/server/actor';
+import { assertCan, currentGroupId } from '$lib/server/authz';
+import { listBooks, createBook, uploadBookFile, updatePageOffset, deleteBook } from '$lib/server/repo/books';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const familyId = requireFamilyId(locals);
-	const directus = getDirectus();
-	const books = await directus.request(
-		readItems('books', {
-			filter: {
-				_or: [{ owner_family: { _eq: familyId } }, { visibility: { _eq: 'shared' } }]
-			},
-			sort: ['subject', 'grade', 'title']
-		})
-	);
-	return { books, familyId };
+	const actor = requireActor(locals);
+	return { books: await listBooks(actor), groupId: currentGroupId(actor) };
 };
 
 export const actions: Actions = {
 	upload: async ({ request, locals }) => {
-		const familyId = requireFamilyId(locals);
+		const actor = requireActor(locals);
+		// Vor dem PDF-Parsen und vor extractChapters — letzteres ruft die Anthropic-API auf
+		// und würde sonst auf unsere Rechnung laufen, bevor die Berechtigung geprüft ist.
+		assertCan(actor, 'book:create');
+
 		const form = await request.formData();
 		const title = (form.get('title') as string)?.trim();
 		const subject = (form.get('subject') as string)?.trim();
@@ -35,8 +30,6 @@ export const actions: Actions = {
 		if (!title || !subject || !grade) return fail(400, { error: 'Bitte Titel, Fach und Klasse angeben.' });
 		if (!file || file.size === 0) return fail(400, { error: 'Bitte ein PDF auswählen.' });
 		if (file.type !== 'application/pdf') return fail(400, { error: 'Nur PDF-Dateien werden unterstützt.' });
-
-		const directus = getDirectus();
 
 		let pdfBytes: Uint8Array;
 		let pageCount: number;
@@ -53,14 +46,13 @@ export const actions: Actions = {
 			const uploadForm = new FormData();
 			uploadForm.append('title', title);
 			uploadForm.append('file', file);
-			const uploaded = await directus.request(uploadFiles(uploadForm));
-			fileId = (uploaded as any).id;
+			fileId = await uploadBookFile(actor, uploadForm);
 		} catch (e) {
 			await logError('buecher/upload', e, { title });
 			return fail(502, { error: 'Der Upload zu Directus ist fehlgeschlagen.' });
 		}
 
-		// Inhaltsverzeichnis indexieren – Fehler hier sind nicht fatal, das Buch wird trotzdem angelegt
+		// Indexierung ist nicht fatal — das Buch wird auch ohne Kapitel angelegt.
 		let chapters: Awaited<ReturnType<typeof extractChapters>> = [];
 		try {
 			chapters = await extractChapters(pdfBytes, pageCount);
@@ -68,22 +60,10 @@ export const actions: Actions = {
 			await logError('buecher/indexierung', e, { title });
 		}
 
-		await directus.request(
-			createItem('books', {
-				title,
-				subject,
-				grade,
-				school_type: schoolType,
-				publisher,
-				isbn,
-				file: fileId,
-				chapters,
-				page_count: pageCount,
-				page_offset: 0,
-				owner_family: familyId,
-				visibility: 'family'
-			})
-		);
+		await createBook(actor, {
+			title, subject, grade, school_type: schoolType, publisher, isbn,
+			file: fileId, chapters, page_count: pageCount
+		});
 
 		return {
 			success:
@@ -94,38 +74,19 @@ export const actions: Actions = {
 	},
 
 	updateOffset: async ({ request, locals }) => {
-		const familyId = requireFamilyId(locals);
+		const actor = requireActor(locals);
 		const form = await request.formData();
-		const id = form.get('id') as string;
 		const offset = parseInt(form.get('page_offset') as string);
-		if (!id || !Number.isFinite(offset)) return fail(400, { error: 'Ungültige Eingabe.' });
+		if (!Number.isFinite(offset)) return fail(400, { error: 'Ungültige Eingabe.' });
 
-		const directus = getDirectus();
-		const book = await directus.request(readItem('books', id));
-		if (!book || book.owner_family !== familyId) return fail(403, { error: 'Kein Zugriff auf dieses Buch.' });
-
-		await directus.request(updateItem('books', id, { page_offset: offset }));
+		await updatePageOffset(actor, form.get('id'), offset);
 		return { success: 'Seiten-Versatz gespeichert.' };
 	},
 
 	delete: async ({ request, locals }) => {
-		const familyId = requireFamilyId(locals);
+		const actor = requireActor(locals);
 		const form = await request.formData();
-		const id = form.get('id') as string;
-		if (!id) return fail(400, { error: 'Ungültige Eingabe.' });
-
-		const directus = getDirectus();
-		const book = await directus.request(readItem('books', id));
-		if (!book || book.owner_family !== familyId) return fail(403, { error: 'Kein Zugriff auf dieses Buch.' });
-
-		await directus.request(deleteItem('books', id));
-		if (book.file) {
-			try {
-				await directus.request(deleteFile(book.file));
-			} catch (e) {
-				await logError('buecher/delete-file', e, { bookId: id });
-			}
-		}
+		const book = await deleteBook(actor, form.get('id'));
 		return { success: `„${book.title}" wurde gelöscht.` };
 	}
 };

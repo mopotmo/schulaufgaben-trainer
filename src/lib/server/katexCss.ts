@@ -9,7 +9,7 @@
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { logError } from '$lib/logger';
+import { logError } from '$lib/server/logger';
 
 const require_ = createRequire(import.meta.url);
 

@@ -1,7 +1,8 @@
 import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
-import { requireFamilyId, assertCorrectionInFamily } from '$lib/server/scope';
+import { requireActor } from '$lib/server/actor';
+import { getCorrection } from '$lib/server/repo/corrections';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -10,8 +11,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// Aufgabe und Korrektur kommen aus der Datenbank, nicht aus dem Request:
 	// sonst bestimmt der Client den kompletten Prompt-Inhalt.
-	const familyId = requireFamilyId(locals);
-	const { correction, exercise } = await assertCorrectionInFamily(correctionId, familyId);
+	const actor = requireActor(locals);
+	const { correction, exercise } = await getCorrection(actor, correctionId);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 

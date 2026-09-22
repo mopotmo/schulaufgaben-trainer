@@ -31,16 +31,31 @@ export type NewConsent = {
 	granted_by_email: string;
 };
 
-export async function grantConsent(actor: Actor, data: NewConsent): Promise<Consent> {
+/**
+ * Schreibt **zwei** Zeilen: die Datenschutz-Einwilligung und die Zustimmung zu den
+ * Nutzungsbedingungen.
+ *
+ * Bewusst getrennt und nicht als ein Eintrag: Die Einwilligung nach Art. 6 Abs. 1 lit. a
+ * DSGVO muss freiwillig und spezifisch sein und ist jederzeit widerrufbar. Die
+ * Nutzungsbedingungen sind Vertragsbedingungen. Bündelt man beides, gerät die
+ * Freiwilligkeit der Einwilligung unter Druck. Die Lebensläufe unterscheiden sich
+ * ebenfalls: Ein Widerruf der Einwilligung bedeutet Löschung aller Daten, ein „Widerruf"
+ * der Nutzungsbedingungen ergibt keinen Sinn.
+ */
+export async function grantConsent(actor: Actor, data: NewConsent): Promise<Consent[]> {
 	assertCan(actor, 'consent:grant');
-	return getDirectus().request(
-		createItem('consents', {
-			group_id: currentGroupId(actor),
-			type: 'privacy',
-			version: CONSENT_VERSION,
-			granted_at: new Date().toISOString(),
-			granted_by_name: data.granted_by_name,
-			granted_by_email: data.granted_by_email
-		})
-	);
+
+	const base = {
+		group_id: currentGroupId(actor),
+		version: CONSENT_VERSION,
+		granted_at: new Date().toISOString(),
+		granted_by_name: data.granted_by_name,
+		granted_by_email: data.granted_by_email
+	};
+
+	const directus = getDirectus();
+	return Promise.all([
+		directus.request(createItem('consents', { ...base, type: 'privacy' })),
+		directus.request(createItem('consents', { ...base, type: 'terms' }))
+	]);
 }

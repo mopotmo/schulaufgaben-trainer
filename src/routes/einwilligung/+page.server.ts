@@ -33,10 +33,11 @@ export const actions: Actions = {
 		const email = ((form.get('email') as string) ?? '').trim();
 		const custody = form.get('custody') === 'on';
 		const privacy = form.get('privacy') === 'on';
+		const terms = form.get('terms') === 'on';
 
-		// Beide Häkchen sind Pflicht und dürfen nicht vorangekreuzt sein (Konzept §3.3).
-		if (!custody || !privacy) {
-			return fail(400, { error: 'Bitte bestätige beide Punkte.', name, email });
+		// Alle drei Häkchen sind Pflicht und dürfen nicht vorangekreuzt sein (Konzept §3.3).
+		if (!custody || !privacy || !terms) {
+			return fail(400, { error: 'Bitte bestätige alle drei Punkte.', name, email });
 		}
 		if (!name) return fail(400, { error: 'Bitte gib deinen Namen an.', name, email });
 		if (!email || !email.includes('@')) {

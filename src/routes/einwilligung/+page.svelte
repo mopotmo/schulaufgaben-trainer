@@ -83,6 +83,13 @@
 				</span>
 			</label>
 
+			<label class="flex gap-3 text-sm text-gray-700">
+				<input type="checkbox" name="terms" class="mt-0.5 h-4 w-4 shrink-0" />
+				<span>
+					Ich akzeptiere die <a class="text-blue-600 hover:underline" href="/nutzungsbedingungen">Nutzungsbedingungen</a>.
+				</span>
+			</label>
+
 			<div>
 				<label class="mb-1 block text-sm font-medium text-gray-700" for="name">Dein Name</label>
 				<input

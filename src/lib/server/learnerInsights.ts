@@ -51,7 +51,12 @@ Antworte ausschließlich als JSON ohne Markdown-Codeblock:
 			messages: [{ role: 'user', content: prompt }]
 		});
 		const text = msg.content.find((b) => b.type === 'text')?.text ?? '';
-		return JSON.parse(text) as InsightUpdate;
+		// Das Modell verpackt die Antwort trotz gegenteiliger Anweisung regelmäßig in einen
+		// Markdown-Codeblock. Deshalb das erste JSON-Objekt herausschneiden, statt den
+		// Rohtext zu parsen — `extractChapters` in books.ts macht es genauso.
+		const json = text.match(/\{[\s\S]*\}/);
+		if (!json) throw new Error(`Keine JSON-Struktur in der Antwort: ${text.slice(0, 80)}`);
+		return JSON.parse(json[0]) as InsightUpdate;
 	} catch (e) {
 		await logError('learnerInsights/extract', e, { subject, topic });
 		return null;

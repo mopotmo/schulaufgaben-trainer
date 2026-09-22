@@ -18,6 +18,7 @@ Umsetzungs-Spec dazu: `docs/spec-gruppen-rollen-einwilligung.md`
 | Session | `src/lib/session.ts`, gruppenbasiert (Familie), Login via Slug + Passwort-Hash |
 | Klassen-Feature | konzipiert, **nicht umgesetzt** |
 | Hosting | Hetzner, Standort Nürnberg (EU) |
+| KI-VO | Transparenzpflichten seit 02.08.2026 anwendbar — siehe §3.7 |
 
 Offen ist alles, was im Frühjahr geplant war: `families` → `groups` mit `type`, Session-Refactor auf
 profilbasiert (inkl. Null-Gleichheits-Bug), Klassenbeitritt.
@@ -146,13 +147,61 @@ Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 - Ergebnisse werden nicht an die Schule oder Dritte weitergegeben
 - Zugang nur für eingeladene Familien, Zugangsdaten nicht weitergeben
 
-### 3.7 Interne Doku
+### 3.7 KI-Verordnung (EU 2024/1689)
+
+Nachgetragen am 22.09.2026 — im ursprünglichen Konzept fehlte die KI-VO komplett.
+
+Die Transparenzpflichten aus **Art. 50** gelten seit dem **2. August 2026**. Rund um die
+Anwendbarkeitstermine gab es zuletzt Diskussionen über Verschiebungen einzelner Teile; der
+Stand gehört beim Anwaltstermin gegengeprüft.
+
+**Art. 50 Abs. 1 — Interaktion erkennbar machen.** Wer mit einem KI-System interagiert, muss
+das erkennen können, sofern es nicht offensichtlich ist. Der Rückfragen-Chat ist der
+Musterfall, und „offensichtlich" trägt hier schlecht: Die Nutzenden sind Kinder, und die
+Oberfläche nennt das Gegenüber „Trainer".
+
+*Umgesetzt:* Hinweise an neun Stellen in der Oberfläche (Aufgaben, Korrekturen, Chat,
+Historie), dazu eine Fußzeile im PDF und ein eigener Abschnitt in den Nutzungsbedingungen.
+Die Hinweise nennen bewusst kein Modell und keinen Anbieter — die Konvention, in der
+Oberfläche nicht von „Claude" zu sprechen, bleibt bestehen. Der Modellname muss nicht fallen,
+das Wort KI schon.
+
+**Art. 50 Abs. 2 — Kennzeichnung synthetischer Inhalte.** Zielt vor allem auf veröffentlichte
+Inhalte und Deepfakes. Für eine geschlossene App mit ausgedruckten Übungsblättern ist die
+praktische Relevanz gering; die PDF-Fußzeile deckt den Gedanken ab, weil das Blatt die App
+verlässt.
+
+**Art. 4 — KI-Kompetenz.** Verlangt, dass die Beteiligten verstehen, womit sie es zu tun
+haben. Der Einwilligungsschirm und der neue Abschnitt in den Nutzungsbedingungen decken das
+für Eltern ab.
+
+**Offen: Anhang III Nr. 3 Buchst. b — Hochrisiko?** Die Vorschrift erfasst KI-Systeme, die
+„zur Bewertung von Lernergebnissen verwendet werden sollen, auch wenn diese Ergebnisse dazu
+dienen, den Lernprozess zu steuern". Die App korrigiert Lösungen, schätzt Noten und speist
+`learner_insights` in die Auswahl der nächsten Aufgaben zurück — das ist fast wörtlich der
+Tatbestand.
+
+Dagegen spricht:
+
+- Anhang III Nr. 3 zielt auf Einrichtungen der allgemeinen und beruflichen Bildung. Dieses
+  Angebot steht ausdrücklich in keinem Zusammenhang mit einer Schule und hat keine
+  schulische Wirkung (§3.6).
+- Art. 6 Abs. 3 nimmt Systeme aus, die kein erhebliches Risiko für Gesundheit, Sicherheit
+  oder Grundrechte bergen.
+- Art. 2 Abs. 10 nimmt rein persönliche, nicht-berufliche Nutzung aus — dieselbe Frage wie
+  bei der DSGVO-Haushaltsausnahme, die wir für uns bereits verneint haben, seit fremde
+  Kinder Zugang haben (§3.2). Die Antwort dürfte hier dieselbe sein.
+
+Das ist keine Frage, die man im Code entscheidet. **Gehört in den Fachanwalt-Check**, den
+dieses Konzept ohnehin als sicherste Variante nennt.
+
+### 3.8 Interne Doku
 
 - **Verzeichnis von Verarbeitungstätigkeiten** (Art. 30): eine Seite
 - **TOM** (Art. 32): HTTPS/TLS, Passwort-Hashing (bcrypt), Zugriff nur Admin, verschlüsselte
   Backups, keine Produktionsdaten lokal, Rate-Limiting am Login
 
-### 3.8 Bewusste Nicht-Ziele
+### 3.9 Bewusste Nicht-Ziele
 
 - Keine Lehrer-Rolle ausliefern
 - Nicht öffentlich bewerben, kein offenes Registrierungsformular, `noindex`
@@ -265,6 +314,7 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 - Aufbewahrungsdauer Uploads: 30 Tage
 - Keine Lehrer-Rolle im ersten Release
 - Onboarding: manuell angelegt + Einwilligung beim ersten Login
+- KI-Transparenzhinweise nach Art. 50 KI-VO: umgesetzt am 22.09.2026 (§3.7)
 - Die drei technischen Detailfragen am Ende der Spec sind am 20.09.2026 entschieden:
   keine Eltern-Profile in Stufe 1, kein Klassenbeitritt in Stufe 1, Migration als Node-Skript.
   Begründungen in der Spec, §10.
@@ -274,3 +324,5 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 **Offen:**
 
 - Stufe 1 ab Aufgabe 10 (Datenmodell, Session, Repo-Layer) und Stufe 0 vollständig
+- **KI-VO, Anhang III Nr. 3 Buchst. b**: Ist die Korrektur- und Notenfunktion eine
+  „Bewertung von Lernergebnissen"? Argumente in §3.7. Für den Anwaltstermin.

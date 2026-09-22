@@ -67,34 +67,51 @@ Das ändert die Struktur der Lösen-Ansicht, ist also kein Einzeiler.
 
 **Dateien.** `src/lib/parseExercises.ts`, `src/routes/loesen/+page.svelte`
 
-### Lernerkenntnisse greifen nur bei wortgleichem Fach und Thema
+### Lernerkenntnisse: Fach und Thema als Freitext
 
-`learner_insights` wird über `profile_id` + `subject` + `topic` gefunden — als exakter
-Zeichenvergleich. Fach und Thema sind aber Freitext aus dem Generieren-Formular, und der
-Bestand zeigt, wie unterschiedlich dasselbe eingetippt wird:
+Schreibweisen sind seit dem 22.09.2026 kein Hindernis mehr — Groß-/Kleinschreibung,
+angehängte Leerzeichen und Zeilenumbrüche werden beim Vergleich normalisiert. **Andere
+Wörter** für dasselbe Gebiet weiterhin schon:
 
-| Fach | Thema |
-|---|---|
-| `Mathe` | `Stochastik` |
-| `mathematik` | `stochastik` |
-| `Latein ` | `Vokabeln bis Lektion 25 \r\nÜbersetzungstext und Grammatik \r\n` |
-| `Latein ` | `Vokabeln (Buch: Campus C1 neu) bis Lektion 25. Übersetzungstext und Grammatik ` |
+| getippt | getippt | findet sich? |
+|---|---|---|
+| `Mathe` / `Stochastik` | `mathe ` / `Stochastik\r\n` | ja |
+| `Mathe` / `Stochastik` | `mathematik` / `stochastik` | **nein** |
+| `Mathe` / `Stochastik` | `Mathe` / `Laplace-Experimente und Stochastik` | **nein** |
 
-Groß-/Kleinschreibung, angehängte Leerzeichen, Zeilenumbrüche im Thema. Jede Variante bekommt
-einen eigenen Datensatz, und keiner davon wird beim nächsten Mal wiedergefunden. Die
-Erkenntnisse werden also gesammelt, erreichen die Generierung aber praktisch nie.
+Beide Varianten stehen so im Bestand. Normalisieren kann das nicht lösen, das sind
+verschiedene Wörter.
 
-Naheliegend wäre, beim Suchen und Schreiben zu normalisieren (trimmen, Kleinschreibung,
-Zeilenumbrüche zu Leerzeichen) und die Altdatensätze einmal zusammenzuführen. Offen bleibt,
-ob das Thema überhaupt das richtige Kriterium ist — „Stochastik" und „Laplace-Experimente und
-Stochastik" sind für einen Schüler dasselbe Gebiet, für den Zeichenvergleich nicht.
+Drei Richtungen, von klein nach groß:
 
-**Dateien.** `src/lib/server/repo/insights.ts`
+1. **An der Quelle ansetzen.** Im Generieren-Formular die bisher benutzten Fächer des Profils
+   als Vorschlag anbieten, statt jedes Mal frei tippen zu lassen. Beseitigt die Ursache,
+   ändert aber nichts an den Altdaten.
+2. **Thema als Kriterium fallen lassen** und Erkenntnisse nur je Fach führen. „Stochastik" und
+   „Laplace-Experimente" sind für einen Schüler ohnehin dasselbe Gebiet. Weniger fein, dafür
+   trifft es fast immer.
+3. **Zuordnen lassen.** Beim Speichern das Modell entscheiden, zu welchem vorhandenen
+   Datensatz die neue Erkenntnis gehört. Am flexibelsten, aber ein weiterer Aufruf, der
+   stillschweigend danebengreifen kann.
 
+**Dateien.** `src/lib/server/repo/insights.ts`, `src/routes/generieren/+page.svelte`
 
 ---
 
 ## Erledigt
+
+### Lernerkenntnisse wurden wegen Schreibweisen nicht gefunden — 22.09.2026
+
+Gesucht wurde über Profil + Fach + Thema als exakter Zeichenvergleich in der Datenbank —
+bei Freitext aus dem Formular. `Mathe ` mit angehängtem Leerzeichen und ein Thema mit
+`\r\n` darin fanden sich nie wieder. Verglichen wird jetzt normalisiert im Code, gefiltert
+nur noch über das Profil; das erreicht auch Altdatensätze, ohne sie anzufassen. Neue
+Datensätze werden aufgeräumt abgelegt.
+
+Was damit **nicht** gelöst ist, steht oben unter „Fach und Thema als Freitext".
+
+**Dateien.** `src/lib/server/repo/insights.ts`
+
 
 ### `learner_insights` blieb seit Juni leer — 22.09.2026
 

@@ -29,8 +29,8 @@
 				<li>· Nichts davon geht an die Schule. KI-Korrekturen können falsch sein.</li>
 			</ul>
 			<p class="mt-3 text-sm text-gray-500">
-				Alle Einzelheiten in der <a class="text-blue-600 hover:underline" href="/datenschutz">Datenschutzerklärung</a>
-				und den <a class="text-blue-600 hover:underline" href="/nutzungsbedingungen">Nutzungsbedingungen</a>.
+				Alle Einzelheiten in der <a class="text-blue-600 hover:underline" href="/datenschutz" target="_blank" rel="noreferrer">Datenschutzerklärung</a>
+				und den <a class="text-blue-600 hover:underline" href="/nutzungsbedingungen" target="_blank" rel="noreferrer">Nutzungsbedingungen</a>.
 			</p>
 		</div>
 
@@ -79,14 +79,16 @@
 			<label class="flex gap-3 text-sm text-gray-700">
 				<input type="checkbox" name="privacy" class="mt-0.5 h-4 w-4 shrink-0" />
 				<span>
-					Ich habe die Datenschutzerklärung gelesen und willige in die beschriebene Verarbeitung ein.
+					Ich habe die
+					<a class="text-blue-600 hover:underline" href="/datenschutz" target="_blank" rel="noreferrer">Datenschutzerklärung</a>
+					gelesen und willige in die beschriebene Verarbeitung ein.
 				</span>
 			</label>
 
 			<label class="flex gap-3 text-sm text-gray-700">
 				<input type="checkbox" name="terms" class="mt-0.5 h-4 w-4 shrink-0" />
 				<span>
-					Ich akzeptiere die <a class="text-blue-600 hover:underline" href="/nutzungsbedingungen">Nutzungsbedingungen</a>.
+					Ich akzeptiere die <a class="text-blue-600 hover:underline" href="/nutzungsbedingungen" target="_blank" rel="noreferrer">Nutzungsbedingungen</a>.
 				</span>
 			</label>
 

@@ -10,22 +10,6 @@ nicht beim Anfassen erst wieder diagnostizieren muss. Erledigtes wandert nach un
 
 ## Offen
 
-### PDF: Aufgaben brechen über Seiten unschön um
-
-Gemeldet am 21.09.2026 beim Review eines generierten Aufgabenblatts.
-
-**Ursache.** Der Generator trennt Aufgaben durch eine Unterstrich-Zeile, aus der `marked`
-ein `<hr>` macht. Das Dokument ist danach eine flache Folge aus `<hr>` und `<p>` — es gibt
-kein Element pro Aufgabe, auf das `break-inside: avoid` wirken könnte. Eine Aufgabe kann
-deshalb mitten im Satz auf die nächste Seite rutschen.
-
-**Ansatz.** Die HTML-Ausgabe an den `<hr>` in `<section>` gruppieren, darauf dann
-`break-inside: avoid`. In der PDF-CSS stehen außerdem bisher überhaupt keine Umbruchregeln,
-auch kein `orphans` / `widows`; der ASCII-Koordinatengitter-Block (Markdown-Codeblock) wird
-dadurch quer durchgeschnitten.
-
-**Dateien.** `src/routes/api/pdf/+server.ts` (CSS und HTML-Gerüst)
-
 ### PDF: Antwortplatz entsteht über Punkt-Zeilen statt über echten Freiraum
 
 Der System-Prompt verlangt „ausreichend Leerzeilen für handschriftliche Antworten". Das
@@ -83,6 +67,21 @@ Kosmetisch, aber in jeder mehrteiligen Aufgabe sichtbar.
 ---
 
 ## Erledigt
+
+### PDF: Aufgaben brachen über Seiten unschön um — 22.09.2026
+
+Der Inhalt wird vor dem Druck je Aufgabe in `<section class="task">` gebündelt, darauf
+`break-inside: avoid`. Der Schreibplatz (Absätze, die nur aus `<br>` bestehen) bleibt
+bewusst **außerhalb** des Abschnitts und darf über die Seitengrenze laufen — sonst wäre jede
+Aufgabe fast seitenhoch und es entstünden große Lücken. Dazu `orphans` / `widows` und
+`break-inside: avoid` für Tabellen und Codeblöcke.
+
+Zwei Fallen dabei: `hr { break-after: avoid }` schob den gesamten Inhalt auf Seite 2, und die
+Klasse `answer-space` existierte bereits mit `height: 2.5cm` — die eigene Klasse heißt
+deshalb `answer-gap`.
+
+Geprüft an acht Blättern: jede Folgeseite beginnt mit einer Aufgabe.
+
 
 ### `marked` warf weiche Zeilenumbrüche weg — 21.09.2026
 

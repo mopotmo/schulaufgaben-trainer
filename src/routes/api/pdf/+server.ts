@@ -58,6 +58,25 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     margin-top: 0.3cm;
     width: 100%;
   }
+  /* --- Seitenumbrüche ---
+     Der gerenderte Inhalt ist eine flache Folge von <p>, <hr>, <table> und <pre>. Ohne
+     Gruppierung kann eine Aufgabe mitten im Satz auf die nächste Seite rutschen. Deshalb
+     wird der Inhalt vor dem Druck in <section class="task"> je Aufgabe gebündelt (siehe
+     page.evaluate weiter unten) und hier zusammengehalten. */
+  /* Zusammengehalten wird die Frage, nicht der Schreibplatz: Bliebe der Freiraum im
+     Abschnitt, wäre jede Aufgabe fast seitenhoch und es entstünden große Lücken. So
+     beginnt die nächste Aufgabe dort, wo Platz ist, und der Freiraum läuft weiter. */
+  .task { break-inside: avoid; }
+  .answer-gap { break-inside: auto; }
+  /* Überschrift nie allein am Seitenfuß. */
+  .task > p:first-of-type { break-after: avoid; }
+  /* Tabellen und der ASCII-Zeichenblock werden nie zerschnitten. */
+  table, pre { break-inside: avoid; }
+  /* Keine Einzelzeile eines Absatzes am Seitenanfang oder -ende. */
+  p { orphans: 3; widows: 3; }
+  /* Eine Trennlinie direkt am Seitenfuß sieht aus wie ein Fehler. */
+
+
   /* Transparenzhinweis nach Art. 50 KI-VO – das Blatt verlässt die App. */
   .ai-notice {
     margin-top: 1cm;
@@ -102,7 +121,73 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				DOMPurify: { sanitize: (dirty: string) => string };
 			}).DOMPurify;
 			const target = document.getElementById('content');
-			if (target) target.innerHTML = purify.sanitize(raw);
+			if (!target) return;
+			target.innerHTML = purify.sanitize(raw);
+
+			// Inhalt je Aufgabe in <section> bündeln, damit `break-inside: avoid` etwas hat,
+			// woran es greifen kann. Eine vorangehende Trennlinie wandert mit in den
+			// Abschnitt — sonst bleibt sie allein am Seitenfuß zurück.
+			const isStart = (node: Node): boolean => {
+				if (node.nodeType !== 1) return false;
+				const el = node as HTMLElement;
+				const text = (el.textContent ?? '').trim();
+				if (!/^Aufgabe\s+\d+/i.test(text)) return false;
+				if (/^H[1-6]$/.test(el.tagName)) return true;
+
+				// Die Generierung setzt Aufgabenköpfe fett — mal als eigenen Absatz
+				// (`**Aufgabe 1 (4 P): Thema**`), mal zusammen mit der Einleitung
+				// (`**Aufgabe 2 (6 P):** Übersetze …`). Entscheidend ist deshalb nicht die
+				// Länge des Absatzes, sondern dass er mit einer fetten „Aufgabe N" beginnt.
+				// Ein Fließtext, der zufällig mit „Aufgabe 3 verlangt …" anfängt, tut das nicht.
+				const lead = el.firstElementChild;
+				if (!lead || !['STRONG', 'B'].includes(lead.tagName)) return false;
+				return /^Aufgabe\s+\d+/i.test((lead.textContent ?? '').trim());
+			};
+
+			const nodes = Array.from(target.childNodes);
+			let section: HTMLElement | null = null;
+			let pendingRule: Node | null = null;
+
+			for (const node of nodes) {
+				const el = node.nodeType === 1 ? (node as HTMLElement) : null;
+
+				if (el?.tagName === 'HR') {
+					// Erst zurückhalten: Gehört sie zur nächsten Aufgabe oder schließt sie ab?
+					if (pendingRule) target.appendChild(pendingRule);
+					pendingRule = node;
+					continue;
+				}
+
+				if (isStart(node)) {
+					section = document.createElement('section');
+					section.className = 'task';
+					target.appendChild(section);
+					if (pendingRule) {
+						section.appendChild(pendingRule);
+						pendingRule = null;
+					}
+				} else if (pendingRule) {
+					(section ?? target).appendChild(pendingRule);
+					pendingRule = null;
+				}
+
+				// Absätze, die nur aus <br> bestehen, sind der Schreibplatz. Sie bleiben außerhalb
+				// des Abschnitts, damit sie über die Seitengrenze laufen dürfen.
+				const onlyBreaks =
+					el?.tagName === 'P' &&
+					(el.textContent ?? '').trim() === '' &&
+					el.querySelector('br') !== null;
+
+				if (onlyBreaks && section) {
+					el.className = 'answer-gap';
+					target.appendChild(el);
+					section = null;
+					continue;
+				}
+
+				(section ?? target).appendChild(node);
+			}
+			if (pendingRule) (section ?? target).appendChild(pendingRule);
 		}, contentHtml);
 
 		await page.evaluateHandle('document.fonts.ready');

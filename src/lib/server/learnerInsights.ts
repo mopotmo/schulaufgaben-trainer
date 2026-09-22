@@ -91,22 +91,26 @@ async function extractInsightsFromText(
 	existing: LearnerInsight | null
 ): Promise<InsightUpdate | null> {
 	const existingContext = existing
-		? `Bisheriger Wissensstand zu diesem Schüler (${subject} / ${topic}):
+		? `Bisheriger Wissensstand zu diesem Schüler im Fach ${subject}:
 - Stärken: ${existing.strengths.join(', ') || '–'}
 - Schwächen: ${existing.weaknesses.join(', ') || '–'}
 - Stil-Hinweise: ${existing.style_notes || '–'}
 - Schwierigkeitsgrad zuletzt: ${existing.difficulty}
+- Zuletzt geübtes Thema: ${existing.topic || '–'}
 
-Merge die neuen Erkenntnisse mit dem bisherigen Stand. Entferne Schwächen, die offensichtlich überwunden wurden.`
-		: `Noch keine Erkenntnisse zu diesem Schüler vorhanden. Erstelle einen ersten Eintrag.`;
+Merge die neuen Erkenntnisse mit dem bisherigen Stand. Entferne Schwächen, die offensichtlich überwunden wurden.
+Der Eintrag gilt für das ganze Fach, nicht nur für das aktuelle Thema — halte deshalb fest, was über das
+Einzelthema hinaus trägt, und verliere Erkenntnisse zu anderen Themen nicht.`
+		: `Noch keine Erkenntnisse zu diesem Schüler im Fach ${subject} vorhanden. Erstelle einen ersten Eintrag.`;
 
 	const prompt = `${existingContext}
 
 Neue Information:
 ${inputText}
 
-Extrahiere daraus strukturierte Lernerkenntnisse für das Fach "${subject}", Thema "${topic}"
-und halte sie mit dem Werkzeug \`lernerkenntnisse\` fest.`;
+Die Information stammt aus einer Übung zum Thema "${topic}".
+Extrahiere daraus strukturierte Lernerkenntnisse für das Fach "${subject}" und halte sie mit dem
+Werkzeug \`lernerkenntnisse\` fest.`;
 
 	try {
 		const msg = await anthropic.messages.create({
@@ -134,7 +138,7 @@ export async function upsertInsight(
 	topic: string,
 	inputText: string
 ): Promise<void> {
-	const existing = await getInsight(actor, profileId, subject, topic);
+	const existing = await getInsight(actor, profileId, subject);
 	const update = await extractInsightsFromText(subject, topic, inputText, existing);
 	if (!update) return;
 
@@ -146,19 +150,19 @@ export async function upsertInsight(
 export async function getInsightPrompt(
 	actor: Actor,
 	profileId: string,
-	subject: string,
-	topic: string
+	subject: string
 ): Promise<string> {
-	const insight = await getInsight(actor, profileId, subject, topic).catch(() => null);
+	const insight = await getInsight(actor, profileId, subject).catch(() => null);
 	if (!insight) return '';
 
 	return [
-		`Lernerkenntnisse zu diesem Schüler (${subject} / ${topic}):`,
+		`Lernerkenntnisse zu diesem Schüler im Fach ${subject}:`,
 		insight.strengths.length > 0 ? `- Stärken: ${insight.strengths.join(', ')}` : '',
 		insight.weaknesses.length > 0
 			? `- Schwächen: ${insight.weaknesses.join(', ')} — baue gezielt Aufgaben dazu ein`
 			: '',
 		insight.style_notes ? `- Arbeitsweise: ${insight.style_notes}` : '',
+		insight.topic ? `- Zuletzt geübtes Thema: ${insight.topic}` : '',
 		`- Schwierigkeitsgrad zuletzt: ${insight.difficulty} — orientiere dich daran`
 	]
 		.filter(Boolean)

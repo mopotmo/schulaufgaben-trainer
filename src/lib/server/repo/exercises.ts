@@ -42,6 +42,44 @@ export async function listExercises(
 	);
 }
 
+/**
+ * Die Fächer, die für dieses Profil schon benutzt wurden — zuletzt benutzte zuerst.
+ *
+ * Fach und Thema sind Freitext. Dadurch stehen im Bestand `Mathe`, `Mathematik` und
+ * `mathematik` nebeneinander, und die Lernerkenntnisse zu einem Fach verteilen sich auf
+ * mehrere Datensätze. Eine Vorschlagsliste im Formular setzt an der Ursache an, statt die
+ * Folgen hinterher zusammenzurechnen.
+ */
+export async function listSubjects(actor: Actor, profileId: unknown): Promise<string[]> {
+	assertCan(actor, 'exercise:read');
+	const profile = await getProfile(actor, profileId);
+
+	const rows = await getDirectus()
+		.request(
+			readItems('exercises', {
+				fields: ['subject'],
+				filter: { profile_id: { _eq: profile.id } },
+				sort: ['-created_at'],
+				limit: 100
+			})
+		)
+		.catch(() => [] as { subject: string | null }[]);
+
+	// Groß-/Kleinschreibung entscheidet nicht über Doppelte — die zuletzt getippte Schreibweise
+	// gewinnt, damit die Liste so aussieht, wie man es selbst geschrieben hat.
+	const gesehen = new Set<string>();
+	const faecher: string[] = [];
+	for (const row of rows) {
+		const fach = (row.subject ?? '').trim().replace(/\s+/g, ' ');
+		if (!fach) continue;
+		const schluessel = fach.toLowerCase();
+		if (gesehen.has(schluessel)) continue;
+		gesehen.add(schluessel);
+		faecher.push(fach);
+	}
+	return faecher;
+}
+
 export type NewExercise = {
 	subject: string;
 	topic: string;

@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const actor = requireActor(locals);
 	const profile = await getProfile(actor, profilId);
-	const insightPrompt = await getInsightPrompt(actor, profile.id, subject, topic);
+	const insightPrompt = await getInsightPrompt(actor, profile.id, subject);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 

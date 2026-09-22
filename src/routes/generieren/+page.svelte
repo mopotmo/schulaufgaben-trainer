@@ -313,10 +313,23 @@
 				id="subject"
 				bind:value={subject}
 				type="text"
+				list="bisherige-faecher"
+				autocomplete="off"
 				placeholder="z.B. Mathematik"
 				disabled={!!exerciseId}
 				class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:bg-gray-50 disabled:text-gray-400"
 			/>
+			<!--
+				Die schon benutzten Fächer als Vorschlag. `datalist` schlägt vor, ohne die Eingabe
+				einzuschränken — ein neues Fach lässt sich weiterhin einfach tippen. Der Nutzen liegt
+				darin, dass man „Mathe" nicht beim nächsten Mal als „Mathematik" eingibt: die
+				Lernerkenntnisse hängen am Fach.
+			-->
+			<datalist id="bisherige-faecher">
+				{#each data.subjects ?? [] as fach}
+					<option value={fach}></option>
+				{/each}
+			</datalist>
 		</div>
 
 		<div>

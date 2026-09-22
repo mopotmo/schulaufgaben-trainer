@@ -22,40 +22,37 @@ function key(value: string): string {
 }
 
 /**
- * Sucht den Datensatz zu Profil, Fach und Thema.
+ * Sucht den Datensatz zu Profil und Fach.
  *
- * Fach und Thema sind Freitext aus dem Generieren-Formular. Ein exakter Zeichenvergleich
- * in der Datenbank fand deshalb so gut wie nie etwas: `Mathe` / `Stochastik` und
- * `mathematik` / `stochastik` sind dasselbe Gebiet, aber nicht dieselbe Zeichenfolge.
- * Die Erkenntnisse wurden gesammelt und erreichten die Generierung trotzdem nicht.
+ * Bewusst **ohne** Thema. Fach und Thema sind Freitext aus dem Generieren-Formular, und
+ * das Thema schwankt am stärksten: `Stochastik`, `stochastik`, `Laplace-Experimente und
+ * Stochastik` meinen dasselbe Gebiet. Je feiner der Schlüssel, desto seltener findet sich
+ * etwas wieder — die Erkenntnisse wurden gesammelt und erreichten die Generierung nie.
  *
- * Gefiltert wird deshalb nur über das Profil — das sind wenige Zeilen — und der Vergleich
- * findet normalisiert im Code statt. Das erreicht auch Altdatensätze, ohne sie anzufassen.
+ * Ein Datensatz je Fach ist gröber, trifft dafür fast immer. Das zuletzt geübte Thema steht
+ * weiterhin im Datensatz, es entscheidet nur nicht mehr über die Zuordnung.
+ *
+ * Gefiltert wird über das Profil — wenige Zeilen — und normalisiert im Code verglichen.
  */
-async function find(profileId: string, subject: string, topic: string): Promise<LearnerInsight | null> {
-	if (!profileId || !tidy(subject) || !tidy(topic)) return null;
+async function find(profileId: string, subject: string): Promise<LearnerInsight | null> {
+	if (!profileId || !tidy(subject)) return null;
 
 	const rows = await getDirectus()
 		.request(readItems('learner_insights', { filter: { profile_id: { _eq: profileId } }, limit: -1 }))
 		.catch(() => [] as LearnerInsight[]);
 
 	const gesuchtesFach = key(subject);
-	const gesuchtesThema = key(topic);
-	return (
-		rows.find((r) => key(r.subject ?? '') === gesuchtesFach && key(r.topic ?? '') === gesuchtesThema) ??
-		null
-	);
+	return rows.find((r) => key(r.subject ?? '') === gesuchtesFach) ?? null;
 }
 
 export async function getInsight(
 	actor: Actor,
 	profileId: string,
-	subject: string,
-	topic: string
+	subject: string
 ): Promise<LearnerInsight | null> {
 	assertCan(actor, 'insight:read');
 	assertInScope(actor, await resolveProfileGroup(actor, profileId));
-	return find(profileId, subject, topic);
+	return find(profileId, subject);
 }
 
 export type InsightUpdate = {
@@ -75,12 +72,17 @@ export async function upsertInsight(
 	assertCan(actor, 'insight:read');
 	assertInScope(actor, await resolveProfileGroup(actor, profileId));
 
-	const existing = await find(profileId, subject, topic);
+	const existing = await find(profileId, subject);
 	const directus = getDirectus();
 
 	if (existing) {
+		// `topic` wird mitgeschrieben, aber als zuletzt geübtes Thema — nicht als Schlüssel.
 		await directus.request(
-			updateItem('learner_insights', existing.id, { ...update, updated_at: new Date().toISOString() })
+			updateItem('learner_insights', existing.id, {
+				...update,
+				topic: tidy(topic),
+				updated_at: new Date().toISOString()
+			})
 		);
 	} else {
 		// Aufgeräumt ablegen, damit in Directus nicht `Latein ` mit angehängtem Leerzeichen steht.

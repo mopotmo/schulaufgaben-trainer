@@ -67,38 +67,35 @@ Das ändert die Struktur der Lösen-Ansicht, ist also kein Einzeiler.
 
 **Dateien.** `src/lib/parseExercises.ts`, `src/routes/loesen/+page.svelte`
 
-### Lernerkenntnisse: Fach und Thema als Freitext
-
-Schreibweisen sind seit dem 22.09.2026 kein Hindernis mehr — Groß-/Kleinschreibung,
-angehängte Leerzeichen und Zeilenumbrüche werden beim Vergleich normalisiert. **Andere
-Wörter** für dasselbe Gebiet weiterhin schon:
-
-| getippt | getippt | findet sich? |
-|---|---|---|
-| `Mathe` / `Stochastik` | `mathe ` / `Stochastik\r\n` | ja |
-| `Mathe` / `Stochastik` | `mathematik` / `stochastik` | **nein** |
-| `Mathe` / `Stochastik` | `Mathe` / `Laplace-Experimente und Stochastik` | **nein** |
-
-Beide Varianten stehen so im Bestand. Normalisieren kann das nicht lösen, das sind
-verschiedene Wörter.
-
-Drei Richtungen, von klein nach groß:
-
-1. **An der Quelle ansetzen.** Im Generieren-Formular die bisher benutzten Fächer des Profils
-   als Vorschlag anbieten, statt jedes Mal frei tippen zu lassen. Beseitigt die Ursache,
-   ändert aber nichts an den Altdaten.
-2. **Thema als Kriterium fallen lassen** und Erkenntnisse nur je Fach führen. „Stochastik" und
-   „Laplace-Experimente" sind für einen Schüler ohnehin dasselbe Gebiet. Weniger fein, dafür
-   trifft es fast immer.
-3. **Zuordnen lassen.** Beim Speichern das Modell entscheiden, zu welchem vorhandenen
-   Datensatz die neue Erkenntnis gehört. Am flexibelsten, aber ein weiterer Aufruf, der
-   stillschweigend danebengreifen kann.
-
-**Dateien.** `src/lib/server/repo/insights.ts`, `src/routes/generieren/+page.svelte`
-
 ---
 
 ## Erledigt
+
+### Lernerkenntnisse fanden sich wegen Freitext nicht wieder — 22.09.2026
+
+Fach und Thema werden bei jeder Generierung frei getippt. Der Bestand zeigt `Mathe`,
+`Mathematik`, `mathematik` und Themen von `Stochastik` bis
+`Laplace-Experimente und Stochastik` — gesucht wurde aber über Profil + Fach + Thema als
+exakten Zeichenvergleich. Die Erkenntnisse wurden gesammelt und erreichten die Generierung nie.
+
+In drei Schritten behoben:
+
+1. **Normalisiert verglichen** statt in der Datenbank exakt gefiltert. Groß-/Kleinschreibung,
+   angehängte Leerzeichen und Zeilenumbrüche im Thema sind kein Unterschied mehr.
+2. **Das Thema als Schlüssel fallen gelassen.** Ein Datensatz je Fach, das zuletzt geübte
+   Thema steht weiterhin darin und geht in den Prompt ein, entscheidet aber nicht mehr über
+   die Zuordnung. Der Extraktions-Prompt weiß jetzt, dass der Eintrag fürs ganze Fach gilt.
+3. **An der Quelle angesetzt.** Das Feld *Fach* schlägt die für dieses Profil schon benutzten
+   Fächer vor (`datalist`, schränkt die Eingabe nicht ein). Damit entsteht `Mathe` gegen
+   `Mathematik` gar nicht erst — der einzige Unterschied, den Schritt 1 und 2 nicht auffangen,
+   weil es verschiedene Wörter sind.
+
+Die dritte erwogene Variante — das Modell zuordnen lassen, welcher Datensatz gemeint ist —
+war damit nicht mehr nötig.
+
+**Dateien.** `src/lib/server/repo/insights.ts`, `src/lib/server/learnerInsights.ts`,
+`src/lib/server/repo/exercises.ts`, `src/routes/generieren/+page.svelte`
+
 
 ### Lernerkenntnisse wurden wegen Schreibweisen nicht gefunden — 22.09.2026
 

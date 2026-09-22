@@ -139,7 +139,15 @@ Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 - **Nur technisch notwendiges Session-Cookie** → kein Cookie-Banner nach § 25 TDDDG nötig.
   Diesen Zustand aktiv halten.
 
-### 3.6 Nutzungsbedingungen (eine kurze Seite)
+### 3.6 Hochgeladene Schulbücher
+
+Ein hochgeladenes Schulbuch ist eine im Wesentlichen vollständige Vervielfältigung und fällt
+daher nicht unter die Privatkopie-Ausnahme (§ 53 Abs. 4 lit. b UrhG). Rechtlich zulässig ist
+das Hochladen nur, wenn das Buch dem nutzenden Haushalt gehört und ausschließlich für diesen
+verwendet wird. Eine Weitergabe an Dritte ist nicht gestattet. Technisch durchgesetzt wird
+dies durch automatische Löschung nach 30 Tagen (siehe §3.5).
+
+### 3.7 Nutzungsbedingungen (eine kurze Seite)
 
 - Privates, kostenloses Angebot, **kein Zusammenhang mit der Schule**, keine Leistungsbewertung
 - Keine Gewähr für Verfügbarkeit; kann jederzeit eingestellt werden (dann Datenlöschung)
@@ -147,7 +155,7 @@ Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 - Ergebnisse werden nicht an die Schule oder Dritte weitergegeben
 - Zugang nur für eingeladene Familien, Zugangsdaten nicht weitergeben
 
-### 3.7 KI-Verordnung (EU 2024/1689)
+### 3.8 KI-Verordnung (EU 2024/1689)
 
 Nachgetragen am 22.09.2026 — im ursprünglichen Konzept fehlte die KI-VO komplett.
 
@@ -195,13 +203,13 @@ Dagegen spricht:
 Das ist keine Frage, die man im Code entscheidet. **Gehört in den Fachanwalt-Check**, den
 dieses Konzept ohnehin als sicherste Variante nennt.
 
-### 3.8 Interne Doku
+### 3.9 Interne Doku
 
 - **Verzeichnis von Verarbeitungstätigkeiten** (Art. 30): eine Seite
 - **TOM** (Art. 32): HTTPS/TLS, Passwort-Hashing (bcrypt), Zugriff nur Admin, verschlüsselte
   Backups, keine Produktionsdaten lokal, Rate-Limiting am Login
 
-### 3.9 Bewusste Nicht-Ziele
+### 3.10 Bewusste Nicht-Ziele
 
 - Keine Lehrer-Rolle ausliefern
 - Nicht öffentlich bewerben, kein offenes Registrierungsformular, `noindex`

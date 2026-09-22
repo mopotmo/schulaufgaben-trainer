@@ -58,6 +58,14 @@
 		sonstige Dritte weitergegeben.
 	</p>
 
+	<h2>Hochgeladene Schulbücher</h2>
+	<p>
+		Du darfst nur Schulbücher hochladen, die dir oder deinem Haushalt gehören. Die hochgeladenen
+		Dateien stehen ausschließlich dir und deinem Haushalt zur Verfügung — eine Weitergabe an
+		Dritte ist nicht erlaubt. Nach 30 Tagen werden die Dateien automatisch gelöscht, auch wenn du
+		sie noch brauchst. Speichere dir bei Bedarf eine Kopie.
+	</p>
+
 	<h2>Fragen</h2>
 	<p>
 		Bei Fragen oder Problemen: <a href="mailto:{OPERATOR.email}">{OPERATOR.email}</a>. Wer das

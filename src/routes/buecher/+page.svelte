@@ -49,6 +49,11 @@
 				<button onclick={() => (showUploadForm = false)} class="text-gray-300 hover:text-gray-500 text-xl leading-none">×</button>
 			</div>
 
+			<div class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-900">
+				<p class="font-medium mb-1">Wichtig:</p>
+				<p>Du darfst nur Schulbücher hochladen, die dir oder deinem Haushalt gehören. Sie stehen nur euch zur Verfügung und dürfen nicht weitergegeben werden. Nach 30 Tagen werden die Dateien automatisch gelöscht.</p>
+			</div>
+
 			<form
 				method="POST"
 				action="?/upload"

@@ -34,16 +34,24 @@
 			</p>
 		</div>
 
-		{#if data.children.length > 0}
-			<div class="mt-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-				<h2 class="text-sm font-semibold text-gray-700">Für diese Kinder</h2>
+		<div class="mt-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+			<h2 class="text-sm font-semibold text-gray-700">Für diese Kinder</h2>
+			{#if data.children.length > 0}
 				<ul class="mt-2 space-y-1 text-sm text-gray-600">
 					{#each data.children as child (child.name)}
 						<li>{child.avatar ?? '🎓'} {child.name} · Klasse {child.grade}</li>
 					{/each}
 				</ul>
-			</div>
-		{/if}
+				<p class="mt-3 text-sm text-gray-500">
+					Die Einwilligung gilt auch für Profile, die du später anlegst.
+				</p>
+			{:else}
+				<p class="mt-2 text-sm text-gray-600">
+					Du hast noch keine Profile angelegt — das kommt gleich nach diesem Schritt. Die
+					Einwilligung gilt für alle Kinder, für die du hier Profile anlegst.
+				</p>
+			{/if}
+		</div>
 
 		<form
 			method="POST"
@@ -58,7 +66,14 @@
 		>
 			<label class="flex gap-3 text-sm text-gray-700">
 				<input type="checkbox" name="custody" class="mt-0.5 h-4 w-4 shrink-0" />
-				<span>Ich bin sorgeberechtigt für die oben aufgeführten Kinder.</span>
+				<span>
+					{#if data.children.length > 0}
+						Ich bin sorgeberechtigt für die oben aufgeführten Kinder und für alle weiteren, für
+						die ich hier später ein Profil anlege.
+					{:else}
+						Ich bin sorgeberechtigt für alle Kinder, für die ich hier ein Profil anlege.
+					{/if}
+				</span>
 			</label>
 
 			<label class="flex gap-3 text-sm text-gray-700">

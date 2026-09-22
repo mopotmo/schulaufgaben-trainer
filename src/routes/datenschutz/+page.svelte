@@ -26,6 +26,11 @@
 		Kinder unter 16 Jahren sind, wird die Einwilligung durch die Sorgeberechtigten erteilt. Sie wird
 		beim ersten Anmelden im System erfasst und dort nachgehalten.
 	</p>
+	<p>
+		Die Einwilligung gilt für alle Kinder, für die das sorgeberechtigte Elternteil in seinem
+		Familienzugang ein Profil anlegt — auch für solche, die erst später hinzukommen. Beim Anlegen
+		eines weiteren Profils wird die Sorgeberechtigung erneut bestätigt.
+	</p>
 
 	<h2>4. Welche Daten verarbeitet werden</h2>
 	<ul>

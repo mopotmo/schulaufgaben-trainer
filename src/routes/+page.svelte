@@ -242,6 +242,13 @@
 						<p class="col-span-2 text-sm text-red-500">{form.error}</p>
 					{/if}
 
+					<div class="col-span-2 pt-1">
+						<p class="text-xs text-gray-400">
+							Mit dem Anlegen bestätigst du erneut, dass du für dieses Kind sorgeberechtigt bist.
+							Bitte nur den Vornamen oder einen Spitznamen eintragen.
+						</p>
+					</div>
+
 					<div class="col-span-2 flex gap-2 pt-1">
 						<button
 							type="submit"

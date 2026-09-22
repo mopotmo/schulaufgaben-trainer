@@ -41,6 +41,25 @@ greifen nie, weil der Generator weder die Klasse noch `<ol>` / `<li>` erzeugt.
 **Dateien.** `src/routes/api/generieren/+server.ts` (Format-Teil des System-Prompts),
 `src/routes/api/pdf/+server.ts` (CSS)
 
+### Urheberrecht: drei offene Punkte beim Schulbuch-Upload
+
+Aus dem Review vom 22.09.2026. Der Freigabepfad über `visibility: 'shared'` ist entfernt und
+der Generierungs-Prompt entschärft; offen bleibt:
+
+1. **Hinweis am Upload-Formular** in `src/routes/buecher/+page.svelte`: nur eigene Bücher,
+   nur für den eigenen Haushalt, keine Weitergabe.
+2. **Löschfrist für hochgeladene Bücher.** Ein dauerhaft gespeichertes Schulbuch ist etwas
+   anderes als eines, das für die Dauer eines Kapitels dient. Gehört zum selben Directus-Flow
+   wie die 30-Tage-Löschung der Lösungsfotos und sollte zusammen gebaut werden.
+3. **Abschnitt in Nutzungsbedingungen und Konzept**, damit die Entscheidung dokumentiert ist
+   wie die übrigen rechtlichen Punkte. Im Konzept als eigener Abschnitt unter §3.
+
+Hintergrund: Ein hochgeladenes Schulbuch ist eine im Wesentlichen vollständige
+Vervielfältigung und damit nach § 53 Abs. 4 lit. b UrhG nicht von der Privatkopie gedeckt.
+
+**Dateien.** `src/routes/buecher/+page.svelte`, `src/routes/nutzungsbedingungen/+page.svelte`,
+`docs/klassen-freigabe-konzept.md`
+
 ### Backups laufen nur von Hand
 
 `docs/backup-und-restore.md` beschreibt das Vorgehen, aber es stößt niemand an. Entweder

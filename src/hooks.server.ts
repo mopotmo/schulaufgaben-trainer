@@ -1,10 +1,21 @@
 import { getSession, clearSession } from '$lib/session';
 import { listGroupIdsForProfile } from '$lib/server/repo/groups';
+import { hasValidConsent } from '$lib/server/repo/consents';
 import type { Actor, Role } from '$lib/server/authz';
 import { error, redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 
-const PUBLIC_PATHS = ['/login', '/einrichten', '/logout'];
+const PUBLIC_PATHS = [
+	'/login',
+	'/einrichten',
+	'/logout',
+	'/impressum',
+	'/datenschutz',
+	'/nutzungsbedingungen'
+];
+
+/** Pfade, die mit Sitzung, aber ohne erteilte Einwilligung erreichbar bleiben müssen. */
+const CONSENT_EXEMPT = ['/einwilligung'];
 
 /** Exakter Treffer oder echter Unterpfad — `startsWith` allein ließe auch `/loginxyz` durch. */
 function isPublic(path: string): boolean {
@@ -54,8 +65,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		redirect(303, `/login?weiter=${encodeURIComponent(path)}`);
 	}
 
-	// Consent-Gate (Spec §5 Schritt 4) folgt mit der Route /einwilligung aus §7.
-	// Vorher aktiviert würde es alle Familien in eine Redirect-Schleife sperren.
+	// Consent-Gate (Spec §5 Schritt 4). Ohne gültige Einwilligung ist keine geschützte Seite
+	// und keine API-Route erreichbar. Das Ergebnis wird pro Request einmal ermittelt.
+	if (actor && !isPublic(path) && !CONSENT_EXEMPT.includes(path)) {
+		if (!(await hasValidConsent(actor.session.groupId))) {
+			if (path.startsWith('/api/')) error(403, 'Einwilligung erforderlich');
+			redirect(303, '/einwilligung');
+		}
+	}
 
 	return resolve(event);
 };

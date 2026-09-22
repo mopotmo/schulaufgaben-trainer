@@ -63,5 +63,13 @@
 				</button>
 			</form>
 		</div>
+
+		<p class="mt-6 text-center text-xs text-gray-400">
+			<a class="hover:underline" href="/impressum">Impressum</a>
+			·
+			<a class="hover:underline" href="/datenschutz">Datenschutz</a>
+			·
+			<a class="hover:underline" href="/nutzungsbedingungen">Nutzungsbedingungen</a>
+		</p>
 	</div>
 </main>

@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>{title} – Schulaufgaben Trainer</title>
+	<title>{title} – Schulaufgaben Check</title>
 	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 

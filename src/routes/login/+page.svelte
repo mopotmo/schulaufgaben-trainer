@@ -10,7 +10,7 @@
 	<div class="w-full max-w-sm">
 		<div class="text-center mb-8">
 			<div class="text-5xl mb-3">🎓</div>
-			<h1 class="text-2xl font-bold text-gray-800">Schulaufgaben Trainer</h1>
+			<h1 class="text-2xl font-bold text-gray-800">Schulaufgaben Check</h1>
 			<p class="text-gray-500 text-sm mt-1">Melde dich mit deinem Familien-Login an.</p>
 		</div>
 

@@ -6,7 +6,7 @@
  *
  */
 export const PROJECT = {
-	name: 'Schulaufgaben Trainer',
+	name: 'Schulaufgaben Check',
 	/** Kurzbeschreibung für Impressum und Nutzungsbedingungen. */
 	description: 'Privates, kostenloses Übungsangebot für Schulaufgaben'
 } as const;

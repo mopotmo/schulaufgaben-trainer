@@ -8,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>Einwilligung – Schulaufgaben Trainer</title>
+	<title>Einwilligung – Schulaufgaben Check</title>
 </svelte:head>
 
 <main class="min-h-screen bg-gray-50 px-4 py-10">

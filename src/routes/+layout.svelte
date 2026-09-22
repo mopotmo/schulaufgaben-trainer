@@ -7,7 +7,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>Schulaufgaben Trainer</title>
+	<title>Schulaufgaben Check</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50 overflow-x-hidden">

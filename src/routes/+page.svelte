@@ -78,7 +78,7 @@
 	<div class="mb-8">
 		<div class="flex items-start justify-between gap-4">
 			<div class="min-w-0">
-				<h1 class="text-2xl sm:text-4xl font-bold text-gray-800 mb-1 leading-tight">Schulaufgaben Trainer</h1>
+				<h1 class="text-2xl sm:text-4xl font-bold text-gray-800 mb-1 leading-tight">Schulaufgaben Check</h1>
 				<p class="text-gray-500 text-sm sm:text-base">Wer übt heute, <strong>{data.family.name}</strong>?</p>
 			</div>
 			<div class="flex items-center gap-3 shrink-0 mt-1">

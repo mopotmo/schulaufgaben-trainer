@@ -6,6 +6,7 @@
  * 3. Flow „E-Mail-Tokens versenden" anlegen (Event-Hook auf `email_tokens.items.create`)
  * 4. Bestand: eingerichtete Familien mit E-Mail gelten als bestätigt
  * 5. `groups.invite_token` wird beim Anlegen einer Gruppe automatisch vergeben
+ * 6. `groups.invite_link`: fertiger Einladungslink als Button im Datensatz
  *
  * Idempotent — mehrfaches Ausführen ändert nichts mehr. Schritt 4 muss vor dem Deploy des
  * neuen Codes laufen, sonst sperrt das Verifikations-Gate die bestehenden Familien aus.
@@ -217,6 +218,17 @@ async function addTokenCollection() {
 }
 
 const FLOW_NAME = 'E-Mail-Tokens versenden';
+/** Erhöhen, wenn sich Flow oder Mailtexte ändern — ein Lauf legt den Flow dann neu an. */
+const FLOW_VERSION = 'Flow-Version 2';
+
+/** Login-Daten stehen in beiden Mails: Wer das Passwort vergisst, weiß oft auch den Namen nicht mehr. */
+const LOGIN_BLOCK = [
+	'**So meldest du dich an**',
+	'',
+	`- Adresse: [${APP_URL}](${APP_URL})`,
+	'- Familienname: **{{gruppe.slug}}**',
+	'- Passwort: das, das du beim Einrichten vergeben hast'
+];
 
 function mailOptions(purpose: 'verify' | 'reset') {
 	const token = '{{$trigger.payload.token}}';
@@ -228,11 +240,15 @@ function mailOptions(purpose: 'verify' | 'reset') {
 			body: [
 				'Hallo,',
 				'',
-				'für den Schulaufgaben Check wurde gerade ein Familienzugang mit dieser E-Mail-Adresse eingerichtet. Bitte bestätige die Adresse:',
+				'für den Schulaufgaben Check wurde gerade der Familienzugang „{{gruppe.name}}" mit dieser E-Mail-Adresse eingerichtet. Bitte bestätige die Adresse:',
 				'',
 				`**[E-Mail-Adresse bestätigen](${APP_URL}/email-bestaetigen?token=${token})**`,
 				'',
 				'Der Link gilt 48 Stunden.',
+				'',
+				...LOGIN_BLOCK,
+				'',
+				'Heb diese Mail am besten auf.',
 				'',
 				'Wenn du das nicht warst, kannst du diese Mail ignorieren.'
 			].join('\n')
@@ -245,11 +261,13 @@ function mailOptions(purpose: 'verify' | 'reset') {
 		body: [
 			'Hallo,',
 			'',
-			'für deinen Familienzugang beim Schulaufgaben Check wurde ein neues Passwort angefordert:',
+			'für deinen Familienzugang „{{gruppe.name}}" beim Schulaufgaben Check wurde ein neues Passwort angefordert:',
 			'',
 			`**[Neues Passwort vergeben](${APP_URL}/passwort-zuruecksetzen?token=${token})**`,
 			'',
 			'Der Link gilt eine Stunde.',
+			'',
+			...LOGIN_BLOCK.map((l) => l.replace('das, das du beim Einrichten vergeben hast', 'das neue, das du über den Link vergibst')),
 			'',
 			'Wenn du das nicht angefordert hast, kannst du diese Mail ignorieren. Dein bisheriges Passwort bleibt dann gültig.'
 		].join('\n')
@@ -264,17 +282,16 @@ function mailOptions(purpose: 'verify' | 'reset') {
 async function addFlow() {
 	log.step('3. Flow „E-Mail-Tokens versenden"');
 	const flows = await directus.request(
-		readFlows({ filter: { name: { _eq: FLOW_NAME } }, fields: ['id', 'name'] })
+		readFlows({ filter: { name: { _eq: FLOW_NAME } }, fields: ['id', 'name', 'description'] })
 	);
+	const current = flows.length === 1 && flows[0].description?.includes(FLOW_VERSION);
 
-	if (flows.length > 0 && !FLOW_NEU) {
-		return log.keep('Flow vorhanden (mit --flow-neu neu anlegen)');
-	}
+	if (current && !FLOW_NEU) return log.keep(`Flow vorhanden, ${FLOW_VERSION}`);
 	if (flows.length > 0) {
-		log.set(`Flow löschen und neu anlegen (${flows.length} vorhanden)`);
+		log.set(`Flow löschen und neu anlegen (${current ? '--flow-neu' : `veraltet → ${FLOW_VERSION}`})`);
 		if (!DRY) for (const f of flows) await directus.request(deleteFlow(f.id));
 	} else {
-		log.add('Flow mit Bedingung und zwei Mail-Operationen');
+		log.add(`Flow: Gruppe lesen, Bedingung, zwei Mail-Operationen (${FLOW_VERSION})`);
 	}
 	if (DRY) return;
 
@@ -283,7 +300,7 @@ async function addFlow() {
 			name: FLOW_NAME,
 			icon: 'mail',
 			color: '#2563EB',
-			description: 'Verschickt Bestätigungs- und Reset-Links. Wird von der App über neue Zeilen in email_tokens ausgelöst.',
+			description: `Verschickt Bestätigungs- und Reset-Links samt Login-Daten. Wird von der App über neue Zeilen in email_tokens ausgelöst. Angelegt von scripts/email-verification.ts — ${FLOW_VERSION}.`,
 			status: 'active',
 			trigger: 'event',
 			accountability: 'all',
@@ -297,7 +314,7 @@ async function addFlow() {
 			name: 'Bestätigungsmail',
 			key: 'mail_verify',
 			type: 'mail',
-			position_x: 37,
+			position_x: 55,
 			position_y: 1,
 			options: mailOptions('verify')
 		})
@@ -308,7 +325,7 @@ async function addFlow() {
 			name: 'Reset-Mail',
 			key: 'mail_reset',
 			type: 'mail',
-			position_x: 37,
+			position_x: 55,
 			position_y: 19,
 			options: mailOptions('reset')
 		})
@@ -319,14 +336,34 @@ async function addFlow() {
 			name: 'Zweck?',
 			key: 'purpose',
 			type: 'condition',
-			position_x: 19,
+			position_x: 37,
 			position_y: 1,
 			options: { filter: { $trigger: { payload: { purpose: { _eq: 'verify' } } } } },
 			resolve: verify.id,
 			reject: reset.id
 		})
 	);
-	await directus.request(updateFlow(flow.id, { operation: condition.id }));
+	// Login-Name und Familienname für die Mail. Ein einzelner Schlüssel liefert das Objekt
+	// direkt, die Mail greift dann per {{gruppe.slug}} darauf zu. `$full`, damit es nicht von
+	// den Rechten des auslösenden Nutzers abhängt — gelesen wird nur die Gruppe aus dem Token.
+	const group = await directus.request(
+		createOperation({
+			flow: flow.id,
+			name: 'Gruppe lesen',
+			key: 'gruppe',
+			type: 'item-read',
+			position_x: 19,
+			position_y: 1,
+			options: {
+				collection: 'groups',
+				key: ['{{$trigger.payload.group_id}}'],
+				query: { fields: ['name', 'slug'] },
+				permissions: '$full'
+			},
+			resolve: condition.id
+		})
+	);
+	await directus.request(updateFlow(flow.id, { operation: group.id }));
 }
 
 async function markExistingVerified() {
@@ -377,12 +414,46 @@ async function autoInviteToken() {
 	);
 }
 
+/**
+ * Reines Anzeigefeld ohne Spalte in der Datenbank. Das Links-Interface setzt `{{invite_token}}`
+ * aus dem Formular ein und rendert einen echten Link — Rechtsklick → „Link-Adresse kopieren".
+ * Nur sichtbar, solange ein Token gesetzt ist.
+ */
+async function addInviteLink() {
+	log.step('6. groups.invite_link (Einladungslink im Datensatz)');
+	const url = `${APP_URL}/einrichten?token={{invite_token}}`;
+	const meta = {
+		interface: 'presentation-links',
+		special: ['alias', 'no-data'],
+		options: {
+			links: [{ label: 'Einladungslink', icon: 'link', type: 'primary', actionType: 'url', url }]
+		},
+		note: 'Rechtsklick → „Link-Adresse kopieren". Erscheint nach dem Speichern, solange die Familie nicht eingerichtet ist.',
+		conditions: [{ name: 'Ohne Token ausblenden', rule: { invite_token: { _null: true } }, hidden: true }],
+		width: 'full'
+	};
+
+	const fields = await directus.request(readFieldsByCollection('groups'));
+	const field = fields.find((f) => f.field === 'invite_link');
+	if (field?.meta?.options?.links?.[0]?.url === url) return log.keep('Feld vorhanden');
+
+	if (field) {
+		log.set(`Link-Ziel auf ${url}`);
+		if (!DRY) await directus.request(updateField('groups', 'invite_link', { meta }));
+		return;
+	}
+	log.add(`Feld invite_link → ${url}`);
+	if (DRY) return;
+	await directus.request(createField('groups', { field: 'invite_link', type: 'alias', meta, schema: null }));
+}
+
 async function main() {
 	await addVerifiedField();
 	await addTokenCollection();
 	await addFlow();
 	await markExistingVerified();
 	await autoInviteToken();
+	await addInviteLink();
 
 	console.log(`\n${DRY ? 'Würde' : 'Hat'} ${changes} Änderung(en) ${DRY ? 'vornehmen' : 'vorgenommen'}.`);
 	if (DRY) console.log('\x1b[33mDry Run — nichts geschrieben. Ohne --dry erneut ausführen.\x1b[0m\n');

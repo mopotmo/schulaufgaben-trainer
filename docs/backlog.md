@@ -46,6 +46,9 @@ Vervielfältigung und damit nach § 53 Abs. 4 lit. b UrhG nicht von der Privatko
 
 ### Backups laufen nur von Hand
 
+*Teilweise erledigt 25.09.2026:* Ein Backup ist jetzt ein Aufruf (`scripts/backup.sh`), samt
+Wiederherstellung und Gegenzählen. Offen bleibt, dass es niemand regelmäßig anstößt.
+
 `docs/backup-und-restore.md` beschreibt das Vorgehen, aber es stößt niemand an. Entweder
 Coolifys geplante Backups nutzen, falls sie Datenbanken im Service-Stack abdecken, oder ein
 Cronjob mit Rotation. Dazu fehlt eine Entscheidung zur Aufbewahrungsdauer — die berührt die

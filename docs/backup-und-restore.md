@@ -5,6 +5,26 @@ Stand: 21.09.2026 · Erprobt an diesem Tag, die Befehle sind gelaufen und nicht 
 Pflicht vor jeder Migration (`CLAUDE.md`). Ein Backup gilt erst als Backup, wenn es
 **zurückgespielt und gegengezählt** wurde — Schritt 5 ist nicht optional.
 
+## Kurzweg: ein Aufruf
+
+Seit 25.09.2026 erledigt `scripts/backup.sh` die Schritte 2–5 (und auf Wunsch 7) vom Mac aus:
+
+```sh
+scripts/backup.sh --probe
+```
+
+- findet den Postgres-Container über die Domain aus `DIRECTUS_URL` — auf dem Server laufen
+  mehrere Directus-Stacks
+- zieht den Dump per SSH direkt in `gpg`; Klartext landet weder auf dem Server noch lokal auf
+  der Platte (strenger als Schritt 3/4 unten)
+- stellt ihn in `trainer-restore` wieder her und zählt jede Tabelle gegen die Produktion
+- `--probe` lässt Postgres (:55432) und Directus (:8055) für Migrations-Probeläufe stehen,
+  `--uploads` sichert zusätzlich das Uploads-Volume, `--check` prüft nur ohne Dump
+
+Voraussetzungen: SSH-Zugang als `groovemanager-coolify` ohne Passwortabfrage (sonst
+`BACKUP_SERVER=…`), `gpg` und Docker lokal. Die Einzelschritte unten bleiben als Referenz und
+für den Fall, dass das Skript scheitert.
+
 ---
 
 ## 1. Ausgangslage

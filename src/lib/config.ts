@@ -39,6 +39,9 @@ export const SUPERVISORY_AUTHORITY = {
 /** Aufbewahrungsdauer hochgeladener Dateien in Tagen (Konzept §3.5). */
 export const UPLOAD_RETENTION_DAYS = 30;
 
+/** Aufbewahrung der Sicherungskopien in Tagen — muss zu KEEP_DAYS in `scripts/backup-cron.sh` passen. */
+export const BACKUP_RETENTION_DAYS = 30;
+
 /** Sind die Pflichtfelder gefüllt? Wird beim Rendern der Rechtsseiten geprüft. */
 export function operatorDataComplete(): boolean {
 	return !Object.values(OPERATOR).some((v) => v.startsWith('AUSFÜLLEN'));

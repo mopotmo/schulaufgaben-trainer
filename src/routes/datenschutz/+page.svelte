@@ -1,6 +1,13 @@
 <script lang="ts">
 	import LegalPage from '$lib/components/LegalPage.svelte';
-	import { OPERATOR, PROCESSORS, PROJECT, SUPERVISORY_AUTHORITY, UPLOAD_RETENTION_DAYS } from '$lib/config';
+	import {
+		BACKUP_RETENTION_DAYS,
+		OPERATOR,
+		PROCESSORS,
+		PROJECT,
+		SUPERVISORY_AUTHORITY,
+		UPLOAD_RETENTION_DAYS
+	} from '$lib/config';
 	import { CONSENT_VERSION } from '$lib/legal';
 </script>
 
@@ -38,7 +45,7 @@
 	<ul>
 		<li><strong>Profil des Kindes:</strong> Anzeigename (Vorname oder Spitzname), Schulart, Jahrgangsstufe, Bundesland, ein Emoji als Avatar</li>
 		<li><strong>Eingaben:</strong> Fach, Thema, Hinweise der Lehrkraft, gewünschter Umfang</li>
-		<li><strong>Hochgeladene Dateien:</strong> Fotos oder PDFs von Aufgabenblättern und handschriftlichen Lösungen</li>
+		<li><strong>Hochgeladene Dateien:</strong> Fotos oder PDFs von Aufgabenblättern und handschriftlichen Lösungen, Schulbücher als PDF</li>
 		<li><strong>Erzeugte Inhalte:</strong> Übungsaufgaben, Korrekturtexte, daraus abgeleitete Lernhinweise</li>
 		<li><strong>Kontaktdaten der einwilligenden Person:</strong> Name und E-Mail-Adresse, Zeitpunkt der Bestätigung der Adresse</li>
 		<li><strong>Einmal-Links:</strong> zufällige Kennungen für Bestätigungs- und Passwort-Links samt Ablaufzeitpunkt</li>
@@ -88,12 +95,24 @@
 
 	<h2>8. Speicherdauer</h2>
 	<ul>
-		<li>Hochgeladene Dateien: {UPLOAD_RETENTION_DAYS} Tage, danach automatische Löschung</li>
+		<li>Hochgeladene Aufgabenblätter und Lösungen: {UPLOAD_RETENTION_DAYS} Tage, danach automatische Löschung</li>
+		<li>
+			Hochgeladene Schulbücher: bis sie 90 Tage lang nicht zum Erzeugen von Aufgaben genutzt wurden,
+			spätestens bis zum Ende des Schuljahres am 31. August
+		</li>
 		<li>Aufgaben, Korrekturen und Lernhinweise: bis zur Löschung des Zugangs</li>
 		<li>Nachweis der Einwilligung: bis zur Löschung des Zugangs, zur Erfüllung der Rechenschaftspflicht</li>
 		<li>Einmal-Links: bis zur Löschung des Zugangs; verwendbar sind sie nur 48 Stunden (Bestätigung) bzw. eine Stunde (Passwort)</li>
 		<li>Fehlerprotokolle: kurzfristig, zur Fehlersuche</li>
 	</ul>
+	<p>
+		Zum Schutz vor Datenverlust wird der gesamte Datenbestand täglich gesichert, einschließlich der
+		hochgeladenen Dateien. Die Sicherungskopien sind verschlüsselt, liegen bei
+		{PROCESSORS.hosting.name} in Deutschland und werden nach {BACKUP_RETENTION_DAYS} Tagen
+		automatisch gelöscht. Gelöschte Daten können deshalb noch bis zu {BACKUP_RETENTION_DAYS} Tage in
+		einer Sicherungskopie enthalten sein. Sie werden daraus nur verwendet, um den Dienst nach einem
+		Ausfall wiederherzustellen.
+	</p>
 
 	<h2>9. Ihre Rechte</h2>
 	<p>
@@ -104,7 +123,8 @@
 		<strong>Die Einwilligung können Sie jederzeit widerrufen</strong>, ohne dass dies die
 		Rechtmäßigkeit der bis dahin erfolgten Verarbeitung berührt. Eine formlose Nachricht an
 		<a href="mailto:{OPERATOR.email}">{OPERATOR.email}</a> genügt. Der Zugang und alle zugehörigen
-		Daten werden dann binnen weniger Tage gelöscht.
+		Daten werden dann binnen weniger Tage gelöscht, aus den Sicherungskopien spätestens
+		{BACKUP_RETENTION_DAYS} Tage danach.
 	</p>
 	<p>
 		Unabhängig davon besteht ein Beschwerderecht bei einer Aufsichtsbehörde, für dieses Angebot beim

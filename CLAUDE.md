@@ -48,8 +48,12 @@ Kleinere Punkte ohne eigenes Konzept stehen in `docs/backlog.md`.
 
 ## Bekannte offene Punkte
 
-Stand 25.09.2026. Stufe 1 der Spec ist umgesetzt: `authz.ts`, Repository-Layer, `groups` /
-`memberships` / `consents`, profilbasierte Session. Alle harten Regeln gelten. Consent-Gate und
+Stand 25.09.2026. Stufe 1 der Spec ist vollständig umgesetzt: `authz.ts`, Repository-Layer,
+`groups` / `memberships` / `consents`, profilbasierte Session; die Altlasten (`families`,
+`family_id`, `owner_family`) sind entfernt. Alle harten Regeln gelten.
+
+Backup vor Migrationen: `scripts/backup.sh --probe` im eigenen Terminal (gpg fragt nach der
+Passphrase) — erzeugt zugleich die lokale Probeumgebung. Consent-Gate und
 Rechtsseiten stehen, ebenso Double-Opt-In und „Passwort vergessen" (Mailversand über einen
 Directus-Flow, Konzept §3.3).
 
@@ -58,8 +62,6 @@ Es gibt keine App-UI zum Einladen — so gewollt.
 
 Offen:
 
-- Spec §6 Schritt 6: `scripts/cleanup-families.ts` (Altlasten `families`, `profiles.family_id`,
-  `books.owner_family`) ist geschrieben, aber noch nicht gegen Produktion gelaufen.
-- `createProfile` schreibt keine `memberships`-Zeile — folgenlos, solange Profil-Sitzungen
-  (`switchProfile`) nicht genutzt werden.
+- Profil löschen nimmt `learner_insights` und `feedback` nicht mit (Backlog) — folgenlos, solange
+  `deleteProfile` keinen Aufrufer hat.
 - Übrige Punkte aus Stufe 0 und 2: `docs/klassen-freigabe-konzept.md` §6/§7 und `docs/backlog.md`.

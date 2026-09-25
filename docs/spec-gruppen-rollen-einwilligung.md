@@ -331,7 +331,8 @@ Fremdschlüssel repariert werden.
 4. Code umstellen (§4, §5) — `profiles.group_id` wird gelesen, `family_id` nicht mehr
 5. Verifizieren: Abnahmekriterien §8
 6. Erst danach: `profiles.group_id` auf `NOT NULL`, dann `profiles.family_id`, `books.owner_family`
-   und `families` löschen
+   und `families` löschen — *erledigt 25.09.2026 mit `scripts/cleanup-families.ts`, vorher
+   geprüftes Backup und Probelauf gegen die wiederhergestellte Kopie.*
 
 **Nicht** per SQL-Rename direkt in Postgres — Directus' Metadaten (`directus_fields`,
 `directus_relations`) laufen dann auseinander.

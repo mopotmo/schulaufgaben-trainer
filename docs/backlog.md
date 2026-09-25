@@ -10,21 +10,6 @@ nicht beim Anfassen erst wieder diagnostizieren muss. Erledigtes wandert nach un
 
 ## Offen
 
-### PDF: Antwortplatz entsteht über Punkt-Zeilen statt über echten Freiraum
-
-Der System-Prompt verlangt „ausreichend Leerzeilen für handschriftliche Antworten". Das
-Modell liefert daraufhin Zeilen mit einem einzelnen `.`, die im PDF als sichtbare
-Punktespalten stehen.
-
-Gleichzeitig laufen zwei CSS-Regeln ins Leere: `.answer-space` und `li { margin-bottom: 1.2cm }`
-greifen nie, weil der Generator weder die Klasse noch `<ol>` / `<li>` erzeugt.
-
-**Ansatz.** Entweder den Prompt auf eine explizite Markierung umstellen, die beim Rendern zu
-`.answer-space` wird, oder die Punkt-Zeilen beim Rendern in Freiraum übersetzen.
-
-**Dateien.** `src/routes/api/generieren/+server.ts` (Format-Teil des System-Prompts),
-`src/routes/api/pdf/+server.ts` (CSS)
-
 ### Schulbücher: Löschfrist umsetzen
 
 Entschieden am 25.09.2026 (Konzept §3.6): Ein Buch wird gelöscht, wenn es **90 Tage lang
@@ -135,6 +120,34 @@ verschoben. Korrigiert:
 
 **Dateien.** `src/routes/buecher/+page.svelte`, `src/routes/nutzungsbedingungen/+page.svelte`,
 `docs/klassen-freigabe-konzept.md`, `docs/backup-und-restore.md`
+
+### PDF: Antwortplatz entstand über Punkt-Zeilen statt über echten Freiraum — 25.09.2026
+
+Beide Prompts, die ein Blatt erzeugen (Generieren und Nachschärfen), verlangten „ausreichend
+Leerzeilen für handschriftliche Antworten". Leerzeilen überleben Markdown nicht, also wich das
+Modell aus. In den 20 Blättern in Directus stehen vier Formen: `<br><br>…` (14 Blätter),
+Zeilen mit nur `.` (2) — im PDF sichtbare Punktespalten —, mit nur `\` (3) und mit `&nbsp;` (1).
+
+Der Prompt verlangt jetzt nach jeder (Teil-)Aufgabe eine eigene Zeile `[Schreibplatz: N]`,
+N = Schreibzeilen passend zum Lösungsweg. Anweisung und Erkennung stehen zusammen in
+`schreibplatz.ts`. `renderMarkdown` erkennt die Markierung und die vier alten Formen als
+eigenen Block (nicht in Codeblöcken) und macht daraus im PDF `<p class="answer-gap">` mit N
+Umbrüchen, höchstens 30. Am Bildschirm fällt er weg — auch die Punkte, die dort bisher über
+dem Antwortfeld standen. Die Seitenaufteilung im PDF erkennt den Schreibplatz an der Klasse
+statt am Inhalt des Absatzes.
+
+Aufgeräumt: `.answer-space`, `ol` / `li` und ein Kommentar ohne Regel im PDF-CSS.
+
+Geprüft an allen 20 Blättern: Die `<br>`-Blätter sehen am Bildschirm unverändert aus, bei den
+übrigen fällt nur der Platzhalter weg. In der Lösen-Ansicht bleiben Gliederung und
+Nummerierung gleich. Im PDF alt gegen neu an sechs Blättern, je eines pro Form: Die
+`<br>`-Blätter sind pixelgleich (eine einzelne `<br>`-Zeile ist jetzt eine Schreibzeile, ohne
+sichtbaren Unterschied), das Punkt-Blatt hat Freiraum statt Punkten und eine Seite weniger.
+Eine neue Generierung mit der Markierung ist noch nicht gelaufen.
+
+**Dateien.** `src/lib/schreibplatz.ts`, `src/lib/renderMarkdown.ts`,
+`src/routes/api/pdf/+server.ts`, `src/routes/api/generieren/+server.ts`,
+`src/routes/api/nachschaerfen/+server.ts`
 
 ### `groups.invite_token` musste von Hand vergeben werden — 25.09.2026
 

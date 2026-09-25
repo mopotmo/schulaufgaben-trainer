@@ -11,6 +11,7 @@ import { createExercise } from '$lib/server/repo/exercises';
 import { uploadFile } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
 import { finalText } from '$lib/server/anthropic';
+import { SCHREIBPLATZ_ANWEISUNG } from '$lib/schreibplatz';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
@@ -119,7 +120,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				? `Die Aufgaben sollen in ${durationMinutes} Minuten lösbar sein – passe Anzahl und Umfang der Aufgaben entsprechend an, auch wenn das von der gewünschten Anzahl abweicht.`
 				: '',
 			`Format: Jede Aufgabe beginnt mit "Aufgabe X (Y Punkte):" – vergib sinnvolle Punktzahlen passend zur Schwierigkeit und zum Umfang der Aufgabe (z.B. 2–6 Punkte pro Aufgabe). Am Ende eine Zeile: "Gesamt: Z Punkte"`,
-			`Darunter ausreichend Leerzeilen für handschriftliche Antworten.`,
+			SCHREIBPLATZ_ANWEISUNG,
 			`Wichtig: Nur die Aufgaben ausgeben, keine Musterlösungen.`
 		]
 			.filter(Boolean)

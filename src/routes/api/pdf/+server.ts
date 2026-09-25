@@ -48,16 +48,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     font-size: 11pt;
   }
   .header .name-line span { min-width: 6cm; border-bottom: 1px solid #999; padding-bottom: 2px; }
-  ol { padding-left: 1.5em; }
-  li { margin-bottom: 1.2cm; }
   p { margin-bottom: 0.4em; }
   h1, h2, h3 { margin-bottom: 0.3em; margin-top: 0.5em; }
-  .answer-space {
-    border-bottom: 1px dotted #bbb;
-    height: 2.5cm;
-    margin-top: 0.3cm;
-    width: 100%;
-  }
   /* --- Seitenumbrüche ---
      Der gerenderte Inhalt ist eine flache Folge von <p>, <hr>, <table> und <pre>. Ohne
      Gruppierung kann eine Aufgabe mitten im Satz auf die nächste Seite rutschen. Deshalb
@@ -67,6 +59,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
      Abschnitt, wäre jede Aufgabe fast seitenhoch und es entstünden große Lücken. So
      beginnt die nächste Aufgabe dort, wo Platz ist, und der Freiraum läuft weiter. */
   .task { break-inside: avoid; }
+  /* Schreibplatz: ein Absatz aus Umbrüchen, von renderMarkdown als .answer-gap gesetzt. */
   .answer-gap { break-inside: auto; }
   /* Überschrift nie allein am Seitenfuß. */
   .task > p:first-of-type { break-after: avoid; }
@@ -74,8 +67,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   table, pre { break-inside: avoid; }
   /* Keine Einzelzeile eines Absatzes am Seitenanfang oder -ende. */
   p { orphans: 3; widows: 3; }
-  /* Eine Trennlinie direkt am Seitenfuß sieht aus wie ein Fehler. */
-
 
   /* Transparenzhinweis nach Art. 50 KI-VO – das Blatt verlässt die App. */
   .ai-notice {
@@ -171,15 +162,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					pendingRule = null;
 				}
 
-				// Absätze, die nur aus <br> bestehen, sind der Schreibplatz. Sie bleiben außerhalb
-				// des Abschnitts, damit sie über die Seitengrenze laufen dürfen.
-				const onlyBreaks =
-					el?.tagName === 'P' &&
-					(el.textContent ?? '').trim() === '' &&
-					el.querySelector('br') !== null;
-
-				if (onlyBreaks && section) {
-					el.className = 'answer-gap';
+				// Der Schreibplatz bleibt außerhalb des Abschnitts, damit er über die Seitengrenze
+				// laufen darf.
+				if (el?.classList.contains('answer-gap') && section) {
 					target.appendChild(el);
 					section = null;
 					continue;

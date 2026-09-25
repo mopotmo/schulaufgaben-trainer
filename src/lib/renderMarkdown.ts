@@ -1,5 +1,6 @@
 import { Marked } from 'marked';
 import { renderMath } from './renderMath';
+import { leseSchreibplatz, schreibplatzStart } from './schreibplatz';
 
 /**
  * Markdown → HTML für `{@html}`.
@@ -20,15 +21,36 @@ import { renderMath } from './renderMath';
 function build(schreibplatz: boolean) {
 	const md = new Marked({ async: false, breaks: true });
 	md.use({
+		extensions: [
+			{
+				/**
+				 * Schreibplatz — `[Schreibplatz: N]` und die älteren Formen (`.`, `\`, `&nbsp;`,
+				 * `<br>` je auf eigener Zeile), siehe `schreibplatz.ts`. Im PDF ein Absatz aus N
+				 * Umbrüchen mit der Klasse `answer-gap`; daran erkennt ihn die Seitenaufteilung.
+				 * Am Bildschirm nichts.
+				 */
+				name: 'schreibplatz',
+				level: 'block',
+				start: schreibplatzStart,
+				tokenizer(src) {
+					const gefunden = leseSchreibplatz(src);
+					if (!gefunden) return undefined;
+					return { type: 'schreibplatz', raw: gefunden.raw, zeilen: gefunden.zeilen };
+				},
+				renderer(token) {
+					if (!schreibplatz) return '';
+					return `<p class="answer-gap">${'<br>'.repeat(token.zeilen as number)}</p>\n`;
+				}
+			}
+		],
 		renderer: {
 			/**
 			 * Rohes HTML wird verworfen — auf dem Arbeitsblatt mit **einer** Ausnahme: `<br>`.
 			 *
-			 * Die Generierung setzt `<br><br><br>` als Schreibplatz. Sie pauschal zu verwerfen
-			 * nahm gedruckten Blättern den Platz zum Antworten, also genau das, wofür sie da
-			 * sind. `<br>` trägt keine Attribute und kann nichts ausführen, deshalb ist es die
-			 * einzige Form, die durchgelassen wird — normalisiert, damit keine Schreibweise
-			 * durchrutscht, die nur so aussieht.
+			 * Ganze `<br>`-Zeilen fängt schon der Schreibplatz oben ab; übrig bleibt `<br>`
+			 * mitten im Text. `<br>` trägt keine Attribute und kann nichts ausführen, deshalb
+			 * ist es die einzige Form, die durchgelassen wird — normalisiert, damit keine
+			 * Schreibweise durchrutscht, die nur so aussieht.
 			 */
 			html(token) {
 				if (!schreibplatz) return '';
@@ -46,7 +68,7 @@ export type RenderOptions = {
 	/**
 	 * Schreibplatz beibehalten. Nur für das PDF.
 	 *
-	 * Auf Papier sind die `<br>`-Blöcke die Linien zum Schreiben. Am Bildschirm steht
+	 * Auf Papier ist er der Platz zum Schreiben. Am Bildschirm steht
 	 * darunter ein Eingabefeld — dort wäre derselbe Platz nur ein rätselhaftes Loch
 	 * zwischen Aufgabenstellung und Antwort.
 	 */
@@ -60,8 +82,8 @@ export function renderMarkdown(
 	if (!source) return '';
 
 	let html = (schreibplatz ? papier : bildschirm).parse(source) as string;
-	// Ohne Schreibplatz bleibt von `<p><br><br><br></p>` ein leerer Absatz übrig — unsichtbar,
-	// aber mit Außenabstand, also weiterhin eine Lücke.
+	// Verworfenes Inline-HTML (`<br>` am Bildschirm, `<img>` …) kann einen leeren Absatz
+	// hinterlassen — unsichtbar, aber mit Außenabstand, also weiterhin eine Lücke.
 	if (!schreibplatz) html = html.replace(/<p>\s*<\/p>\s*/g, '');
 
 	return renderMath(html);

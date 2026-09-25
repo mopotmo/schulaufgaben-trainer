@@ -85,6 +85,31 @@ Aus der Umsetzung vom 25.09.2026 (Double-Opt-In und „Passwort vergessen").
 **Dateien.** `src/lib/session.ts`, `src/hooks.server.ts`, `src/lib/server/repo/emailTokens.ts`,
 `scripts/email-verification.ts`
 
+### Profil löschen: abhängige Daten werden nicht vollständig mitgelöscht
+
+Festgestellt am 25.09.2026 an den Relationen in Produktion. `deleteProfile` hat noch keinen
+Aufrufer, der Fehler ist also nicht sichtbar — wird es aber, sobald Eltern Profile löschen können.
+
+| Collection | Verweis auf das Profil | Beim Löschen |
+|---|---|---|
+| `memberships` | `profile_id` | `CASCADE` ✓ |
+| `exercises` | `profile_id` | `CASCADE` ✓ |
+| `corrections` | über `exercise_id` | `CASCADE` ✓ |
+| `learner_insights` | `profile_id` | **`NO ACTION`** — das Löschen scheitert am Fremdschlüssel |
+| `feedback` | `profile_id` | **keine Relation** — Zeilen bleiben verwaist stehen |
+
+Dazu: `corrections.solution_file` zeigt auf `directus_files`. Die Kaskade löscht die Korrektur,
+nicht das hochgeladene Lösungsfoto — Datei und Zeile bleiben im Uploads-Volume.
+
+Aus DSGVO-Sicht sollte mit dem Profil alles gehen, was sich auf das Kind bezieht.
+
+**Ansatz.** In Directus `learner_insights.profile_id` auf `CASCADE` umstellen und für
+`feedback.profile_id` eine Relation mit `CASCADE` (oder `SET NULL`, falls Feedback anonym
+erhalten bleiben soll — Entscheidung offen). Lösungsfotos entweder in `deleteProfile` vor dem
+Löschen einsammeln oder vom Flow für die 30-Tage-Löschung miterfassen lassen. Vorher Backup.
+
+**Dateien.** `src/lib/server/repo/profiles.ts` (`deleteProfile`), Directus-Relationen
+
 ## Erledigt
 
 ### `groups.invite_token` musste von Hand vergeben werden — 25.09.2026

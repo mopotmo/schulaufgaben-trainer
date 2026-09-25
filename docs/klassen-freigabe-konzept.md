@@ -18,7 +18,7 @@ Umsetzungs-Spec dazu: `docs/spec-gruppen-rollen-einwilligung.md`
 | Session | `src/lib/session.ts`, gruppenbasiert (Familie), Login via Slug + Passwort-Hash |
 | Klassen-Feature | konzipiert, **nicht umgesetzt** |
 | Hosting | Hetzner, Standort Nürnberg (EU) |
-| KI-VO | Transparenzpflichten seit 02.08.2026 anwendbar — siehe §3.7 |
+| KI-VO | Transparenzpflichten seit 02.08.2026 anwendbar — siehe §3.8 |
 
 Offen ist alles, was im Frühjahr geplant war: `families` → `groups` mit `type`, Session-Refactor auf
 profilbasiert (inkl. Null-Gleichheits-Bug), Klassenbeitritt.
@@ -149,10 +149,28 @@ Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 ### 3.6 Hochgeladene Schulbücher
 
 Ein hochgeladenes Schulbuch ist eine im Wesentlichen vollständige Vervielfältigung und fällt
-daher nicht unter die Privatkopie-Ausnahme (§ 53 Abs. 4 lit. b UrhG). Rechtlich zulässig ist
-das Hochladen nur, wenn das Buch dem nutzenden Haushalt gehört und ausschließlich für diesen
-verwendet wird. Eine Weitergabe an Dritte ist nicht gestattet. Technisch durchgesetzt wird
-dies durch automatische Löschung nach 30 Tagen (siehe §3.5).
+daher nicht unter die Privatkopie-Ausnahme (§ 53 Abs. 4 lit. b UrhG). Vertretbar ist das
+Hochladen nur, wenn das Buch dem nutzenden Haushalt gehört und ausschließlich dort verwendet
+wird. Entschieden (Review 22.09.2026, Frist 25.09.2026):
+
+- **Keine Weitergabe, auch nicht innerhalb der App.** Der Freigabepfad über
+  `visibility: 'shared'` ist entfernt; Bücher sind nur für die eigene Gruppe sichtbar
+  (`repo/books.ts`). Der Generierungs-Prompt verlangt eigene Aufgaben und verbietet, Aufgabentexte,
+  Zahlenbeispiele oder Formulierungen wörtlich zu übernehmen (`api/generieren`).
+- **Hinweis am Upload-Formular** (`/buecher`, an die Schüler gerichtet, „du") und
+  **Abschnitt in den Nutzungsbedingungen** (an die Eltern, „Sie"): nur eigene Bücher, nur für
+  den eigenen Haushalt, keine Weitergabe.
+- **Löschfrist: 90 Tage ohne Nutzung, spätestens zum Schuljahresende (31.08.).** Ein Buch
+  soll für die Dauer eines Kapitels bzw. Schuljahres dienen, nicht als dauerhafte Ablage. Eine
+  feste Frist ab Upload (z. B. 30 Tage) wurde verworfen: Sie löscht mitten im Kapitel und
+  führt zu wiederholtem Hochladen — also zu mehr Kopien, nicht weniger. „Nutzung" heißt: das
+  Buch war Quelle einer Generierung. Dafür braucht `books` ein Feld `last_used_at`. Gelöschte
+  Bücher liegen bis zu 30 Tage in den Backups; das steht so in den Nutzungsbedingungen.
+- Umgesetzt wird die Löschung im selben Directus-Flow wie die Lösungsfotos (§3.5). Bis dahin
+  ist die Zusage in den Texten nicht eingelöst — siehe `backlog.md`.
+
+Die Nutzungsbedingungen wurden ohne Versionssprung geändert (`CONSENT_VERSION` bleibt
+`2026-09-v2`): Zum Zeitpunkt der Änderung gab es noch keine aktiv nutzenden fremden Familien.
 
 ### 3.7 Nutzungsbedingungen (eine kurze Seite)
 
@@ -200,7 +218,7 @@ Dagegen spricht:
 
 - Anhang III Nr. 3 zielt auf Einrichtungen der allgemeinen und beruflichen Bildung. Dieses
   Angebot steht ausdrücklich in keinem Zusammenhang mit einer Schule und hat keine
-  schulische Wirkung (§3.6).
+  schulische Wirkung (§3.7).
 - Art. 6 Abs. 3 nimmt Systeme aus, die kein erhebliches Risiko für Gesundheit, Sicherheit
   oder Grundrechte bergen.
 - Art. 2 Abs. 10 nimmt rein persönliche, nicht-berufliche Nutzung aus — dieselbe Frage wie
@@ -290,7 +308,7 @@ Mehr nicht.
 | 1 | Seiten `/impressum`, `/datenschutz`, `/nutzungsbedingungen` + Links, auch auf der Login-Seite | S |
 | 2 | `consents`-Collection + blockierendes Consent-Gate beim ersten Login | M |
 | 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen | S |
-| 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen (Directus Flow) | M |
+| 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen (Directus Flow); Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) | M |
 | 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` | S |
 | 6 | AVV Anthropic + AVV Hetzner abschließen und ablegen | S |
 | 7 | VVT + TOM als internes Dokument | S |
@@ -329,7 +347,7 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 - Aufbewahrungsdauer Uploads: 30 Tage
 - Keine Lehrer-Rolle im ersten Release
 - Onboarding: manuell angelegt + Einwilligung beim ersten Login
-- KI-Transparenzhinweise nach Art. 50 KI-VO: umgesetzt am 22.09.2026 (§3.7)
+- KI-Transparenzhinweise nach Art. 50 KI-VO: umgesetzt am 22.09.2026 (§3.8)
 - Die drei technischen Detailfragen am Ende der Spec sind am 20.09.2026 entschieden:
   keine Eltern-Profile in Stufe 1, kein Klassenbeitritt in Stufe 1, Migration als Node-Skript.
   Begründungen in der Spec, §10.
@@ -340,4 +358,4 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 
 - Stufe 1 ab Aufgabe 10 (Datenmodell, Session, Repo-Layer) und Stufe 0 vollständig
 - **KI-VO, Anhang III Nr. 3 Buchst. b**: Ist die Korrektur- und Notenfunktion eine
-  „Bewertung von Lernergebnissen"? Argumente in §3.7. Für den Anwaltstermin.
+  „Bewertung von Lernergebnissen"? Argumente in §3.8. Für den Anwaltstermin.

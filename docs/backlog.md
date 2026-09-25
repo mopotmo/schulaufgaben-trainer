@@ -25,24 +25,23 @@ greifen nie, weil der Generator weder die Klasse noch `<ol>` / `<li>` erzeugt.
 **Dateien.** `src/routes/api/generieren/+server.ts` (Format-Teil des System-Prompts),
 `src/routes/api/pdf/+server.ts` (CSS)
 
-### Urheberrecht: drei offene Punkte beim Schulbuch-Upload
+### Schulbücher: Löschfrist umsetzen
 
-Aus dem Review vom 22.09.2026. Der Freigabepfad über `visibility: 'shared'` ist entfernt und
-der Generierungs-Prompt entschärft; offen bleibt:
+Entschieden am 25.09.2026 (Konzept §3.6): Ein Buch wird gelöscht, wenn es **90 Tage lang
+nicht Quelle einer Generierung** war, spätestens zum **31.08.** (Schuljahresende). Upload-Hinweis
+und Nutzungsbedingungen sagen das bereits — die Zusage ist erst eingelöst, wenn das hier steht.
 
-1. **Hinweis am Upload-Formular** in `src/routes/buecher/+page.svelte`: nur eigene Bücher,
-   nur für den eigenen Haushalt, keine Weitergabe.
-2. **Löschfrist für hochgeladene Bücher.** Ein dauerhaft gespeichertes Schulbuch ist etwas
-   anderes als eines, das für die Dauer eines Kapitels dient. Gehört zum selben Directus-Flow
-   wie die 30-Tage-Löschung der Lösungsfotos und sollte zusammen gebaut werden.
-3. **Abschnitt in Nutzungsbedingungen und Konzept**, damit die Entscheidung dokumentiert ist
-   wie die übrigen rechtlichen Punkte. Im Konzept als eigener Abschnitt unter §3.
+1. **`books.last_used_at`** anlegen (Skript in `scripts/` mit `--dry`, Muster
+   `scripts/email-verification.ts`), Bestandsbücher mit `created_at` vorbelegen. Typ in
+   `src/lib/server/directus.ts` mitziehen.
+2. **Beim Generieren setzen**, sobald ein Buch als Quelle dient — über `repo/books.ts`,
+   nicht direkt im Route-Handler.
+3. **Löschen im Directus-Flow** der Lösungsfotos (Konzept Stufe 0 #4): Zeile *und* PDF in
+   `directus_files`. Zwei Bedingungen: `last_used_at` älter als 90 Tage, oder 31.08. erreicht.
+4. Optional: in der Bücherliste „wird am … gelöscht" anzeigen.
 
-Hintergrund: Ein hochgeladenes Schulbuch ist eine im Wesentlichen vollständige
-Vervielfältigung und damit nach § 53 Abs. 4 lit. b UrhG nicht von der Privatkopie gedeckt.
-
-**Dateien.** `src/routes/buecher/+page.svelte`, `src/routes/nutzungsbedingungen/+page.svelte`,
-`docs/klassen-freigabe-konzept.md`
+**Dateien.** `src/lib/server/repo/books.ts`, `src/routes/api/generieren/+server.ts`,
+`src/lib/server/directus.ts`, `src/routes/buecher/+page.svelte`, neues Skript in `scripts/`
 
 ### Backups laufen nur von Hand
 
@@ -114,6 +113,28 @@ Löschen einsammeln oder vom Flow für die 30-Tage-Löschung miterfassen lassen.
 **Dateien.** `src/lib/server/repo/profiles.ts` (`deleteProfile`), Directus-Relationen
 
 ## Erledigt
+
+### Urheberrecht: Hinweise beim Schulbuch-Upload — 25.09.2026
+
+Aus dem Review vom 22.09.2026. Ein hochgeladenes Schulbuch ist eine im Wesentlichen
+vollständige Vervielfältigung und nach § 53 Abs. 4 lit. b UrhG nicht von der Privatkopie
+gedeckt. Freigabepfad (`visibility: 'shared'`) und Generierungs-Prompt waren schon angepasst.
+
+Ein erster Anlauf (22.09.) hatte Hinweis, Nutzungsbedingungen und Konzept-Abschnitt bereits
+geschrieben, aber eine Löschung nach 30 Tagen zugesagt, die weder entschieden noch gebaut war,
+die Eltern in den Nutzungsbedingungen geduzt und beim Einschieben von §3.6 fünf Querverweise
+verschoben. Korrigiert:
+
+1. **Hinweis am Upload-Formular** (an die Schüler, „du"): nur eigene Bücher, nur die eigene
+   Familie sieht sie, keine Weitergabe, Löschfrist.
+2. **Löschfrist entschieden**: 90 Tage ohne Nutzung, spätestens 31.08. Die Umsetzung steht
+   oben unter „Schulbücher: Löschfrist umsetzen".
+3. **Nutzungsbedingungen** (an die Eltern, „Sie") und **Konzept §3.6** mit Begründung und
+   verworfener Alternative; Querverweise im Konzept und in `backup-und-restore.md` repariert.
+   Kein Versionssprung von `CONSENT_VERSION` — noch keine aktiv nutzenden fremden Familien.
+
+**Dateien.** `src/routes/buecher/+page.svelte`, `src/routes/nutzungsbedingungen/+page.svelte`,
+`docs/klassen-freigabe-konzept.md`, `docs/backup-und-restore.md`
 
 ### `groups.invite_token` musste von Hand vergeben werden — 25.09.2026
 

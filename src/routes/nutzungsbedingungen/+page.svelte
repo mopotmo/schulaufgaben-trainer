@@ -60,11 +60,21 @@
 
 	<h2>Hochgeladene Schulbücher</h2>
 	<p>
-		Du darfst nur Schulbücher hochladen, die dir oder deinem Haushalt gehören. Die hochgeladenen
-		Dateien stehen ausschließlich dir und deinem Haushalt zur Verfügung — eine Weitergabe an
-		Dritte ist nicht erlaubt. Nach 30 Tagen werden die Dateien automatisch gelöscht, auch wenn du
-		sie noch brauchst. Speichere dir bei Bedarf eine Kopie.
+		Ein hochgeladenes Schulbuch ist eine Kopie eines urheberrechtlich geschützten Werks. Das
+		Urheberrecht erlaubt das nur in engen Grenzen, deshalb gilt:
 	</p>
+	<ul>
+		<li>Hochladen dürfen Sie nur Schulbücher, die Ihnen oder Ihrem Haushalt gehören.</li>
+		<li>
+			Ein hochgeladenes Buch steht ausschließlich Ihrer Familie zur Verfügung. Andere Familien
+			sehen es nicht. Die Datei darf nicht an Dritte weitergegeben werden.
+		</li>
+		<li>
+			Wird ein Buch 90 Tage lang nicht zum Erzeugen von Aufgaben genutzt, wird es automatisch
+			gelöscht, spätestens zum Ende des Schuljahres am 31. August. In Sicherungskopien kann es
+			danach noch bis zu 30 Tage vorhanden sein.
+		</li>
+	</ul>
 
 	<h2>Fragen</h2>
 	<p>

@@ -51,7 +51,8 @@
 
 			<div class="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-900">
 				<p class="font-medium mb-1">Wichtig:</p>
-				<p>Du darfst nur Schulbücher hochladen, die dir oder deinem Haushalt gehören. Sie stehen nur euch zur Verfügung und dürfen nicht weitergegeben werden. Nach 30 Tagen werden die Dateien automatisch gelöscht.</p>
+				<p>Lade nur Schulbücher hoch, die dir oder deiner Familie gehören. Das Buch sieht nur deine Familie – gib die Datei nicht weiter.</p>
+				<p class="mt-1">Wird ein Buch 90 Tage lang nicht zum Üben benutzt, wird es automatisch gelöscht, spätestens zum Ende des Schuljahres.</p>
 			</div>
 
 			<form

@@ -93,7 +93,7 @@ docker exec <container> pg_dump -U <user> -d <db> -Fc > ~/trainer-$(date +%F).du
 ## 4. Verschlüsseln und herunterladen
 
 In der Datenbank stehen Vornamen, Klassenstufen und Korrekturtexte fremder Kinder. Der
-TOM-Abschnitt im Konzept (§3.8) verlangt verschlüsselte Backups — das gilt ab dem Moment, in
+TOM-Abschnitt im Konzept (§3.9) verlangt verschlüsselte Backups — das gilt ab dem Moment, in
 dem die Datei den Container verlässt.
 
 ```sh

@@ -131,6 +131,8 @@ Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 
 - **Anthropic**: DPA in der Console unterzeichnen, PDF ablegen. Zero-Data-Retention prüfen.
 - **Hetzner**: AVV elektronisch über Cloud Console bzw. Robot abschließen, PDF ablegen.
+  **Erledigt am 25.09.2026.** Betroffene ausdrücklich als Minderjährige unter 16 und deren
+  Sorgeberechtigte eingetragen, Datenarten passend zu `/datenschutz` Abschnitt 4.
   Standort Nürnberg in der Datenschutzerklärung nennen.
 - **Directus** wird selbst betrieben → kein eigener AVV.
 
@@ -310,7 +312,7 @@ Mehr nicht.
 | 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen | S |
 | 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen (Directus Flow); Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) | M |
 | 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` | S |
-| 6 | AVV Anthropic + AVV Hetzner abschließen und ablegen | S |
+| 6 | AVV Anthropic + AVV Hetzner abschließen und ablegen — Hetzner erledigt 25.09.2026, Anthropic offen | S |
 | 7 | VVT + TOM als internes Dokument | S |
 | 8 | Login härten: nicht erratbare Slugs/Codes, Rate-Limiting | S |
 
@@ -348,6 +350,7 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 - Keine Lehrer-Rolle im ersten Release
 - Onboarding: manuell angelegt + Einwilligung beim ersten Login
 - KI-Transparenzhinweise nach Art. 50 KI-VO: umgesetzt am 22.09.2026 (§3.8)
+- AVV mit Hetzner abgeschlossen am 25.09.2026 (§3.4)
 - Die drei technischen Detailfragen am Ende der Spec sind am 20.09.2026 entschieden:
   keine Eltern-Profile in Stufe 1, kein Klassenbeitritt in Stufe 1, Migration als Node-Skript.
   Begründungen in der Spec, §10.

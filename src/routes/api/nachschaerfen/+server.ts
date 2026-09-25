@@ -6,6 +6,7 @@ import { requireActor } from '$lib/server/actor';
 import { getExercise, createExercise } from '$lib/server/repo/exercises';
 import type { RequestHandler } from './$types';
 import { finalText } from '$lib/server/anthropic';
+import { SCHREIBPLATZ_ANWEISUNG } from '$lib/schreibplatz';
 
 export type NachschaerpenMode = 'weak_areas' | 'easier' | 'harder';
 
@@ -42,7 +43,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			messages: [
 				{
 					role: 'user',
-					content: `Ursprüngliche Aufgaben:\n\n${exercise.generated_content}\n\n---\n\nKorrektur des Schülers:\n\n${correctionResult}\n\n---\n\n${modeInstructions[mode]}\n\nFormat: Jede Aufgabe beginnt mit "Aufgabe X (Y Punkte):" – vergib sinnvolle Punktzahlen. Am Ende eine Zeile: "Gesamt: Z Punkte". Darunter ausreichend Leerzeilen für handschriftliche Antworten. Keine Musterlösungen.`
+					content: `Ursprüngliche Aufgaben:\n\n${exercise.generated_content}\n\n---\n\nKorrektur des Schülers:\n\n${correctionResult}\n\n---\n\n${modeInstructions[mode]}\n\nFormat: Jede Aufgabe beginnt mit "Aufgabe X (Y Punkte):" – vergib sinnvolle Punktzahlen. Am Ende eine Zeile: "Gesamt: Z Punkte". ${SCHREIBPLATZ_ANWEISUNG} Keine Musterlösungen.`
 				}
 			]
 		});

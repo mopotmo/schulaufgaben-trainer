@@ -28,18 +28,6 @@ und Nutzungsbedingungen sagen das bereits — die Zusage ist erst eingelöst, we
 **Dateien.** `src/lib/server/repo/books.ts`, `src/routes/api/generieren/+server.ts`,
 `src/lib/server/directus.ts`, `src/routes/buecher/+page.svelte`, neues Skript in `scripts/`
 
-### Backups laufen nur von Hand
-
-*Teilweise erledigt 25.09.2026:* Ein Backup ist jetzt ein Aufruf (`scripts/backup.sh`), samt
-Wiederherstellung und Gegenzählen. Offen bleibt, dass es niemand regelmäßig anstößt.
-
-`docs/backup-und-restore.md` beschreibt das Vorgehen, aber es stößt niemand an. Entweder
-Coolifys geplante Backups nutzen, falls sie Datenbanken im Service-Stack abdecken, oder ein
-Cronjob mit Rotation. Dazu fehlt eine Entscheidung zur Aufbewahrungsdauer — die berührt die
-Löschzusage aus dem Konzept §3.3.
-
-**Dateien.** keine (Betrieb)
-
 ### Lösen-Ansicht: Der Blatt-Fuß landet in der letzten Teilaufgabe
 
 Am Ende eines Blatts steht oft eine Zeile wie `Gesamt: 24 Punkte`, durch `---` vom letzten
@@ -91,13 +79,36 @@ nicht das hochgeladene Lösungsfoto — Datei und Zeile bleiben im Uploads-Volum
 Aus DSGVO-Sicht sollte mit dem Profil alles gehen, was sich auf das Kind bezieht.
 
 **Ansatz.** In Directus `learner_insights.profile_id` auf `CASCADE` umstellen und für
-`feedback.profile_id` eine Relation mit `CASCADE` (oder `SET NULL`, falls Feedback anonym
-erhalten bleiben soll — Entscheidung offen). Lösungsfotos entweder in `deleteProfile` vor dem
+`feedback.profile_id` eine Relation mit `SET NULL` — entschieden am 25.09.2026: Feedback bleibt
+anonym erhalten. Dafür prüfen, dass im Feedback-Text selbst nichts Personenbezogenes steht. Lösungsfotos entweder in `deleteProfile` vor dem
 Löschen einsammeln oder vom Flow für die 30-Tage-Löschung miterfassen lassen. Vorher Backup.
 
 **Dateien.** `src/lib/server/repo/profiles.ts` (`deleteProfile`), Directus-Relationen
 
 ## Erledigt
+
+### Backups liefen nur von Hand — 25.09.2026
+
+`scripts/backup.sh` machte ein Backup zu einem Aufruf, aber niemand stieß ihn regelmäßig an.
+Jetzt läuft `scripts/backup-cron.sh` als Cronjob auf dem Server (täglich 02:15 UTC): Datenbank
+und Uploads, verschlüsselt mit einem öffentlichen gpg-Schlüssel, auf eine Hetzner Storage Box
+in Falkenstein, Rotation nach **30 Tagen** (entschieden 25.09.2026). Nach jedem erfolgreichen
+Lauf ein Push an Uptime Kuma; bleibt er 26 Stunden aus, gibt es Alarm.
+
+Coolifys geplante Backups wurden verworfen: Sie verschlüsseln nicht selbst und erfassen das
+Uploads-Volume nicht. Die Box hat keine äußere Erreichbarkeit; der Mac liest über ein
+Unterkonto (nur lesen) per ProxyJump über den Server. Der Server kann Backups schreiben, aber
+nicht entschlüsseln — der private Schlüssel liegt nur beim Betreiber.
+
+`scripts/backup.sh --latest` holt den neuesten Stand, stellt ihn wieder her und zählt gegen die
+Zählung vom Zeitpunkt des Dumps. Erster Lauf so geprüft: 41 Tabellen, 6 Dateien.
+**Mindestens monatlich und vor Migrationen ausführen** — der Cronjob kann das nicht selbst.
+
+Die Datenschutzerklärung nennt Sicherungen, Ort und 30 Tage (§8, §9), ohne neue
+`CONSENT_VERSION`, weil es noch keine aktiven Nutzer gibt.
+
+**Dateien.** `scripts/backup-cron.sh`, `scripts/backup.sh`, `docs/backup-und-restore.md`,
+`src/routes/datenschutz/+page.svelte`, `src/lib/config.ts`
 
 ### Urheberrecht: Hinweise beim Schulbuch-Upload — 25.09.2026
 

@@ -25,6 +25,108 @@ Voraussetzungen: SSH-Zugang als `groovemanager-coolify` ohne Passwortabfrage (so
 `BACKUP_SERVER=…`), `gpg` und Docker lokal. Die Einzelschritte unten bleiben als Referenz und
 für den Fall, dass das Skript scheitert.
 
+## Automatisch: täglich auf die Storage Box
+
+*Stand 25.09.2026: eingerichtet und in Betrieb, täglich 02:15 UTC. Log auf dem Server in
+`/var/log/trainer-backup.log`, Konfiguration in `/etc/trainer-backup.env`, Cronjob in
+`/etc/cron.d/trainer-backup`.*
+
+`scripts/backup-cron.sh` läuft als Cronjob **auf dem Server**. Es sichert Datenbank und
+Uploads, verschlüsselt mit einem **öffentlichen** Schlüssel, lädt beides auf eine Hetzner
+Storage Box und löscht dort Stände, die älter als 30 Tage sind (Aufbewahrung entschieden am
+25.09.2026). Der Server kann Backups also schreiben, aber nicht lesen. Nach jedem erfolgreichen
+Lauf meldet er sich bei Uptime Kuma; bleibt die Meldung aus, schlägt der Monitor an.
+
+Ein Satz auf der Box besteht aus drei Dateien:
+
+| Datei | Inhalt |
+|---|---|
+| `trainer-<stamp>.dump.gpg` | pg_dump im Custom-Format, verschlüsselt |
+| `uploads-<stamp>.tar.gz.gpg` | Uploads-Volume, verschlüsselt |
+| `trainer-<stamp>.counts` | Zeilenzahl je Tabelle und Dateizahl zum Zeitpunkt des Dumps, Klartext ohne Personenbezug |
+
+Die `.counts`-Datei wird zuletzt hochgeladen. Nur ein Satz mit ihr ist vollständig.
+
+**Wiederherstellung prüfen** — der Cronjob kann das nicht, weil ihm der private Schlüssel
+fehlt. Deshalb mindestens monatlich und vor jeder Migration auf dem Mac:
+
+```sh
+scripts/backup.sh --latest
+```
+
+Holt den neuesten Satz, spielt ihn in `trainer-restore` ein und zählt gegen die `.counts`-Datei
+statt gegen die inzwischen weitergelaufene Produktion. Mit `--probe` bleibt die Probeumgebung
+stehen. Vor einer Migration trotzdem `scripts/backup.sh` für einen frischen Stand.
+
+### Einrichtung
+
+1. **Storage Box buchen** (Hetzner-Konsole, kleinste Größe reicht, Standort **Falkenstein** —
+   Deutschland wie der Server, nicht Helsinki). Nur **SSH-Support** an; SMB, WebDAV und
+   **„Äußere Erreichbarkeit" aus** (entschieden 25.09.2026) — die Box ist dann nur aus dem
+   Hetzner-Netz erreichbar, der Mac kommt über den Server als Zwischenstation hin.
+   Automatische Snapshots der Box **aus** lassen — sie würden die 30 Tage unterlaufen.
+2. **Unterkonto nur zum Lesen** für den Mac anlegen, Basisverzeichnis `trainer`,
+   „Nur lesen" an, „Äußere Erreichbarkeit" auch hier aus. Der Mac braucht keinen
+   Schreibzugriff.
+3. **Schlüsselpaar auf dem Mac** erzeugen, mit Passphrase:
+
+   ```sh
+   gpg --quick-gen-key "Schulaufgaben Backup" ed25519 cert never
+   gpg --quick-add-key <Fingerprint> cv25519 encr never
+   gpg --armor --export "Schulaufgaben Backup" > trainer-backup.pub.asc
+   ```
+
+   Den privaten Schlüssel zusätzlich offline sichern (`gpg --export-secret-keys --armor`,
+   z. B. im Passwortmanager). **Ohne ihn sind alle Backups wertlos.**
+4. **Server:** `trainer-backup.pub.asc` nach `/etc/trainer-backup.pub.asc`, das Skript nach
+   `/usr/local/bin/trainer-backup`. Für root ein SSH-Schlüssel ohne Passphrase, dessen
+   öffentlicher Teil auf die Box kommt (Hauptkonto, Port 23):
+
+   ```sh
+   ssh-keygen -t ed25519 -f /root/.ssh/storagebox -N ''
+   ```
+
+   In `/root/.ssh/config` für den Box-Host `Port 23` und `IdentityFile /root/.ssh/storagebox`
+   eintragen. Vorher auf dem Server prüfen, dass `gpg`, `sftp` und `curl` vorhanden sind.
+5. **Konfiguration** `/etc/trainer-backup.env`, Rechte `600`:
+
+   ```sh
+   DIRECTUS_HOST=schulaufgaben-trainer-directus.coolify.groovemanager.com
+   BOX=u123456@u123456.your-storagebox.de
+   PUSH_URL=https://<uptime-kuma>/api/push/<token>
+   ```
+
+6. **Uptime Kuma:** Monitor vom Typ *Push*, Intervall 26 Stunden. Die URL ohne Parameter
+   in `PUSH_URL`.
+7. **Probelauf:** `trainer-backup --dry` prüft Konfiguration, Container und Box. Danach einmal
+   ohne `--dry` und auf dem Mac `scripts/backup.sh --latest` — erst dann den Cronjob anlegen.
+8. **Cronjob** in `/etc/cron.d/trainer-backup` (Serverzeit ist UTC):
+
+   ```
+   15 2 * * * root /usr/local/bin/trainer-backup >> /var/log/trainer-backup.log 2>&1
+   ```
+
+   Das Log enthält nur Container-Namen, Größen und Dateinamen.
+
+Auf dem Mac `BACKUP_BOX=<unterkonto>@<box-host>` in `.env` eintragen und den
+SSH-Schlüssel des Macs beim Unterkonto hinterlegen.
+
+**So eingerichtet am 25.09.2026** — Box `u676898`, Unterkonto `u676898-sub1` (nur lesen):
+
+- Die Konsole bietet kein Feld für SSH-Schlüssel. Der Server-Schlüssel kam per
+  `ssh-copy-id -s -i /root/.ssh/storagebox.pub` mit einmaliger Passworteingabe auf die Box.
+- Der Mac-Schlüssel `~/.ssh/storagebox_trainer` liegt über das Hauptkonto in
+  `trainer/.ssh/authorized_keys` — dort sucht Hetzner die Schlüssel des Unterkontos.
+- Das Unterkonto startet **in** `trainer`; für den Mac ist der Ordner deshalb `.`
+  (Standard von `BACKUP_BOX_DIR`).
+- Den Host-Schlüssel der Box hat der Mac aus `known_hosts` des Servers übernommen
+  (ED25519 `SHA256:XqONwb1S0zuj5A1CDxpOSuD2hnAArV1A3wKY7Z3sdgM`), nicht blind akzeptiert.
+- Erster Lauf `trainer-2026-09-25-181402`: 41 Tabellen, 6 Dateien, mit `--latest`
+  wiederhergestellt und gegengezählt. `backup.sh --latest` geht per `ProxyJump`
+über `groovemanager-coolify` (`BACKUP_BOX_JUMP`, Standard `BACKUP_SERVER`). Der Server reicht
+nur die Verbindung durch; angemeldet wird mit dem Schlüssel des Macs, der Inhalt bleibt
+verschlüsselt. Auf dem Server muss dafür `AllowTcpForwarding` erlaubt sein (Standard bei OpenSSH).
+
 ---
 
 ## 1. Ausgangslage
@@ -253,13 +355,15 @@ aufbewahrt werden.
 
 ## 8. Offen
 
-- **Wiederholung.** Bisher läuft alles von Hand. Entweder Coolifys geplante Backups nutzen,
-  falls sie den Service-Stack abdecken (Oberfläche prüfen), oder ein Cronjob mit denselben
-  Befehlen plus Rotation.
+- **Wiederholung.** Gelöst durch den Cronjob oben (entschieden 25.09.2026: Cronjob auf die
+  Storage Box statt Coolifys geplanter Backups — die hätten nicht selbst verschlüsselt und die
+  Uploads nicht erfasst). Eingerichtet am 25.09.2026.
 - **Hetzner-Snapshot** als zweite Ebene, vor jeder Migration zusätzlich zum Dump.
-- **Aufbewahrung.** Wie viele Stände, wie lange, wo. Berührt die Löschzusage aus Konzept
-  §3.3: Ein Backup, das ein gelöschtes Profil noch monatelang vorhält, ist ein eigener Punkt
-  im Verzeichnis der Verarbeitungstätigkeiten.
+- **Aufbewahrung.** Entschieden am 25.09.2026: täglich, 30 Tage, auf der Storage Box. Ein
+  gelöschtes Profil liegt damit bis zu 30 Tage länger im Backup — in Datenschutzerklärung und
+  Verzeichnis der Verarbeitungstätigkeiten nennen.
+- **Box löschbar vom Server aus.** Der Server hat Schreib- und Löschrechte auf der Box, ein
+  kompromittierter Server kann also auch die Backups löschen. Für diese Größe hingenommen.
 - **30-Tage-Löschung der Uploads** (Konzept, Stufe 0 #4) ist nicht umgesetzt. Solange sie
   fehlt, wächst mit jedem Upload-Backup ein Bestand mit, der längst gelöscht sein sollte.
   Als Directus-Flow oder Cronjob — siehe Spec §10.3, Flows sind für Wiederkehrendes.

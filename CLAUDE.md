@@ -57,6 +57,11 @@ Passphrase) — erzeugt zugleich die lokale Probeumgebung. Consent-Gate und
 Rechtsseiten stehen, ebenso Double-Opt-In und „Passwort vergessen" (Mailversand über einen
 Directus-Flow, Konzept §3.3).
 
+Zwei Cronjobs auf dem Server, nicht Teil des App-Deploys: `scripts/aufraeumen.ts` (Löschfristen,
+01:45 UTC) und `scripts/backup-cron.sh` (Backup auf die Storage Box, 02:15 UTC). Nach einer
+Änderung an ihnen oder an `src/lib/retention.ts` von Hand neu auf den Server kopieren —
+Pfade in `docs/backup-und-restore.md`.
+
 Neue Familien legt nur der Admin in Directus an; Einladungslink und Token vergibt Directus selbst.
 Es gibt keine App-UI zum Einladen — so gewollt.
 

@@ -10,24 +10,6 @@ nicht beim Anfassen erst wieder diagnostizieren muss. Erledigtes wandert nach un
 
 ## Offen
 
-### Schulbücher: Löschfrist umsetzen
-
-Entschieden am 25.09.2026 (Konzept §3.6): Ein Buch wird gelöscht, wenn es **90 Tage lang
-nicht Quelle einer Generierung** war, spätestens zum **31.08.** (Schuljahresende). Upload-Hinweis
-und Nutzungsbedingungen sagen das bereits — die Zusage ist erst eingelöst, wenn das hier steht.
-
-1. **`books.last_used_at`** anlegen (Skript in `scripts/` mit `--dry`, Muster
-   `scripts/email-verification.ts`), Bestandsbücher mit `created_at` vorbelegen. Typ in
-   `src/lib/server/directus.ts` mitziehen.
-2. **Beim Generieren setzen**, sobald ein Buch als Quelle dient — über `repo/books.ts`,
-   nicht direkt im Route-Handler.
-3. **Löschen im Directus-Flow** der Lösungsfotos (Konzept Stufe 0 #4): Zeile *und* PDF in
-   `directus_files`. Zwei Bedingungen: `last_used_at` älter als 90 Tage, oder 31.08. erreicht.
-4. Optional: in der Bücherliste „wird am … gelöscht" anzeigen.
-
-**Dateien.** `src/lib/server/repo/books.ts`, `src/routes/api/generieren/+server.ts`,
-`src/lib/server/directus.ts`, `src/routes/buecher/+page.svelte`, neues Skript in `scripts/`
-
 ### Lösen-Ansicht: Der Blatt-Fuß landet in der letzten Teilaufgabe
 
 Am Ende eines Blatts steht oft eine Zeile wie `Gesamt: 24 Punkte`, durch `---` vom letzten
@@ -86,6 +68,36 @@ löscht sie als verwaiste Dateien 30 Tage nach dem Upload. Vorher Backup.
 **Dateien.** `src/lib/server/repo/profiles.ts` (`deleteProfile`), Directus-Relationen
 
 ## Erledigt
+
+### Löschfristen für Bücher, Uploads und Einmal-Links — 25.09.2026
+
+Die Datenschutzerklärung und die Nutzungsbedingungen sagten Löschfristen zu, die niemand
+einlöste. Jetzt löscht `scripts/aufraeumen.ts` jede Nacht um 01:45 UTC, vor dem Backup
+(Regeln in `src/lib/retention.ts`):
+
+- Schulbücher samt PDF: 90 Tage nach `last_used_at`, spätestens Ende des Schuljahres des
+  Uploads (Konzept §3.6). `books.last_used_at` legte `scripts/books-last-used.ts` an; gesetzt
+  wird es beim Hochladen und nach jeder erfolgreichen Generierung mit dem Buch.
+- Aufgabenblätter und Lösungsfotos: 30 Tage nach dem Upload. Der Verweis wird geleert, Aufgabe
+  und Korrekturtext bleiben.
+- Verwaiste Dateien: 30 Tage nach dem Upload, wenn keine Relation auf `directus_files` auf sie
+  zeigt. Deckt auch die Fotos gelöschter Profile ab.
+- `email_tokens`: 7 Tage, wenn verbraucht oder abgelaufen.
+
+**Skript statt Directus-Flow** (Abweichung von Konzept und Spec §10.3, dort vermerkt): Die
+Flow-Operation „Delete Data" löscht in `directus_files` nur die Zeile, nicht die Datei auf der
+Platte. Nur `DELETE /files` über die REST-API entfernt beides.
+
+In der Probe gegen Testdaten für jeden Fall geprüft, einschließlich der Dateien auf der Platte.
+Erster Lauf in Produktion: die 5 Lösungsfotos und Aufgabenblätter vom Juni gelöscht, das
+Uploads-Volume ist leer. Die Bücherliste zeigt das Löschdatum — mangels Büchern in Produktion
+und ohne Anmeldung nicht im Browser gesehen, ebenso wenig das Setzen von `last_used_at` bei
+einer echten Generierung.
+
+**Dateien.** `scripts/aufraeumen.ts`, `scripts/books-last-used.ts`, `src/lib/retention.ts`,
+`src/lib/server/repo/books.ts`, `src/routes/api/generieren/+server.ts`,
+`src/routes/buecher/+page.svelte`, `src/routes/datenschutz/+page.svelte`,
+`docs/backup-und-restore.md`
 
 ### Backups liefen nur von Hand — 25.09.2026
 

@@ -1,4 +1,4 @@
-# Schulaufgaben Trainer — Arbeitsanweisungen
+# Schulaufgaben Check — Arbeitsanweisungen
 
 SvelteKit + Tailwind + Directus + Anthropic API. Deployment über Coolify auf Hetzner (Nürnberg).
 PDF-Erzeugung mit Puppeteer.
@@ -37,14 +37,29 @@ Kleinere Punkte ohne eigenes Konzept stehen in `docs/backlog.md`.
 - **Erst fragen, dann bauen.** Bei unklarer oder unvollständiger Aufgabenstellung, oder wenn der
   Code von der Spec abweicht: nachfragen statt raten.
 - Änderungen am Datenmodell immer zuerst in Directus, dann im Code — und die Typen in
-  `src/lib/directus.ts` mitziehen.
+  `src/lib/server/directus.ts` mitziehen. **Beim Entfernen umgekehrt:** erst den Code, der das
+  Feld nicht mehr liest, dann in Directus löschen.
+- Schemaänderungen als idempotentes Skript in `scripts/` mit `--dry`, nicht von Hand in Directus —
+  so sind sie reviewbar und gegen eine Backup-Kopie wiederholbar (Muster: `scripts/email-verification.ts`).
 - Vor jeder Migration: DB-Backup. Nicht optional — Vorgehen in `docs/backup-und-restore.md`.
+  Der erste echte Lauf geht gegen eine lokal wiederhergestellte Kopie, erst dann Produktion.
 - Nach größeren Änderungen `npm run build` und `npm run check` laufen lassen.
 - Mehrere Lösungsansätze vorschlagen, wenn es mehr als einen sinnvollen gibt.
 
 ## Bekannte offene Punkte
 
-Die Berechtigungslücke aus `docs/spec-gruppen-rollen-einwilligung.md` §1 ist geschlossen, die
-Fragen aus §10 sind beantwortet. Offen ist Stufe 1: Regel 1 gilt noch nicht — `getDirectus()`
-steht weiterhin in Route-Handlern, bis `authz.ts` und `src/lib/server/repo/*` stehen. Bis dahin
-laufen Scope-Prüfungen über `src/lib/server/scope.ts`.
+Stand 25.09.2026. Stufe 1 der Spec ist umgesetzt: `authz.ts`, Repository-Layer, `groups` /
+`memberships` / `consents`, profilbasierte Session. Alle harten Regeln gelten. Consent-Gate und
+Rechtsseiten stehen, ebenso Double-Opt-In und „Passwort vergessen" (Mailversand über einen
+Directus-Flow, Konzept §3.3).
+
+Neue Familien legt nur der Admin in Directus an; Einladungslink und Token vergibt Directus selbst.
+Es gibt keine App-UI zum Einladen — so gewollt.
+
+Offen:
+
+- Spec §6 Schritt 6: `scripts/cleanup-families.ts` (Altlasten `families`, `profiles.family_id`,
+  `books.owner_family`) ist geschrieben, aber noch nicht gegen Produktion gelaufen.
+- `createProfile` schreibt keine `memberships`-Zeile — folgenlos, solange Profil-Sitzungen
+  (`switchProfile`) nicht genutzt werden.
+- Übrige Punkte aus Stufe 0 und 2: `docs/klassen-freigabe-konzept.md` §6/§7 und `docs/backlog.md`.

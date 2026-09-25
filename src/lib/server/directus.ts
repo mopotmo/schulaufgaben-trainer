@@ -1,17 +1,6 @@
 import { createDirectus, rest, staticToken } from '@directus/sdk';
 import { DIRECTUS_TOKEN, DIRECTUS_URL } from '$env/static/private';
 
-/** @deprecated Geht in `Group` auf. Wird nach der Migration entfernt (Spec §6 Schritt 6). */
-export type Family = {
-	id: string;
-	name: string;
-	slug: string;
-	email: string | null;
-	password_hash: string | null;
-	invite_token: string | null;
-	created_at: string;
-};
-
 export type GroupType = 'family' | 'class' | 'school';
 
 /** Rollen aus `memberships`. In Stufe 1 wird nur `learner` vergeben — siehe Spec §10.1. */
@@ -75,14 +64,9 @@ export type Consent = {
 
 export type Profile = {
 	id: string;
-	/**
-	 * Nach der Migration `NOT NULL` (Spec §6 Schritt 6). Bis dahin nullable —
-	 * deshalb nie ungeprüft in einen Directus-Filter (harte Regel 3).
-	 */
-	group_id: string | null;
+	/** In der Datenbank `NOT NULL` (Spec §6 Schritt 6, `scripts/cleanup-families.ts`). */
+	group_id: string;
 	kind: 'learner' | 'adult';
-	/** @deprecated Ersetzt durch `group_id`. Wird nach der Migration entfernt. */
-	family_id: string | null;
 	name: string;
 	school_type: string;
 	grade: number;
@@ -172,8 +156,6 @@ export type Book = {
 	page_count: number | null;
 	page_offset: number;
 	owner_group: string | null;
-	/** @deprecated Ersetzt durch `owner_group`. Wird nach der Migration entfernt. */
-	owner_family: string | null;
 	/**
 	 * Historisch. Wird seit dem Urheberrechts-Review nicht mehr ausgewertet — Bücher sind
 	 * immer nur für die eigene Gruppe sichtbar. Siehe `repo/books.ts`.
@@ -187,8 +169,6 @@ type Schema = {
 	memberships: Membership[];
 	consents: Consent[];
 	email_tokens: EmailToken[];
-	/** @deprecated siehe `Family` */
-	families: Family[];
 	profiles: Profile[];
 	exercises: Exercise[];
 	corrections: Correction[];

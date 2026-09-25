@@ -6,7 +6,7 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			/** Ersetzt `familyId`. Wird einmal pro Request im Hook gebaut (Spec §5). */
+			/** Wird einmal pro Request im Hook gebaut (Spec §5). */
 			actor: Actor | null;
 		}
 		// interface PageData {}

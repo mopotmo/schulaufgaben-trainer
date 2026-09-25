@@ -1,6 +1,10 @@
 /**
  * Einmalige Migration: families → groups, plus memberships (Spec §6).
  *
+ * Historisch: Gelaufen im September 2026. Seit `scripts/cleanup-families.ts` gibt es
+ * `families`, `profiles.family_id` und `books.owner_family` nicht mehr — das Skript lässt
+ * sich nicht mehr ausführen und bleibt nur als Nachweis, wie migriert wurde.
+ *
  * Idempotent — mehrfaches Ausführen ändert nichts mehr. Die IDs bleiben erhalten,
  * eine Familie wird also zur Gruppe mit derselben id. Deshalb müssen keine
  * Fremdschlüssel repariert werden.

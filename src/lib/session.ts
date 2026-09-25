@@ -7,9 +7,6 @@
  *   Cookie unbegrenzt gültig und nicht widerrufbar.
  * - `v` erlaubt, mit einem Bump alle bestehenden Cookies auf einen Schlag zu entwerten.
  * - Der Signaturvergleich ist konstantzeitig.
- *
- * Achtung beim Ausrollen: Cookies im alten Format (`<familyId>.<hmac>`) sind ungültig,
- * alle angemeldeten Familien müssen sich einmal neu anmelden.
  */
 import { SESSION_SECRET } from '$env/static/private';
 import { timingSafeEqual, createHmac } from 'node:crypto';

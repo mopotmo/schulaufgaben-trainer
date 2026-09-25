@@ -18,13 +18,15 @@
 		<li>Erzeugung von Übungsaufgaben, passend zu Schulart, Jahrgangsstufe und Bundesland</li>
 		<li>KI-gestützte Korrektur eingereichter Lösungen</li>
 		<li>Anzeige des Lernfortschritts innerhalb der eigenen Familie</li>
+		<li>Bestätigung der E-Mail-Adresse und Zusenden eines Links bei vergessenem Passwort</li>
 	</ul>
 
 	<h2>3. Rechtsgrundlage</h2>
 	<p>
 		Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO in Verbindung mit Art. 8 DSGVO. Da die Nutzenden
 		Kinder unter 16 Jahren sind, wird die Einwilligung durch die Sorgeberechtigten erteilt. Sie wird
-		beim ersten Anmelden im System erfasst und dort nachgehalten.
+		beim Einrichten des Zugangs im System erfasst und dort nachgehalten. Die dabei angegebene
+		E-Mail-Adresse wird über einen Bestätigungslink geprüft; erst danach ist der Zugang nutzbar.
 	</p>
 	<p>
 		Die Einwilligung gilt für alle Kinder, für die das sorgeberechtigte Elternteil in seinem
@@ -38,7 +40,8 @@
 		<li><strong>Eingaben:</strong> Fach, Thema, Hinweise der Lehrkraft, gewünschter Umfang</li>
 		<li><strong>Hochgeladene Dateien:</strong> Fotos oder PDFs von Aufgabenblättern und handschriftlichen Lösungen</li>
 		<li><strong>Erzeugte Inhalte:</strong> Übungsaufgaben, Korrekturtexte, daraus abgeleitete Lernhinweise</li>
-		<li><strong>Kontaktdaten der einwilligenden Person:</strong> Name und E-Mail-Adresse</li>
+		<li><strong>Kontaktdaten der einwilligenden Person:</strong> Name und E-Mail-Adresse, Zeitpunkt der Bestätigung der Adresse</li>
+		<li><strong>Einmal-Links:</strong> zufällige Kennungen für Bestätigungs- und Passwort-Links samt Ablaufzeitpunkt</li>
 		<li><strong>Technische Daten:</strong> ein Sitzungs-Cookie sowie Fehlerprotokolle des Servers</li>
 	</ul>
 	<p>
@@ -57,9 +60,13 @@
 			<strong>{PROCESSORS.hosting.name}</strong> ({PROCESSORS.hosting.country}) —
 			{PROCESSORS.hosting.purpose}. Die Server stehen in Deutschland.
 		</li>
+		<li>
+			<strong>{PROCESSORS.mail.name}</strong> ({PROCESSORS.mail.country}) — {PROCESSORS.mail.purpose}.
+			Übermittelt werden die E-Mail-Adresse und der Inhalt der Bestätigungs- bzw. Passwort-Mail.
+		</li>
 	</ul>
 	<p>
-		Mit beiden Anbietern besteht ein Vertrag zur Auftragsverarbeitung. Eine Weitergabe an sonstige
+		Mit allen drei Anbietern besteht ein Vertrag zur Auftragsverarbeitung. Eine Weitergabe an sonstige
 		Dritte findet nicht statt, insbesondere nicht an Schulen oder Lehrkräfte.
 	</p>
 
@@ -84,6 +91,7 @@
 		<li>Hochgeladene Dateien: {UPLOAD_RETENTION_DAYS} Tage, danach automatische Löschung</li>
 		<li>Aufgaben, Korrekturen und Lernhinweise: bis zur Löschung des Zugangs</li>
 		<li>Nachweis der Einwilligung: bis zur Löschung des Zugangs, zur Erfüllung der Rechenschaftspflicht</li>
+		<li>Einmal-Links: bis zur Löschung des Zugangs; verwendbar sind sie nur 48 Stunden (Bestätigung) bzw. eine Stunde (Passwort)</li>
 		<li>Fehlerprotokolle: kurzfristig, zur Fehlersuche</li>
 	</ul>
 

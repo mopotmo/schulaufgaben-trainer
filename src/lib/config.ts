@@ -19,13 +19,14 @@ export const OPERATOR = {
 	city: '90556 Cadolzburg',
 	country: 'Deutschland',
 	/** Kontakt für Auskunft, Löschung und Widerruf der Einwilligung. */
-	email: 'manu@mopot.de'
+	email: 'mail@schulaufgaben-check.de'
 } as const;
 
 /** Auftragsverarbeiter, in der Datenschutzerklärung namentlich zu nennen (Konzept §3.2). */
 export const PROCESSORS = {
 	ai: { name: 'Anthropic PBC', purpose: 'KI-Generierung und -Korrektur', country: 'USA' },
-	hosting: { name: 'Hetzner Online GmbH', purpose: 'Hosting', country: 'Deutschland (Nürnberg)' }
+	hosting: { name: 'Hetzner Online GmbH', purpose: 'Hosting', country: 'Deutschland (Nürnberg)' },
+	mail: { name: 'netcup GmbH', purpose: 'E-Mail-Versand', country: 'Deutschland (Karlsruhe)' }
 } as const;
 
 /** Zuständige Aufsichtsbehörde, nicht-öffentlicher Bereich Bayern. */

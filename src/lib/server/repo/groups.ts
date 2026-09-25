@@ -8,7 +8,7 @@
 import { readItem, readItems, updateItem } from '@directus/sdk';
 import { error } from '@sveltejs/kit';
 import { getDirectus, type Group } from '$lib/server/directus';
-import { assertCan, assertInScope, currentGroupId, type Actor } from '../authz';
+import { assertCan, assertInScope, currentGroupId, requireId, type Actor } from '../authz';
 
 /** Login. Kein Actor — es gibt noch keine Sitzung. */
 export async function findGroupBySlug(slug: string): Promise<Group | null> {
@@ -37,6 +37,78 @@ export async function setPassword(groupId: string, passwordHash: string): Promis
 	await getDirectus().request(
 		updateItem('groups', groupId, { password_hash: passwordHash, invite_token: null })
 	);
+}
+
+/**
+ * Ersteinrichtung über den Einladungslink. Kein Actor — die Sitzung entsteht erst danach.
+ * Die Adresse gilt bis zum Klick auf den Bestätigungslink als unbestätigt.
+ */
+export async function setupFamily(
+	groupId: string,
+	data: { passwordHash: string; email: string }
+): Promise<void> {
+	await getDirectus().request(
+		updateItem('groups', requireId(groupId), {
+			password_hash: data.passwordHash,
+			email: data.email,
+			email_verified_at: null,
+			invite_token: null
+		})
+	);
+}
+
+/** Vom Hook gebraucht — deshalb nur die eine Spalte. */
+export async function isEmailVerified(groupId: string): Promise<boolean> {
+	const group = await getDirectus()
+		.request(readItem('groups', requireId(groupId), { fields: ['email_verified_at'] }))
+		.catch(() => null);
+	return !!group?.email_verified_at;
+}
+
+export async function markEmailVerified(groupId: string): Promise<void> {
+	await getDirectus().request(
+		updateItem('groups', requireId(groupId), { email_verified_at: new Date().toISOString() })
+	);
+}
+
+/**
+ * „Passwort vergessen". Kein Actor. Nur bestätigte Adressen: Ein Reset-Link an eine nie
+ * bestätigte Adresse wäre ein Umweg, die Bestätigung auszuhebeln.
+ */
+export async function findVerifiedFamiliesByEmail(email: string): Promise<Group[]> {
+	if (!email) return [];
+	return getDirectus().request(
+		readItems('groups', {
+			filter: {
+				email: { _eq: email },
+				email_verified_at: { _nnull: true },
+				password_hash: { _nnull: true },
+				type: { _eq: 'family' },
+				status: { _eq: 'active' }
+			},
+			limit: -1
+		})
+	);
+}
+
+/** Reset-Link, vom Token bereits geprüft. Kein Actor. */
+export async function resetPassword(groupId: string, passwordHash: string): Promise<void> {
+	await getDirectus().request(
+		updateItem('groups', requireId(groupId), { password_hash: passwordHash })
+	);
+}
+
+/**
+ * Für Token-Seiten ohne Sitzung. Nur Name und aktuelle Adresse — das Token hat die Gruppe
+ * bereits bestimmt, hier wird nichts aus Request-Daten aufgelöst.
+ */
+export async function getGroupContact(
+	groupId: string
+): Promise<{ name: string; slug: string; email: string | null } | null> {
+	const group = await getDirectus()
+		.request(readItem('groups', requireId(groupId), { fields: ['name', 'slug', 'email'] }))
+		.catch(() => null);
+	return group ? { name: group.name, slug: group.slug, email: group.email } : null;
 }
 
 /** Die eigene Gruppe der laufenden Sitzung. */

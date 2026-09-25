@@ -33,6 +33,22 @@ export type Group = {
 	/** Beitrittscode Klasse. In Stufe 1 ungenutzt. */
 	invite_code: string | null;
 	status: 'active' | 'archived';
+	/** Ohne Bestätigung lässt der Hook die Familie nur auf `/email-bestaetigen`. */
+	email_verified_at: string | null;
+	created_at: string;
+};
+
+export type EmailTokenPurpose = 'verify' | 'reset';
+
+/** Jede neue Zeile löst über einen Directus-Flow eine Mail aus (`scripts/email-verification.ts`). */
+export type EmailToken = {
+	id: string;
+	group_id: string;
+	purpose: EmailTokenPurpose;
+	token: string;
+	email: string;
+	expires_at: string;
+	used_at: string | null;
 	created_at: string;
 };
 
@@ -170,6 +186,7 @@ type Schema = {
 	groups: Group[];
 	memberships: Membership[];
 	consents: Consent[];
+	email_tokens: EmailToken[];
 	/** @deprecated siehe `Family` */
 	families: Family[];
 	profiles: Profile[];

@@ -70,7 +70,33 @@ Eine Zeile am Ende des Blatts, ohne Folgen für die Korrektur.
 
 ---
 
+### E-Mail-Bestätigung: zwei Nacharbeiten
+
+Aus der Umsetzung vom 25.09.2026 (Double-Opt-In und „Passwort vergessen").
+
+1. **Passwort-Reset entwertet keine laufenden Sitzungen.** Das Cookie trägt nur `iat` und
+   eine globale Version (`v`), nichts pro Gruppe. Wer ein fremdes Cookie hat, bleibt nach dem
+   Reset bis zu 30 Tage angemeldet. Ansatz: `groups.session_version` ins Cookie aufnehmen und
+   im Hook vergleichen; der Reset erhöht sie.
+2. **`email_tokens` wächst unbegrenzt.** Verbrauchte und abgelaufene Zeilen bleiben bis zur
+   Kontolöschung (so steht es auch in der Datenschutzerklärung). Ansatz: den Directus-Flow für
+   die 30-Tage-Löschung der Uploads (Konzept Stufe 0 #4) um diese Collection erweitern.
+
+**Dateien.** `src/lib/session.ts`, `src/hooks.server.ts`, `src/lib/server/repo/emailTokens.ts`,
+`scripts/email-verification.ts`
+
 ## Erledigt
+
+### `groups.invite_token` musste von Hand vergeben werden — 25.09.2026
+
+Beim Anlegen einer Familie in Directus blieb das Token leer, die UUID musste man selbst
+eintragen. Jetzt trägt das Feld den Directus-Spezialwert `uuid`: Beim Anlegen entsteht eine
+UUID aus `node:crypto`, wenn keine mitkommt. Änderungen und das Leeren beim Einrichten fasst
+der Spezialwert nicht an — eine eingerichtete Familie bekommt nie wieder einen gültigen
+Einladungslink. Statt des zuerst notierten Filter-Flows, weil es ohne Flow und ohne
+Sandbox-Skript auskommt. Die Feldnotiz in Directus zeigt das Muster des Einladungslinks.
+
+**Dateien.** `scripts/email-verification.ts` (Schritt 5)
 
 ### Lösen-Ansicht: Aufgabentitel stand über jeder Teilaufgabe — 22.09.2026
 

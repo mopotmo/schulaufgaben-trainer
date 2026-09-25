@@ -14,6 +14,12 @@
 			<p class="text-gray-500 text-sm mt-1">Melde dich mit deinem Familien-Login an.</p>
 		</div>
 
+		{#if data.bestaetigt}
+			<p class="mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+				Danke, deine E-Mail-Adresse ist bestätigt. Melde dich jetzt an.
+			</p>
+		{/if}
+
 		<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 			<form
 				method="POST"
@@ -62,6 +68,9 @@
 					{loading ? 'Wird geprüft…' : 'Anmelden'}
 				</button>
 			</form>
+			<p class="mt-4 text-center text-sm">
+				<a class="text-blue-600 hover:underline" href="/passwort-vergessen">Passwort vergessen?</a>
+			</p>
 		</div>
 
 		<p class="mt-6 text-center text-xs text-gray-400">

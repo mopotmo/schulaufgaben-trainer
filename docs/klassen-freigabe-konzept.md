@@ -117,6 +117,13 @@ Screen beim ersten Login, blockierend:
 hat. Für einen Klassenversuch mit persönlich bekannten Familien und persönlich übergebenen
 Zugangsdaten vertretbar. Sobald es darüber hinausgeht: Double-Opt-In nachrüsten (Stufe 2).
 
+**Nachtrag 25.09.2026 — Double-Opt-In vorgezogen.** Neue Familien richten Passwort, E-Mail
+und Einwilligung in einem Schritt über den Einladungslink ein (`/einrichten`) und kommen erst
+nach dem Klick auf einen Bestätigungslink in die App. Versand über einen Directus-Flow
+(Event-Hook auf `email_tokens`), SMTP bei netcup. Dieselbe Infrastruktur trägt „Passwort
+vergessen". Die drei Bestandsfamilien gelten als bestätigt. Einrichtung:
+`scripts/email-verification.ts`; `CONSENT_VERSION` auf `2026-09-v2`.
+
 **Widerruf** muss so einfach sein wie die Erteilung. Zunächst Hinweistext mit Kontaktadresse und
 Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 
@@ -302,7 +309,7 @@ Mehr nicht.
 
 ### Stufe 2 — nach dem Start
 
-- Self-Service-Registrierung mit Double-Opt-In
+- Self-Service-Registrierung (Double-Opt-In ist seit 25.09.2026 umgesetzt, §3.3)
 - Eltern-Bereich „Meine Daten ansehen / alles löschen"
 - Aktivitäts-Feed für die Klasse — nur Opt-in, nur Vornamen
 - Lehrer-Rolle, erst mit Freigabe durch die Schule

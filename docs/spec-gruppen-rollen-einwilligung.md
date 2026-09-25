@@ -19,7 +19,9 @@ Einwilligung.
 **Nicht-Ziele in diesem Durchgang:**
 
 - Lehrer-Rolle als UI (nur im Datenmodell vorsehen)
-- Self-Service-Registrierung, E-Mail-Versand, Double-Opt-In
+- Self-Service-Registrierung, E-Mail-Versand, Double-Opt-In — *Nachtrag 25.09.2026:
+  E-Mail-Versand und Double-Opt-In sind vorgezogen, siehe Konzept §3.3. Self-Service bleibt
+  draußen: Familien legt weiterhin nur der Betreiber in Directus an.*
 - Echte Mandantenfähigkeit (nur die Vorkehrungen, §6)
 - Aktivitäts-/Präsenz-Feed
 

@@ -6,7 +6,10 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (locals.actor) redirect(303, '/');
-	return { weiter: url.searchParams.get('weiter') ?? '/' };
+	return {
+		weiter: url.searchParams.get('weiter') ?? '/',
+		bestaetigt: url.searchParams.has('bestaetigt')
+	};
 };
 
 export const actions: Actions = {

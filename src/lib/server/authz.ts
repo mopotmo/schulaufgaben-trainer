@@ -70,6 +70,18 @@ const MATRIX: Record<Role, Action[]> = {
 	admin: []
 };
 
+/**
+ * Eltern haben in Stufe 1 kein eigenes Profil (Spec §10.1). Die Rolle `parent` steht deshalb
+ * nicht in `memberships`, sondern wird aus dem Session-Typ abgeleitet — nur hier.
+ */
+export function familyActor(groupId: string): Actor {
+	return {
+		session: { kind: 'family', groupId: requireId(groupId) },
+		groupIds: [groupId],
+		roles: ['parent']
+	};
+}
+
 export function can(actor: Actor, action: Action): boolean {
 	return actor.roles.some((role) => MATRIX[role]?.includes(action));
 }

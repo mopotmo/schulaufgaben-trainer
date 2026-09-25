@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { OPERATOR } from '$lib/config';
+	import ConsentSummary from '$lib/components/ConsentSummary.svelte';
+	import ConsentChecks from '$lib/components/ConsentChecks.svelte';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -19,38 +21,8 @@
 			einmalig und dauert eine Minute.
 		</p>
 
-		<div class="mt-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-			<h2 class="text-sm font-semibold text-gray-700">Worum es geht</h2>
-			<ul class="mt-2 space-y-1.5 text-sm text-gray-600">
-				<li>· Es werden Übungsaufgaben erzeugt, passend zu Schulart, Klasse und Bundesland.</li>
-				<li>· Eingereichte Lösungen werden von einer KI korrigiert — auch hochgeladene Fotos.</li>
-				<li>· Dafür gehen Eingaben und Uploads an Anthropic in den USA. Gehostet wird in Nürnberg.</li>
-				<li>· Hochgeladene Dateien werden nach 30 Tagen automatisch gelöscht.</li>
-				<li>· Nichts davon geht an die Schule. KI-Korrekturen können falsch sein.</li>
-			</ul>
-			<p class="mt-3 text-sm text-gray-500">
-				Alle Einzelheiten in der <a class="text-blue-600 hover:underline" href="/datenschutz" target="_blank" rel="noreferrer">Datenschutzerklärung</a>
-				und den <a class="text-blue-600 hover:underline" href="/nutzungsbedingungen" target="_blank" rel="noreferrer">Nutzungsbedingungen</a>.
-			</p>
-		</div>
-
-		<div class="mt-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-			<h2 class="text-sm font-semibold text-gray-700">Für diese Kinder</h2>
-			{#if data.children.length > 0}
-				<ul class="mt-2 space-y-1 text-sm text-gray-600">
-					{#each data.children as child (child.name)}
-						<li>{child.avatar ?? '🎓'} {child.name} · Klasse {child.grade}</li>
-					{/each}
-				</ul>
-				<p class="mt-3 text-sm text-gray-500">
-					Die Einwilligung gilt auch für Profile, die du später anlegst.
-				</p>
-			{:else}
-				<p class="mt-2 text-sm text-gray-600">
-					Du hast noch keine Profile angelegt — das kommt gleich nach diesem Schritt. Die
-					Einwilligung gilt für alle Kinder, für die du hier Profile anlegst.
-				</p>
-			{/if}
+		<div class="mt-6">
+			<ConsentSummary children={data.children} />
 		</div>
 
 		<form
@@ -64,52 +36,14 @@
 			}}
 			class="mt-4 space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
 		>
-			<label class="flex gap-3 text-sm text-gray-700">
-				<input type="checkbox" name="custody" class="mt-0.5 h-4 w-4 shrink-0" />
-				<span>
-					{#if data.children.length > 0}
-						Ich bin sorgeberechtigt für die oben aufgeführten Kinder und für alle weiteren, für
-						die ich hier später ein Profil anlege.
-					{:else}
-						Ich bin sorgeberechtigt für alle Kinder, für die ich hier ein Profil anlege.
-					{/if}
-				</span>
-			</label>
+			<ConsentChecks hasChildren={data.children.length > 0} name={form?.name ?? ''} />
 
-			<label class="flex gap-3 text-sm text-gray-700">
-				<input type="checkbox" name="privacy" class="mt-0.5 h-4 w-4 shrink-0" />
-				<span>
-					Ich habe die
-					<a class="text-blue-600 hover:underline" href="/datenschutz" target="_blank" rel="noreferrer">Datenschutzerklärung</a>
-					gelesen und willige in die beschriebene Verarbeitung ein.
-				</span>
-			</label>
-
-			<label class="flex gap-3 text-sm text-gray-700">
-				<input type="checkbox" name="terms" class="mt-0.5 h-4 w-4 shrink-0" />
-				<span>
-					Ich akzeptiere die <a class="text-blue-600 hover:underline" href="/nutzungsbedingungen" target="_blank" rel="noreferrer">Nutzungsbedingungen</a>.
-				</span>
-			</label>
-
-			<div>
-				<label class="mb-1 block text-sm font-medium text-gray-700" for="name">Dein Name</label>
-				<input
-					id="name" name="name" type="text" required autocomplete="name"
-					value={form?.name ?? ''}
-					class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
-				/>
-			</div>
-
-			<div>
-				<label class="mb-1 block text-sm font-medium text-gray-700" for="email">Deine E-Mail-Adresse</label>
-				<input
-					id="email" name="email" type="email" required autocomplete="email"
-					value={form?.email ?? data.email}
-					class="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
-				/>
-				<p class="mt-1 text-xs text-gray-400">Nur für Rückfragen, Widerruf und Löschanfragen.</p>
-			</div>
+			{#if data.email}
+				<p class="text-xs text-gray-500">
+					Rückfragen, Widerruf und Löschanfragen laufen über deine bestätigte Adresse
+					<strong>{data.email}</strong>.
+				</p>
+			{/if}
 
 			{#if form?.error}
 				<p class="text-sm text-red-500">{form.error}</p>

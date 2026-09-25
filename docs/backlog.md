@@ -53,9 +53,8 @@ Aus der Umsetzung vom 25.09.2026 (Double-Opt-In und „Passwort vergessen").
    eine globale Version (`v`), nichts pro Gruppe. Wer ein fremdes Cookie hat, bleibt nach dem
    Reset bis zu 30 Tage angemeldet. Ansatz: `groups.session_version` ins Cookie aufnehmen und
    im Hook vergleichen; der Reset erhöht sie.
-2. **`email_tokens` wächst unbegrenzt.** Verbrauchte und abgelaufene Zeilen bleiben bis zur
-   Kontolöschung (so steht es auch in der Datenschutzerklärung). Ansatz: den Directus-Flow für
-   die 30-Tage-Löschung der Uploads (Konzept Stufe 0 #4) um diese Collection erweitern.
+2. ~~**`email_tokens` wächst unbegrenzt.**~~ *Erledigt 25.09.2026:* `scripts/aufraeumen.ts`
+   löscht verbrauchte und abgelaufene Zeilen nach 7 Tagen; die Datenschutzerklärung sagt das.
 
 **Dateien.** `src/lib/session.ts`, `src/hooks.server.ts`, `src/lib/server/repo/emailTokens.ts`,
 `scripts/email-verification.ts`
@@ -80,8 +79,9 @@ Aus DSGVO-Sicht sollte mit dem Profil alles gehen, was sich auf das Kind bezieht
 
 **Ansatz.** In Directus `learner_insights.profile_id` auf `CASCADE` umstellen und für
 `feedback.profile_id` eine Relation mit `SET NULL` — entschieden am 25.09.2026: Feedback bleibt
-anonym erhalten. Dafür prüfen, dass im Feedback-Text selbst nichts Personenbezogenes steht. Lösungsfotos entweder in `deleteProfile` vor dem
-Löschen einsammeln oder vom Flow für die 30-Tage-Löschung miterfassen lassen. Vorher Backup.
+anonym erhalten. Dafür prüfen, dass im Feedback-Text selbst nichts Personenbezogenes steht. Lösungsfotos brauchen
+nichts Eigenes mehr: Nach der Kaskade verweist nichts mehr auf sie, `scripts/aufraeumen.ts`
+löscht sie als verwaiste Dateien 30 Tage nach dem Upload. Vorher Backup.
 
 **Dateien.** `src/lib/server/repo/profiles.ts` (`deleteProfile`), Directus-Relationen
 

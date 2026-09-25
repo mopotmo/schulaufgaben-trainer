@@ -71,10 +71,21 @@ export async function createBook(actor: Actor, data: NewBook): Promise<Book> {
 			...data,
 			page_offset: 0,
 			owner_group: currentGroupId(actor),
+			// Das Hochladen zählt als erste Nutzung — sonst liefe die Löschfrist ab Upload ohnehin.
+			last_used_at: new Date().toISOString(),
 			// Bleibt aus Gründen der Abwärtskompatibilität gesetzt, wird nicht mehr ausgewertet.
 			visibility: 'family'
 		})
 	);
+}
+
+/**
+ * Das Buch war Quelle einer Generierung — setzt die 90-Tage-Frist neu (Konzept §3.6).
+ * Prüft den Zugriff selbst, auch wenn der Aufrufer das Buch schon über `getBook` geholt hat.
+ */
+export async function markBookUsed(actor: Actor, bookId: unknown): Promise<void> {
+	const book = await getBook(actor, bookId);
+	await getDirectus().request(updateItem('books', book.id, { last_used_at: new Date().toISOString() }));
 }
 
 export async function uploadBookFile(actor: Actor, form: FormData): Promise<string> {

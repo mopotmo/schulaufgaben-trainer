@@ -141,7 +141,9 @@ Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 - Kinderprofile nur mit **Vorname oder Spitzname**. Kein Nachname, kein Geburtsdatum.
   Hinweistext direkt am Eingabefeld.
 - Klasse nur als interner Code, **nicht** Schulname + Klasse im Klartext.
-- **Hochgeladene Lösungsfotos nach 30 Tagen automatisch löschen** (Directus Flow oder Cronjob).
+- **Hochgeladene Lösungsfotos nach 30 Tagen automatisch löschen** — `scripts/aufraeumen.ts`
+  als täglicher Cronjob auf dem Server (entschieden 25.09.2026; kein Directus-Flow, weil
+  die Flow-Operation „Delete Data" löscht in `directus_files` nur die Zeile, nicht die Datei auf der Platte (ItemsService statt FilesService, geprüft an Directus 11)).
   Sensibelste Datenkategorie — Handschrift, oft Name auf dem Blatt.
 - Korrekturtexte bleiben (Fortschritt), Uploads nicht.
 - **Keine Analytics, keine externen Fonts, kein CDN.**
@@ -168,8 +170,8 @@ wird. Entschieden (Review 22.09.2026, Frist 25.09.2026):
   führt zu wiederholtem Hochladen — also zu mehr Kopien, nicht weniger. „Nutzung" heißt: das
   Buch war Quelle einer Generierung. Dafür braucht `books` ein Feld `last_used_at`. Gelöschte
   Bücher liegen bis zu 30 Tage in den Backups; das steht so in den Nutzungsbedingungen.
-- Umgesetzt wird die Löschung im selben Directus-Flow wie die Lösungsfotos (§3.5). Bis dahin
-  ist die Zusage in den Texten nicht eingelöst — siehe `backlog.md`.
+- Umgesetzt im selben täglichen Lauf wie die Lösungsfotos (§3.5): `scripts/aufraeumen.ts`,
+  Regeln in `src/lib/retention.ts`. Die Bücherliste zeigt das Löschdatum aus denselben Regeln.
 
 Die Nutzungsbedingungen wurden ohne Versionssprung geändert (`CONSENT_VERSION` bleibt
 `2026-09-v2`): Zum Zeitpunkt der Änderung gab es noch keine aktiv nutzenden fremden Familien.
@@ -310,7 +312,7 @@ Mehr nicht.
 | 1 | Seiten `/impressum`, `/datenschutz`, `/nutzungsbedingungen` + Links, auch auf der Login-Seite | S |
 | 2 | `consents`-Collection + blockierendes Consent-Gate beim ersten Login | M |
 | 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen | S |
-| 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen (Directus Flow); Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) | M |
+| 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen; Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) — `scripts/aufraeumen.ts`, Cronjob statt Flow (§3.5) | M |
 | 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` | S |
 | 6 | AVV Anthropic + AVV Hetzner abschließen und ablegen — Hetzner erledigt 25.09.2026, Anthropic offen | S |
 | 7 | VVT + TOM als internes Dokument | S |

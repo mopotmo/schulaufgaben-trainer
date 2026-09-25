@@ -127,6 +127,44 @@ SSH-Schlüssel des Macs beim Unterkonto hinterlegen.
 nur die Verbindung durch; angemeldet wird mit dem Schlüssel des Macs, der Inhalt bleibt
 verschlüsselt. Auf dem Server muss dafür `AllowTcpForwarding` erlaubt sein (Standard bei OpenSSH).
 
+## Aufräumen: Löschfristen
+
+`scripts/aufraeumen.ts` läuft jede Nacht vor dem Backup und löscht, was nach den zugesagten
+Fristen weg sein muss. Regeln in `src/lib/retention.ts`:
+
+| Was | Frist |
+|---|---|
+| Aufgabenblätter und Lösungsfotos | 30 Tage nach Upload; Aufgabe und Korrekturtext bleiben, der Verweis wird geleert |
+| Schulbücher (Zeile und PDF) | 90 Tage nach `last_used_at`, spätestens Ende des Schuljahres des Uploads (31.08.) |
+| Verwaiste Dateien | 30 Tage nach Upload, wenn keine Relation auf `directus_files` auf sie zeigt |
+| `email_tokens` | 7 Tage, wenn verbraucht oder abgelaufen |
+
+Eine Datei, auf die etwas anderes verweist (etwa ein Avatar), fasst das Skript nie an. Kein
+Directus-Flow, weil dessen „Delete Data" in `directus_files` nur die Zeile löscht und die
+Datei auf der Platte liegen lässt; `DELETE /files` über die REST-API entfernt beides.
+
+Ausgabe nur IDs und Zahlen. `--dry` zeigt, was gelöscht würde.
+
+```sh
+node --experimental-strip-types --env-file=.env scripts/aufraeumen.ts --dry
+```
+
+**Auf dem Server** läuft es in `node:24-alpine`, ohne `node_modules` — deshalb `fetch` statt SDK:
+
+| | |
+|---|---|
+| Dateien | `/opt/trainer-aufraeumen/` mit `scripts/aufraeumen.ts`, `src/lib/retention.ts` und `package.json` (`{"type":"module"}`) |
+| Konfiguration | `/etc/trainer-aufraeumen.env` (600): `DIRECTUS_URL`, `DIRECTUS_TOKEN`, `PUSH_URL` |
+| Cronjob | `/etc/cron.d/trainer-aufraeumen`, 01:45 UTC — vor dem Backup um 02:15 |
+| Log | `/var/log/trainer-aufraeumen.log` |
+
+```
+45 1 * * * root docker run --rm --env-file /etc/trainer-aufraeumen.env -v /opt/trainer-aufraeumen:/app:ro -w /app node:24-alpine node --experimental-strip-types --no-warnings scripts/aufraeumen.ts >> /var/log/trainer-aufraeumen.log 2>&1
+```
+
+Nach einer Änderung an Skript oder Regeln beide Dateien neu nach `/opt/trainer-aufraeumen/`
+kopieren — der Cronjob kommt nicht mit dem App-Deploy.
+
 ---
 
 ## 1. Ausgangslage
@@ -344,7 +382,8 @@ Datenkategorie, weil oft der Name des Kindes mit auf dem Blatt steht.
 
 Am 21.09.2026 lagen alle fünf Dateien seit dem 13./14. Juni im Volume — über drei Monate.
 Nach Konzept §3.5 und Stufe 0 #4 sollen Lösungsfotos **nach 30 Tagen automatisch gelöscht**
-werden; diese Automatik existiert noch nicht.
+werden. Seit 25.09.2026 erledigt das `scripts/aufraeumen.ts` (Abschnitt „Aufräumen"), jede
+Nacht vor dem Backup.
 
 Ein verschlüsseltes Archiv verlängert damit die Aufbewahrung von Daten, die laut eigener
 Zusage längst weg sein müssten. Entweder vorher aufräumen und danach sichern, oder sichern
@@ -364,6 +403,5 @@ aufbewahrt werden.
   Verzeichnis der Verarbeitungstätigkeiten nennen.
 - **Box löschbar vom Server aus.** Der Server hat Schreib- und Löschrechte auf der Box, ein
   kompromittierter Server kann also auch die Backups löschen. Für diese Größe hingenommen.
-- **30-Tage-Löschung der Uploads** (Konzept, Stufe 0 #4) ist nicht umgesetzt. Solange sie
-  fehlt, wächst mit jedem Upload-Backup ein Bestand mit, der längst gelöscht sein sollte.
-  Als Directus-Flow oder Cronjob — siehe Spec §10.3, Flows sind für Wiederkehrendes.
+- **30-Tage-Löschung der Uploads** (Konzept, Stufe 0 #4): umgesetzt 25.09.2026 als
+  `scripts/aufraeumen.ts`, siehe „Aufräumen".

@@ -467,6 +467,9 @@ Mitgebaut wird trotzdem, weil es später teuer wird:
 - Idempotenz lässt sich in Code ausdrücken und testen.
 - Flows sind für Wiederkehrendes: die **30-Tage-Löschung der Uploads** (Konzept, Stufe 0 #4)
   gehört dorthin, die Migration nicht.
+  *Revidiert 25.09.2026:* Die Löschung ist doch ein Skript (`scripts/aufraeumen.ts`, täglicher
+  Cronjob) — die Flow-Operation „Delete Data" löscht in `directus_files` nur die Zeile, nicht die Datei auf der Platte (ItemsService statt FilesService, geprüft an Directus 11). Dieselben Gründe wie oben kommen hinzu: in git, mit `--dry`, gegen die
+  Probeumgebung testbar.
 
 Zwei Auflagen: Das Skript bekommt einen `--dry`-Modus, und der erste echte Lauf geht gegen eine
 wiederhergestellte Kopie des Backups, nicht gegen Produktion.

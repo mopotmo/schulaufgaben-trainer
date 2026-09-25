@@ -36,8 +36,8 @@ export const SUPERVISORY_AUTHORITY = {
 	url: 'https://www.lda.bayern.de'
 } as const;
 
-/** Aufbewahrungsdauer hochgeladener Dateien in Tagen (Konzept §3.5). */
-export const UPLOAD_RETENTION_DAYS = 30;
+/** Aufbewahrungsdauer hochgeladener Dateien in Tagen (Konzept §3.5). Definiert in `retention.ts`. */
+export { UPLOAD_RETENTION_DAYS } from './retention';
 
 /** Aufbewahrung der Sicherungskopien in Tagen — muss zu KEEP_DAYS in `scripts/backup-cron.sh` passen. */
 export const BACKUP_RETENTION_DAYS = 30;

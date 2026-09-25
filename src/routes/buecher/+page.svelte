@@ -1,12 +1,24 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { bookDeletionDate, schoolYearEnd, BOOK_IDLE_DAYS } from '$lib/retention';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let showUploadForm = $state(false);
 	let uploading = $state(false);
 	let expandedBook = $state<string | null>(null);
+
+	const dateFormat = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+	/** Dieselbe Regel wie beim Löschen (`scripts/aufraeumen.ts`). */
+	function deletionNote(book: { created_at: string; last_used_at?: string | null }): string {
+		const date = bookDeletionDate({ created_at: book.created_at, last_used_at: book.last_used_at ?? null });
+		const atYearEnd = date.getTime() === schoolYearEnd(new Date(book.created_at)).getTime();
+		return atYearEnd
+			? `Wird zum Ende des Schuljahres am ${dateFormat.format(date)} gelöscht.`
+			: `Wird am ${dateFormat.format(date)} gelöscht, wenn du es bis dahin nicht zum Üben nutzt. Jede Nutzung verlängert um ${BOOK_IDLE_DAYS} Tage.`;
+	}
 
 	function toggleChapters(id: string) {
 		expandedBook = expandedBook === id ? null : id;
@@ -179,8 +191,8 @@
 								{#if book.school_type}· {book.school_type}{/if}
 								{#if book.publisher}· {book.publisher}{/if}
 								{#if book.page_count}· {book.page_count} Seiten{/if}
-								
 							</p>
+							<p class="text-xs text-gray-400 mt-0.5">{deletionNote(book)}</p>
 							<div class="flex flex-wrap items-center gap-3 mt-2">
 								{#if book.chapters && book.chapters.length > 0}
 									<button

@@ -6,7 +6,7 @@ import { getInsightPrompt } from '$lib/server/learnerInsights';
 import { fetchBookPdf, slicePdfPages } from '$lib/books';
 import { requireActor } from '$lib/server/actor';
 import { getProfile } from '$lib/server/repo/profiles';
-import { getBook } from '$lib/server/repo/books';
+import { getBook, markBookUsed } from '$lib/server/repo/books';
 import { createExercise } from '$lib/server/repo/exercises';
 import { uploadFile } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
@@ -50,6 +50,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// Claude akzeptiert max. 100 PDF-Seiten pro Request (über alle Dokumente hinweg).
 	const MAX_BOOK_PAGES = 100;
 	let storedBookNote = '';
+	let usedBookId: string | null = null;
 	if (bookId && bookRanges.length > 0) {
 		const totalPages = bookRanges.reduce((sum, r) => sum + (r.to - r.from + 1), 0);
 		if (totalPages > MAX_BOOK_PAGES) {
@@ -80,6 +81,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				lastDoc.cache_control = { type: 'ephemeral' };
 			}
 			storedBookNote = `Auszüge aus dem Schulbuch „${storedBook.title}": ${noteParts.join('; ')}`;
+			usedBookId = storedBook.id;
 			userContentParts.push({ type: 'text', text: `Anbei: ${storedBookNote}.` });
 		} catch (e) {
 			await logError('api/generieren/buch', e, { bookId, bookRanges });
@@ -176,6 +178,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		source_file: sourceFileId,
 		tokens_used: tokensUsed
 	});
+
+	// Erst nach erfolgreicher Generierung: Nur dann war das Buch tatsächlich Quelle.
+	// Nicht fatal — die Aufgabe ist schon gespeichert, schlimmstenfalls läuft die Frist früher ab.
+	if (usedBookId) {
+		await markBookUsed(actor, usedBookId).catch((e) => logError('api/generieren/buch-genutzt', e, { bookId: usedBookId }));
+	}
 
 	return json({ exerciseId: exercise.id, content: generatedContent, tokensUsed });
 };

@@ -8,6 +8,7 @@
 		SUPERVISORY_AUTHORITY,
 		UPLOAD_RETENTION_DAYS
 	} from '$lib/config';
+	import { EMAIL_TOKEN_RETENTION_DAYS } from '$lib/retention';
 	import { CONSENT_VERSION } from '$lib/legal';
 </script>
 
@@ -102,7 +103,10 @@
 		</li>
 		<li>Aufgaben, Korrekturen und Lernhinweise: bis zur Löschung des Zugangs</li>
 		<li>Nachweis der Einwilligung: bis zur Löschung des Zugangs, zur Erfüllung der Rechenschaftspflicht</li>
-		<li>Einmal-Links: bis zur Löschung des Zugangs; verwendbar sind sie nur 48 Stunden (Bestätigung) bzw. eine Stunde (Passwort)</li>
+		<li>
+			Einmal-Links: verwendbar nur 48 Stunden (Bestätigung) bzw. eine Stunde (Passwort), gelöscht
+			{EMAIL_TOKEN_RETENTION_DAYS} Tage nach Verwendung bzw. Ablauf
+		</li>
 		<li>Fehlerprotokolle: kurzfristig, zur Fehlersuche</li>
 	</ul>
 	<p>

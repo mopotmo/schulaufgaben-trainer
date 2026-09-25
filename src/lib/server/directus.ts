@@ -162,6 +162,11 @@ export type Book = {
 	 */
 	visibility: 'family' | 'shared';
 	created_at: string;
+	/**
+	 * Zuletzt Quelle einer Generierung. Steuert die Löschfrist (`$lib/retention`,
+	 * `scripts/aufraeumen.ts`). Angelegt von `scripts/books-last-used.ts`.
+	 */
+	last_used_at: string | null;
 };
 
 type Schema = {

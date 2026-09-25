@@ -74,11 +74,35 @@ export type NewProfile = {
 	avatar: string;
 };
 
+/**
+ * Legt Profil und `learner`-Mitgliedschaft an (Spec §3.2, §10.1). Ohne die Mitgliedschaft
+ * verwirft der Hook jede Profilsitzung sofort.
+ *
+ * Directus-REST kennt keine Transaktion über zwei Collections. Scheitert die Mitgliedschaft,
+ * wird das Profil wieder gelöscht, damit kein Profil ohne Zugang zurückbleibt.
+ */
 export async function createProfile(actor: Actor, data: NewProfile): Promise<Profile> {
 	assertCan(actor, 'profile:create');
-	return getDirectus().request(
-		createItem('profiles', { ...data, kind: 'learner', group_id: currentGroupId(actor) })
+	const groupId = currentGroupId(actor);
+	const directus = getDirectus();
+
+	const profile = await directus.request(
+		createItem('profiles', { ...data, kind: 'learner', group_id: groupId })
 	);
+	try {
+		await directus.request(
+			createItem('memberships', {
+				profile_id: profile.id,
+				group_id: groupId,
+				role: 'learner',
+				status: 'active'
+			})
+		);
+	} catch (e) {
+		await directus.request(deleteItem('profiles', profile.id)).catch(() => {});
+		throw e;
+	}
+	return profile;
 }
 
 export async function updateProfile(
@@ -94,5 +118,6 @@ export async function updateProfile(
 export async function deleteProfile(actor: Actor, profileId: unknown): Promise<void> {
 	assertCan(actor, 'profile:delete');
 	const profile = await getProfile(actor, profileId);
+	// Mitgliedschaften räumt die Datenbank weg: `memberships.profile_id` ist ON DELETE CASCADE.
 	await getDirectus().request(deleteItem('profiles', profile.id));
 }

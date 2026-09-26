@@ -129,11 +129,19 @@ Zusage einer Löschung binnen weniger Tage; später Button im Eltern-Bereich.
 
 ### 3.4 Auftragsverarbeitung
 
-- **Anthropic**: DPA in der Console unterzeichnen, PDF ablegen. Zero-Data-Retention prüfen.
+- **Anthropic**: Der DPA samt Standardvertragsklauseln ist Teil der Commercial Terms of Service
+  und gilt mit deren Annahme beim Anlegen des Console-Kontos — keine eigene Unterschrift.
+  PDF von anthropic.com/legal/data-processing-addendum mit Abrufdatum ablegen.
+  Zero-Data-Retention nur per Einzelvereinbarung mit dem Vertrieb, für uns nicht vorgesehen.
+  **Erledigt am 25.09.2026.**
 - **Hetzner**: AVV elektronisch über Cloud Console bzw. Robot abschließen, PDF ablegen.
   **Erledigt am 25.09.2026.** Betroffene ausdrücklich als Minderjährige unter 16 und deren
   Sorgeberechtigte eingetragen, Datenarten passend zu `/datenschutz` Abschnitt 4.
   Standort Nürnberg in der Datenschutzerklärung nennen.
+- **netcup** (SMTP für Bestätigungs- und Passwort-Mails): AVV im Kundencontrollpanel abschließen,
+  PDF ablegen. **Erledigt am 26.09.2026.** Betroffene: Sorgeberechtigte als Mail-Empfänger;
+  Daten: Namens-, Kontakt-, Login- und Verkehrsdaten (Mails enthalten Familienname, `slug` und
+  Einmal-Link), keine besonderen Kategorien.
 - **Directus** wird selbst betrieben → kein eigener AVV.
 
 ### 3.5 Datenminimierung
@@ -314,7 +322,7 @@ Mehr nicht.
 | 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen | S |
 | 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen; Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) — `scripts/aufraeumen.ts`, Cronjob statt Flow (§3.5) | M |
 | 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` | S |
-| 6 | AVV Anthropic + AVV Hetzner abschließen und ablegen — Hetzner erledigt 25.09.2026, Anthropic offen | S |
+| 6 | AVV Anthropic, Hetzner und netcup abschließen und ablegen — erledigt 25./26.09.2026 | S |
 | 7 | VVT + TOM als internes Dokument | S |
 | 8 | Login härten: nicht erratbare Slugs/Codes, Rate-Limiting | S |
 
@@ -352,7 +360,8 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 - Keine Lehrer-Rolle im ersten Release
 - Onboarding: manuell angelegt + Einwilligung beim ersten Login
 - KI-Transparenzhinweise nach Art. 50 KI-VO: umgesetzt am 22.09.2026 (§3.8)
-- AVV mit Hetzner abgeschlossen am 25.09.2026 (§3.4)
+- AVV mit Hetzner abgeschlossen, DPA von Anthropic abgelegt (25.09.2026), AVV mit netcup
+  abgeschlossen (26.09.2026) — alle drei Auftragsverarbeiter aus `/datenschutz` abgedeckt (§3.4)
 - Die drei technischen Detailfragen am Ende der Spec sind am 20.09.2026 entschieden:
   keine Eltern-Profile in Stufe 1, kein Klassenbeitritt in Stufe 1, Migration als Node-Skript.
   Begründungen in der Spec, §10.

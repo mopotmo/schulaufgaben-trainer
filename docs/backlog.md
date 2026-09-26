@@ -136,7 +136,7 @@ verschoben. Korrigiert:
 1. **Hinweis am Upload-Formular** (an die Schüler, „du"): nur eigene Bücher, nur die eigene
    Familie sieht sie, keine Weitergabe, Löschfrist.
 2. **Löschfrist entschieden**: 90 Tage ohne Nutzung, spätestens 31.08. Die Umsetzung steht
-   oben unter „Schulbücher: Löschfrist umsetzen".
+   oben unter „Löschfristen für Bücher, Uploads und Einmal-Links".
 3. **Nutzungsbedingungen** (an die Eltern, „Sie") und **Konzept §3.6** mit Begründung und
    verworfener Alternative; Querverweise im Konzept und in `backup-und-restore.md` repariert.
    Kein Versionssprung von `CONSENT_VERSION` — noch keine aktiv nutzenden fremden Familien.
@@ -236,7 +236,8 @@ bei Freitext aus dem Formular. `Mathe ` mit angehängtem Leerzeichen und ein The
 nur noch über das Profil; das erreicht auch Altdatensätze, ohne sie anzufassen. Neue
 Datensätze werden aufgeräumt abgelegt.
 
-Was damit **nicht** gelöst ist, steht oben unter „Fach und Thema als Freitext".
+Was damit **nicht** gelöst ist, steht oben unter „Lernerkenntnisse fanden sich wegen Freitext
+nicht wieder".
 
 **Dateien.** `src/lib/server/repo/insights.ts`
 

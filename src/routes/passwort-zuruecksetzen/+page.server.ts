@@ -34,8 +34,11 @@ export const actions: Actions = {
 		if (!found) return fail(400, { error: 'Der Link ist abgelaufen oder wurde schon verwendet.' });
 
 		await consumeToken(found.token.id);
-		await resetPassword(found.token.group_id, await bcrypt.hash(password, 12));
-		setSession(cookies, found.token.group_id);
+		// Der neue Hash entwertet alle vorher ausgestellten Cookies (Fingerabdruck in der
+		// Sitzung) — auch ein gestohlenes. Dieses Gerät bekommt ein frisches.
+		const passwordHash = await bcrypt.hash(password, 12);
+		await resetPassword(found.token.group_id, passwordHash);
+		setSession(cookies, found.token.group_id, passwordHash);
 		redirect(303, '/');
 	}
 };

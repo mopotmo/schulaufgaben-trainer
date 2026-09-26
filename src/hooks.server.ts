@@ -1,5 +1,5 @@
-import { getSession, clearSession } from '$lib/session';
-import { isEmailVerified, listGroupIdsForProfile } from '$lib/server/repo/groups';
+import { getSession, clearSession, matchesPassword } from '$lib/session';
+import { getSessionState, listGroupIdsForProfile } from '$lib/server/repo/groups';
 import { hasValidConsent } from '$lib/server/repo/consents';
 import { familyActor, type Actor, type Role } from '$lib/server/authz';
 import { error, redirect } from '@sveltejs/kit';
@@ -35,8 +35,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (!payload && event.cookies.get('session')) clearSession(event.cookies);
 
 	let actor: Actor | null = null;
+	let emailVerified = false;
 
-	if (payload) {
+	// Cookie aus der Zeit vor der letzten Passwortänderung (oder Gruppe weg): entwerten.
+	// Läuft auch auf öffentlichen Pfaden — sonst leitet etwa `/login` mit einer alten Sitzung
+	// noch auf die Startseite weiter.
+	const state = payload ? await getSessionState(payload.groupId) : null;
+	if (payload && (!state || !matchesPassword(payload, state.passwordHash))) {
+		clearSession(event.cookies);
+	} else if (payload && state) {
+		emailVerified = state.emailVerified;
 		if (payload.kind === 'family') {
 			actor = familyActor(payload.groupId);
 		} else {
@@ -64,15 +72,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	if (actor && !isPublic(path)) {
-		// Beide Prüfungen parallel, damit das zweite Gate keinen weiteren Roundtrip kostet.
-		const [verified, consented] = await Promise.all([
-			isEmailVerified(actor.session.groupId),
-			CONSENT_EXEMPT.includes(path) ? true : hasValidConsent(actor.session.groupId)
-		]);
+		// Der Bestätigungsstatus kam schon mit der Sitzungsprüfung oben — hier kein Roundtrip mehr.
+		const consented = CONSENT_EXEMPT.includes(path) || (await hasValidConsent(actor.session.groupId));
 
 		// Verifikations-Gate: Ohne bestätigte Adresse ist die Einwilligung nicht belegbar
 		// (Konzept §3.3, Double-Opt-In). Kommt deshalb vor dem Consent-Gate.
-		if (!verified) {
+		if (!emailVerified) {
 			if (path.startsWith('/api/')) error(403, 'E-Mail-Adresse nicht bestätigt');
 			redirect(303, '/email-bestaetigen');
 		}

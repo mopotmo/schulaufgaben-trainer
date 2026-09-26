@@ -27,20 +27,6 @@ Eine Zeile am Ende des Blatts, ohne Folgen für die Korrektur.
 
 ---
 
-### E-Mail-Bestätigung: zwei Nacharbeiten
-
-Aus der Umsetzung vom 25.09.2026 (Double-Opt-In und „Passwort vergessen").
-
-1. **Passwort-Reset entwertet keine laufenden Sitzungen.** Das Cookie trägt nur `iat` und
-   eine globale Version (`v`), nichts pro Gruppe. Wer ein fremdes Cookie hat, bleibt nach dem
-   Reset bis zu 30 Tage angemeldet. Ansatz: `groups.session_version` ins Cookie aufnehmen und
-   im Hook vergleichen; der Reset erhöht sie.
-2. ~~**`email_tokens` wächst unbegrenzt.**~~ *Erledigt 25.09.2026:* `scripts/aufraeumen.ts`
-   löscht verbrauchte und abgelaufene Zeilen nach 7 Tagen; die Datenschutzerklärung sagt das.
-
-**Dateien.** `src/lib/session.ts`, `src/hooks.server.ts`, `src/lib/server/repo/emailTokens.ts`,
-`scripts/email-verification.ts`
-
 ### Profil löschen: abhängige Daten werden nicht vollständig mitgelöscht
 
 Festgestellt am 25.09.2026 an den Relationen in Produktion. `deleteProfile` hat noch keinen
@@ -68,6 +54,36 @@ löscht sie als verwaiste Dateien 30 Tage nach dem Upload. Vorher Backup.
 **Dateien.** `src/lib/server/repo/profiles.ts` (`deleteProfile`), Directus-Relationen
 
 ## Erledigt
+
+### Passwort-Reset entwertete keine laufenden Sitzungen — 26.09.2026
+
+Aus der Umsetzung vom 25.09.2026 (Double-Opt-In und „Passwort vergessen"). Das Cookie trug
+nur `iat` und eine globale Version, nichts, was sich pro Familie ändert. Wer ein fremdes
+Cookie hatte, blieb nach dem Reset bis zu 30 Tage angemeldet.
+
+Das Cookie trägt jetzt einen Fingerabdruck des Passwort-Hashs (HMAC mit `SESSION_SECRET`,
+der Hash selbst verlässt den Server nicht). Der Hook vergleicht ihn bei jeder Anfrage mit
+Cookie gegen den aktuellen Hash — in derselben Abfrage, die vorher nur den Bestätigungsstatus
+las. Jede Passwortänderung entwertet damit alle vorher ausgestellten Cookies, auch die
+Änderung unter Einstellungen; das Gerät, auf dem geändert wird, bekommt ein frisches.
+
+**Fingerabdruck statt `groups.session_version`** (entschieden 26.09.2026): keine
+Schemaänderung, keine Migration. Dafür lässt sich eine Familie nicht per Hand in Directus
+abmelden, und die freiwillige Änderung meldet die anderen Geräte zwangsläufig mit ab — so
+gewollt. Das Cookie steht auf `v: 2`; alte Cookies ohne Fingerabdruck gelten nicht mehr,
+nach dem Deploy meldet sich also jede Familie einmal neu an.
+
+Fällt Directus aus, schlägt der Hook mit einem Fehler durch, statt die Sitzung zu löschen
+(`getSessionState` fängt nur „Gruppe nicht gefunden" ab).
+
+In der Probe mit einer Testfamilie und zwei Geräten (Browser und `curl`) geprüft: Nach dem
+Reset und nach der Änderung unter Einstellungen ist das zweite Gerät abgemeldet (Seiten
+leiten auf `/login`, API antwortet 401, Cookie gelöscht), das ändernde bleibt angemeldet.
+
+**Dateien.** `src/lib/session.ts`, `src/hooks.server.ts`, `src/lib/server/repo/groups.ts`,
+`src/routes/login/+page.server.ts`, `src/routes/einrichten/+page.server.ts`,
+`src/routes/passwort-zuruecksetzen/+page.server.ts`, `src/routes/einstellungen/+page.server.ts`,
+`src/routes/einstellungen/+page.svelte`
 
 ### Löschfristen für Bücher, Uploads und Einmal-Links — 25.09.2026
 

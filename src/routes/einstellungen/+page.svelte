@@ -19,7 +19,7 @@
 
 		{#if form?.success}
 			<div class="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-700 mb-4">
-				Passwort erfolgreich geändert.
+				Passwort erfolgreich geändert. Auf allen anderen Geräten ist die Familie jetzt abgemeldet.
 			</div>
 		{/if}
 

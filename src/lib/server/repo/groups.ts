@@ -57,12 +57,27 @@ export async function setupFamily(
 	);
 }
 
-/** Vom Hook gebraucht — deshalb nur die eine Spalte. */
-export async function isEmailVerified(groupId: string): Promise<boolean> {
-	const group = await getDirectus()
-		.request(readItem('groups', requireId(groupId), { fields: ['email_verified_at'] }))
-		.catch(() => null);
-	return !!group?.email_verified_at;
+/**
+ * Vom Hook bei jeder Anfrage mit Cookie gebraucht — deshalb nur die zwei Spalten, in einer
+ * Abfrage. Der Passwort-Hash verlässt den Server nicht; der Hook vergleicht nur den
+ * Fingerabdruck im Cookie dagegen. `null`: Gruppe gibt es nicht (mehr).
+ *
+ * `readItems` statt `readItem`: Eine fehlende Gruppe ist hier eine leere Liste, kein Fehler.
+ * Ein echter Fehler (Directus nicht erreichbar) soll durchschlagen — mit `catch` würde er als
+ * „Gruppe weg" gelesen, und der Hook löschte bei jedem Ausfall alle Sitzungen.
+ */
+export async function getSessionState(
+	groupId: string
+): Promise<{ passwordHash: string | null; emailVerified: boolean } | null> {
+	const [group] = await getDirectus().request(
+		readItems('groups', {
+			filter: { id: { _eq: requireId(groupId) } },
+			fields: ['password_hash', 'email_verified_at'],
+			limit: 1
+		})
+	);
+	if (!group) return null;
+	return { passwordHash: group.password_hash, emailVerified: !!group.email_verified_at };
 }
 
 export async function markEmailVerified(groupId: string): Promise<void> {

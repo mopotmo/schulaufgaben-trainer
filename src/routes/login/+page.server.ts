@@ -31,7 +31,7 @@ export const actions: Actions = {
 			return fail(401, { error: 'Familienname oder Passwort stimmt nicht.' });
 		}
 
-		setSession(cookies, group.id);
+		setSession(cookies, group.id, group.password_hash);
 
 		const weiter = (form.get('weiter') as string) || '/';
 		// Nur app-interne Ziele — sonst wird der Login zum offenen Redirect.

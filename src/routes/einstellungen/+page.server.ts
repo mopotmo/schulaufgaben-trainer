@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import bcrypt from 'bcryptjs';
+import { setSession } from '$lib/session';
 import { requireActor } from '$lib/server/actor';
 import { assertCan } from '$lib/server/authz';
 import { getOwnGroup, changePassword } from '$lib/server/repo/groups';
@@ -16,7 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	changePassword: async ({ request, locals }) => {
+	changePassword: async ({ request, locals, cookies }) => {
 		const actor = requireActor(locals);
 		// Vor jeder Verarbeitung, insbesondere vor dem Passwortvergleich.
 		assertCan(actor, 'group:manage');
@@ -35,7 +36,11 @@ export const actions: Actions = {
 			return fail(401, { error: 'Das aktuelle Passwort ist falsch.' });
 		}
 
-		await changePassword(actor, await bcrypt.hash(next, 12));
+		// Der neue Hash meldet alle anderen Geräte ab (Fingerabdruck in der Sitzung).
+		// Dieses bleibt angemeldet: `group:manage` gibt es nur in der Familiensitzung.
+		const passwordHash = await bcrypt.hash(next, 12);
+		await changePassword(actor, passwordHash);
+		setSession(cookies, group.id, passwordHash);
 		return { success: true };
 	}
 };

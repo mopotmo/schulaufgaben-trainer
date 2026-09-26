@@ -48,8 +48,9 @@ export const actions: Actions = {
 		// Bestehende Familie, von Hand in Directus zurückgesetzt: nur das Passwort.
 		if (group.password_hash) {
 			if (!pw.ok) return fail(400, { error: pw.error, ...keep });
-			await setPassword(group.id, await bcrypt.hash(pw.password, 12));
-			setSession(cookies, group.id);
+			const passwordHash = await bcrypt.hash(pw.password, 12);
+			await setPassword(group.id, passwordHash);
+			setSession(cookies, group.id, passwordHash);
 			redirect(303, '/');
 		}
 
@@ -62,8 +63,9 @@ export const actions: Actions = {
 		// Einwilligung zuerst: Schlägt danach etwas fehl, ist der Einladungslink noch gültig und
 		// ein zweiter Versuch schreibt höchstens eine doppelte Einwilligung — kein halber Zugang.
 		await grantConsent(familyActor(group.id), { granted_by_name: consent.value.name, granted_by_email: email });
-		await setupFamily(group.id, { passwordHash: await bcrypt.hash(pw.password, 12), email });
-		setSession(cookies, group.id);
+		const passwordHash = await bcrypt.hash(pw.password, 12);
+		await setupFamily(group.id, { passwordHash, email });
+		setSession(cookies, group.id, passwordHash);
 
 		// Geht der Versand schief, bietet `/email-bestaetigen` „erneut senden" an.
 		await issueToken(group.id, 'verify', email).catch(() => false);

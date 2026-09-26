@@ -6,6 +6,9 @@
  * - `iat` und `MAX_AGE` begrenzen die Gültigkeit. Vorher war ein einmal ausgestelltes
  *   Cookie unbegrenzt gültig und nicht widerrufbar.
  * - `v` erlaubt, mit einem Bump alle bestehenden Cookies auf einen Schlag zu entwerten.
+ * - `pw` ist ein Fingerabdruck des Passwort-Hashs der Gruppe. Der Hook vergleicht ihn mit dem
+ *   aktuellen Hash — nach jeder Passwortänderung sind alle vorher ausgestellten Cookies
+ *   ungültig, ohne dass es dafür eine eigene Spalte braucht.
  * - Der Signaturvergleich ist konstantzeitig.
  */
 import { SESSION_SECRET } from '$env/static/private';
@@ -16,16 +19,27 @@ const COOKIE_NAME = 'session';
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 Tage
 
 export type SessionPayload = {
-	v: 1;
+	/** 2 seit dem Fingerabdruck — Cookies ohne `pw` sollen nicht weiter gelten. */
+	v: 2;
 	kind: 'family' | 'profile';
 	groupId: string;
 	profileId?: string;
+	/** Fingerabdruck des Passwort-Hashs bei Ausstellung, siehe `passwordFingerprint`. */
+	pw: string;
 	/** Unix-Sekunden */
 	iat: number;
 };
 
 function sign(data: string): string {
 	return createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+}
+
+/**
+ * Aus dem Fingerabdruck lässt sich der Hash nicht zurückgewinnen — das Cookie liegt beim
+ * Client, der bcrypt-Hash soll dort nicht einmal in Teilen landen.
+ */
+function passwordFingerprint(passwordHash: string): string {
+	return createHmac('sha256', SESSION_SECRET).update(`pw:${passwordHash}`).digest('base64url');
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -51,20 +65,38 @@ function write(cookies: Cookies, payload: SessionPayload) {
 	});
 }
 
-/** Anmeldung als Familie (Eltern). */
-export function setSession(cookies: Cookies, groupId: string) {
-	write(cookies, { v: 1, kind: 'family', groupId, iat: Math.floor(Date.now() / 1000) });
+/** Anmeldung als Familie (Eltern). `passwordHash` ist der aktuelle Hash der Gruppe. */
+export function setSession(cookies: Cookies, groupId: string, passwordHash: string) {
+	write(cookies, {
+		v: 2,
+		kind: 'family',
+		groupId,
+		pw: passwordFingerprint(passwordHash),
+		iat: Math.floor(Date.now() / 1000)
+	});
 }
 
 /** Wechsel von der Familien- auf eine Profilsitzung. */
-export function switchProfile(cookies: Cookies, groupId: string, profileId: string) {
+export function switchProfile(
+	cookies: Cookies,
+	groupId: string,
+	profileId: string,
+	passwordHash: string
+) {
 	write(cookies, {
-		v: 1,
+		v: 2,
 		kind: 'profile',
 		groupId,
 		profileId,
+		pw: passwordFingerprint(passwordHash),
 		iat: Math.floor(Date.now() / 1000)
 	});
+}
+
+/** Wurde das Cookie vor der letzten Passwortänderung ausgestellt? Dann `false`. */
+export function matchesPassword(payload: SessionPayload, passwordHash: string | null): boolean {
+	if (!passwordHash) return false;
+	return safeEqual(payload.pw, passwordFingerprint(passwordHash));
 }
 
 export function getSession(cookies: Cookies): SessionPayload | null {
@@ -86,12 +118,13 @@ export function getSession(cookies: Cookies): SessionPayload | null {
 		return null;
 	}
 
-	if (payload?.v !== 1) return null;
+	if (payload?.v !== 2) return null;
 	if (payload.kind !== 'family' && payload.kind !== 'profile') return null;
 	if (typeof payload.groupId !== 'string' || !payload.groupId) return null;
 	if (payload.kind === 'profile' && (typeof payload.profileId !== 'string' || !payload.profileId)) {
 		return null;
 	}
+	if (typeof payload.pw !== 'string' || !payload.pw) return null;
 	if (typeof payload.iat !== 'number' || !Number.isFinite(payload.iat)) return null;
 	if (Math.floor(Date.now() / 1000) - payload.iat > MAX_AGE) return null;
 

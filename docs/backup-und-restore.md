@@ -25,6 +25,22 @@ Voraussetzungen: SSH-Zugang als `groovemanager-coolify` ohne Passwortabfrage (so
 `BACKUP_SERVER=…`), `gpg` und Docker lokal. Die Einzelschritte unten bleiben als Referenz und
 für den Fall, dass das Skript scheitert.
 
+**Der Directus-Container der Probe** (`trainer-directus`) wird nicht vom Skript angelegt, nur
+gestartet. Er muss **dieselbe Version wie die Produktion** fahren — sonst laufen beim Start
+Migrationen, und die Probe prüft etwas anderes als das, was in Produktion passiert. Einmalig:
+
+```sh
+docker network create trainer-net   # falls noch nicht vorhanden
+docker run -d --name trainer-directus --network trainer-net -p 8055:8055 \
+  -e DB_CLIENT=pg -e DB_HOST=trainer-restore -e DB_PORT=5432 -e DB_DATABASE=directus \
+  -e DB_USER=postgres -e DB_PASSWORD=test -e KEY=probe -e SECRET=probe \
+  -e CACHE_ENABLED=false -e TELEMETRY=false -e IP_TRUST_PROXY=true \
+  directus/directus:12.4.1
+```
+
+Nach einem Directus-Update in Produktion den Container mit dem neuen Tag neu anlegen. Der
+statische Token aus `.env` gilt auch lokal, weil er im Dump mitkommt.
+
 ## Automatisch: täglich auf die Storage Box
 
 *Stand 25.09.2026: eingerichtet und in Betrieb, täglich 02:15 UTC. Log auf dem Server in
@@ -172,7 +188,7 @@ kopieren — der Cronjob kommt nicht mit dem App-Deploy.
 | | |
 |---|---|
 | Hosting | Hetzner, Nürnberg · Coolify 4.1.2, ein Server |
-| Directus | Service-Stack vom Typ `directus-with-postgresql` |
+| Directus | Service-Stack vom Typ `directus-with-postgresql`, `directus/directus:12.4.1` (fester Tag, seit 26.09.2026) |
 | Postgres | **innerhalb** des Service-Stacks, keine Standalone-Datenbank |
 | Uploads | eigenes Docker-Volume, **nicht** in Postgres |
 

@@ -57,6 +57,10 @@ Passphrase) — erzeugt zugleich die lokale Probeumgebung. Consent-Gate und
 Rechtsseiten stehen, ebenso Double-Opt-In und „Passwort vergessen" (Mailversand über einen
 Directus-Flow, Konzept §3.3).
 
+Directus läuft seit 26.09.2026 auf `directus/directus:12.4.1` (fester Tag, Core-Tarif ohne
+Lizenzschlüssel: 25 Collections, 3 Studio-Nutzer). Updates erst in der Probe, dann in Coolify
+den Tag ändern — die Probe muss dieselbe Version fahren (`docs/backup-und-restore.md`).
+
 Zwei Cronjobs auf dem Server, nicht Teil des App-Deploys: `scripts/aufraeumen.ts` (Löschfristen,
 01:45 UTC) und `scripts/backup-cron.sh` (Backup auf die Storage Box, 02:15 UTC). Nach einer
 Änderung an ihnen oder an `src/lib/retention.ts` von Hand neu auf den Server kopieren —

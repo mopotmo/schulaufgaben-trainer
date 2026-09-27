@@ -22,3 +22,6 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Internes Datenschutz-Dokument (VVT/TOM) — nicht öffentlich
+/docs/vvt-tom.md

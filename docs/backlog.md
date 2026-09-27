@@ -10,6 +10,33 @@ nicht beim Anfassen erst wieder diagnostizieren muss. Erledigtes wandert nach un
 
 ## Offen
 
+### Directus-Revisionen halten gelöschte Daten
+
+Festgestellt am 27.09.2026 bei VVT/TOM (internes Dokument, offener Punkt 1). Alle Collections
+stehen auf `accountability: all`: Directus legt bei jedem Anlegen und Ändern eine vollständige
+Kopie in `directus_revisions` ab. Unsere Löschungen — Widerruf der Lernerkenntnisse, Profil
+löschen, `aufraeumen.ts` — erfassen sie nicht. In Produktion lagen die am selben Tag gelöschte
+Lernerkenntnis (Stärken, Schwächen), 12 alte Passwort-Hashes und frühere Stände von Profilen,
+Aufgaben und Korrekturen. Die Datenschutzerklärung sagt „sofort gelöscht".
+
+**Ansatz.** `accountability` auf `activity` umstellen (nur wer/wann, kein Datensatz) — über den
+Snapshot-Weg — und die vorhandenen Revisionen der Nutz-Collections löschen. Alternativ eine
+Aufbewahrungsfrist für Revisionen in Directus, falls die Version das hergibt (prüfen). Danach
+im internen VVT/TOM-Dokument nachziehen. Vorher Backup; die Sicherungen enthalten die Revisionen noch
+30 Tage.
+
+**Dateien.** `schema/snapshot.json`, ggf. `scripts/`
+
+---
+
+### Server härten
+
+Aus der Prüfung am Server für VVT/TOM am 27.09.2026; betrifft den ganzen Server, nicht nur
+diese App. Einzelheiten im internen Dokument `docs/vvt-tom.md` (nur lokal, per `.gitignore`
+ausgeschlossen), Abschnitt „Offene Punkte", Nr. 2–5.
+
+---
+
 ### Donate-Button
 
 Eltern sollen den Betrieb freiwillig unterstützen können (Wunsch vom 27.09.2026).

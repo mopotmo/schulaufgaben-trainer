@@ -323,7 +323,7 @@ Mehr nicht.
 | 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen; Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) — `scripts/aufraeumen.ts`, Cronjob statt Flow (§3.5) | M |
 | 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` | S |
 | 6 | AVV Anthropic, Hetzner und netcup abschließen und ablegen — erledigt 25./26.09.2026 | S |
-| 7 | VVT + TOM als internes Dokument | S |
+| 7 | VVT + TOM als internes Dokument — erstellt 27.09.2026, nicht im Repo, lokal unter `docs/vvt-tom.md`, per `.gitignore` ausgeschlossen | S |
 | 8 | Login härten: Rate-Limiting — umgesetzt 27.09.2026 (`src/lib/server/rateLimit.ts`, im App-Speicher: Login 10 Fehlversuche pro IP und 20 pro Familie in 15 Min., Passwort vergessen/Einrichten/Zurücksetzen 5 pro IP und Stunde). Slugs bleiben die Familiennamen — entschieden 27.09.2026, der Schutz liegt beim Rate-Limiting | S |
 
 ### Stufe 1 — der Refactor (Spec liegt vor)

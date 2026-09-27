@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { findVerifiedFamiliesByEmail } from '$lib/server/repo/groups';
 import { issueToken } from '$lib/server/repo/emailTokens';
 import { readEmail } from '$lib/server/consentForm';
+import { clientIp, minutes, tokenByIp } from '$lib/server/rateLimit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -9,8 +10,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request }) => {
-		const email = readEmail(await request.formData());
+	default: async (event) => {
+		const ip = clientIp(event);
+		const wait = tokenByIp.blockedFor(ip);
+		if (wait > 0) return fail(429, { error: `Zu viele Anfragen. Bitte in ${minutes(wait)} erneut versuchen.` });
+		tokenByIp.fail(ip);
+
+		const email = readEmail(await event.request.formData());
 		if (!email) return fail(400, { error: 'Bitte gib eine gültige E-Mail-Adresse an.' });
 
 		// Eine Adresse kann in seltenen Fällen zu mehreren Familien gehören — dann bekommt

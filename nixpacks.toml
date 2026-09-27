@@ -4,6 +4,10 @@ nixPkgs = ['nodejs_22', 'chromium']
 [variables]
 PUPPETEER_SKIP_DOWNLOAD = 'true'
 PUPPETEER_EXECUTABLE_PATH = '/root/.nix-profile/bin/chromium'
+# Client-IP für das Rate-Limiting (src/lib/server/rateLimit.ts): der Eintrag, den Traefik als
+# einziger Proxy anhängt. Ohne diese Zeilen sähe die App nur die IP des Proxys.
+ADDRESS_HEADER = 'X-Forwarded-For'
+XFF_DEPTH = '1'
 
 [start]
 cmd = 'node build/index.js'

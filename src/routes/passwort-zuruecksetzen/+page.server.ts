@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { setSession } from '$lib/session';
 import { getGroupContact, resetPassword } from '$lib/server/repo/groups';
 import { consumeToken, findValidToken } from '$lib/server/repo/emailTokens';
+import { clientIp, minutes, tokenByIp } from '$lib/server/rateLimit';
 import type { Actions, PageServerLoad } from './$types';
 
 /** Ein Token gilt nur für die Adresse, an die es ging — ändert sich die Adresse, verfällt es. */
@@ -22,7 +23,8 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	default: async (event) => {
+		const { request, cookies } = event;
 		const form = await request.formData();
 		const password = ((form.get('password') as string) ?? '').trim();
 		const passwordConfirm = ((form.get('passwordConfirm') as string) ?? '').trim();
@@ -30,8 +32,15 @@ export const actions: Actions = {
 		if (password.length < 8) return fail(400, { error: 'Das Passwort muss mindestens 8 Zeichen lang sein.' });
 		if (password !== passwordConfirm) return fail(400, { error: 'Die Passwörter stimmen nicht überein.' });
 
+		const ip = clientIp(event);
+		const wait = tokenByIp.blockedFor(ip);
+		if (wait > 0) return fail(429, { error: `Zu viele Versuche. Bitte in ${minutes(wait)} erneut versuchen.` });
+
 		const found = await resolve(form.get('token') as string);
-		if (!found) return fail(400, { error: 'Der Link ist abgelaufen oder wurde schon verwendet.' });
+		if (!found) {
+			tokenByIp.fail(ip);
+			return fail(400, { error: 'Der Link ist abgelaufen oder wurde schon verwendet.' });
+		}
 
 		await consumeToken(found.token.id);
 		// Der neue Hash entwertet alle vorher ausgestellten Cookies (Fingerabdruck in der

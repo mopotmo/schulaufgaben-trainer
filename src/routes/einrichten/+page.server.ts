@@ -6,6 +6,7 @@ import { findGroupByInviteToken, setPassword, setupFamily } from '$lib/server/re
 import { grantConsent } from '$lib/server/repo/consents';
 import { issueToken } from '$lib/server/repo/emailTokens';
 import { readConsent, readEmail } from '$lib/server/consentForm';
+import { clientIp, minutes, tokenByIp } from '$lib/server/rateLimit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -28,7 +29,8 @@ function readPassword(form: FormData): { ok: true; password: string } | { ok: fa
 }
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	default: async (event) => {
+		const { request, cookies } = event;
 		const form = await request.formData();
 		const token = form.get('token') as string;
 
@@ -40,8 +42,15 @@ export const actions: Actions = {
 			email: ((form.get('email') as string) ?? '').trim()
 		};
 
+		const ip = clientIp(event);
+		const wait = tokenByIp.blockedFor(ip);
+		if (wait > 0) return fail(429, { error: `Zu viele Versuche. Bitte in ${minutes(wait)} erneut versuchen.`, ...keep });
+
 		const group = await findGroupByInviteToken(token);
-		if (!group) return fail(400, { error: 'Ungültiger oder bereits verwendeter Link.', ...keep });
+		if (!group) {
+			tokenByIp.fail(ip);
+			return fail(400, { error: 'Ungültiger oder bereits verwendeter Link.', ...keep });
+		}
 
 		const pw = readPassword(form);
 

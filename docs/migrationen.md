@@ -51,6 +51,13 @@ Die Richtung steht aus Sicht der Instanz: *fehlt dort* (im Repo, nicht in Direct
 *nur dort* (in Directus, nicht im Repo), *weicht ab*. Dann entscheiden: Gilt das Repo →
 `apply`. Ist die Handänderung in Directus richtig → `pull` gegen Produktion und committen.
 
+## Rückweg
+
+Ein Backup einspielen — nicht `apply` mit einem älteren Snapshot. Directus ändert beim Abgleich
+erst die Felder, dann die Relationen; eine Spalte, an der ein Fremdschlüssel hängt, lässt sich
+so nicht zurückstellen (am 27.09.2026 beim Profil-Löschen gesehen: `feedback.profile_id`
+UUID → Text scheiterte). Der Abbruch ist vollständig — es bleibt nichts halb angewendet.
+
 ## Directus-Update
 
 Der Snapshot trägt die Directus-Version. Nach einem Update (erst Probe, dann Produktion)
@@ -64,6 +71,7 @@ wurden nicht datiert festgehalten, das Datum ist das des letzten Commits am Skri
 
 | Datum | Was | Probe | Produktion |
 |---|---|---|---|
+| 27.09.2026 | Profil löschen: `learner_insights` CASCADE, `feedback.profile_id` UUID + SET NULL, `feedback.id`/`feature_requests.id` mit `uuid` | ✓ 27.09. | offen |
 | 26.09.2026 | Erster Snapshot aus Produktion (Directus 12.4.1, 12 Collections, 104 Felder, 11 Relationen) | — | Quelle |
 | 26.09.2026 | Directus 11.17.4 → 12.4.1 (8 Directus-Migrationen) | ✓ 26.09. | ✓ 26.09. |
 | 25.09.2026 | `scripts/books-last-used.ts` — `books.last_used_at` samt Backfill | ✓ | ✓ |

@@ -2607,14 +2607,16 @@
 				"field": "id",
 				"group": null,
 				"hidden": true,
-				"interface": null,
+				"interface": "input",
 				"note": null,
 				"options": null,
 				"readonly": true,
 				"required": false,
 				"searchable": true,
 				"sort": 1,
-				"special": null,
+				"special": [
+					"uuid"
+				],
 				"translations": null,
 				"validation": null,
 				"validation_message": null,
@@ -2932,14 +2934,16 @@
 				"field": "id",
 				"group": null,
 				"hidden": true,
-				"interface": null,
+				"interface": "input",
 				"note": null,
 				"options": null,
 				"readonly": true,
 				"required": false,
 				"searchable": true,
 				"sort": 1,
-				"special": null,
+				"special": [
+					"uuid"
+				],
 				"translations": null,
 				"validation": null,
 				"validation_message": null,
@@ -2971,13 +2975,15 @@
 			"meta": {
 				"collection": "feedback",
 				"conditions": null,
-				"display": null,
-				"display_options": null,
+				"display": "related-values",
+				"display_options": {
+					"template": "{{name}}"
+				},
 				"field": "profile_id",
 				"group": null,
 				"hidden": false,
-				"interface": null,
-				"note": "Welches Profil hat das Feedback gegeben",
+				"interface": "select-dropdown-m2o",
+				"note": "Beim Löschen des Profils auf leer gesetzt — das Feedback bleibt anonym erhalten (Backlog, entschieden 25.09.2026).",
 				"options": null,
 				"readonly": false,
 				"required": false,
@@ -2990,10 +2996,10 @@
 				"width": "full"
 			},
 			"schema": {
-				"data_type": "character varying",
+				"data_type": "uuid",
 				"default_value": null,
-				"foreign_key_column": null,
-				"foreign_key_table": null,
+				"foreign_key_column": "id",
+				"foreign_key_table": "profiles",
 				"generation_expression": null,
 				"has_auto_increment": false,
 				"is_generated": false,
@@ -3001,13 +3007,13 @@
 				"is_nullable": true,
 				"is_primary_key": false,
 				"is_unique": false,
-				"max_length": 255,
+				"max_length": null,
 				"name": "profile_id",
 				"numeric_precision": null,
 				"numeric_scale": null,
 				"table": "feedback"
 			},
-			"type": "string"
+			"type": "uuid"
 		},
 		{
 			"collection": "feedback",
@@ -5361,6 +5367,31 @@
 			}
 		},
 		{
+			"collection": "feedback",
+			"field": "profile_id",
+			"meta": {
+				"junction_field": null,
+				"many_collection": "feedback",
+				"many_field": "profile_id",
+				"one_allowed_collections": null,
+				"one_collection": "profiles",
+				"one_collection_field": null,
+				"one_deselect_action": "nullify",
+				"one_field": null,
+				"sort_field": null
+			},
+			"related_collection": "profiles",
+			"schema": {
+				"column": "profile_id",
+				"constraint_name": "feedback_profile_id_foreign",
+				"foreign_key_column": "id",
+				"foreign_key_table": "profiles",
+				"on_delete": "SET NULL",
+				"on_update": "NO ACTION",
+				"table": "feedback"
+			}
+		},
+		{
 			"collection": "groups",
 			"field": "parent_group",
 			"meta": {
@@ -5405,7 +5436,7 @@
 				"constraint_name": "learner_insights_profile_id_foreign",
 				"foreign_key_column": "id",
 				"foreign_key_table": "profiles",
-				"on_delete": "NO ACTION",
+				"on_delete": "CASCADE",
 				"on_update": "NO ACTION",
 				"table": "learner_insights"
 			}

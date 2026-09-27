@@ -39,6 +39,26 @@ export async function saveFeatureRequest(
 	}
 }
 
+/**
+ * Beim Löschen eines Profils: seine ID aus allen Wunschlisten nehmen. `profile_ids` ist JSON,
+ * dafür gibt es keine Relation und damit keine Kaskade. `count` bleibt — er zählt Wünsche,
+ * nicht Personen. Die ID ist vom Aufrufer bereits gegen den Scope geprüft.
+ */
+export async function forgetProfileInFeatureRequests(profileId: string): Promise<void> {
+	const directus = getDirectus();
+	const all = await directus.request(
+		readItems('feature_requests', { limit: -1, fields: ['id', 'profile_ids'] })
+	);
+	for (const fr of all) {
+		if (!fr.profile_ids?.includes(profileId)) continue;
+		await directus.request(
+			updateItem('feature_requests', fr.id, {
+				profile_ids: fr.profile_ids.filter((id) => id !== profileId)
+			})
+		);
+	}
+}
+
 function wordOverlap(a: string, b: string): number {
 	const wordsA = new Set(a.split(/\s+/).filter((w) => w.length > 3));
 	return [...wordsA].filter((w) => b.includes(w)).length;

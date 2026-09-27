@@ -27,33 +27,49 @@ Eine Zeile am Ende des Blatts, ohne Folgen für die Korrektur.
 
 ---
 
-### Profil löschen: abhängige Daten werden nicht vollständig mitgelöscht
+### Logs haben keine Löschfrist
 
-Festgestellt am 25.09.2026 an den Relationen in Produktion. `deleteProfile` hat noch keinen
-Aufrufer, der Fehler ist also nicht sichtbar — wird es aber, sobald Eltern Profile löschen können.
+Festgestellt am 27.09.2026 beim Profil-Löschen. `logs` wächst unbegrenzt, `scripts/aufraeumen.ts`
+fasst die Collection nicht an. `learnerInsights/persist` schreibt bei Fehlern die `profileId`
+in `details`; nach dem Löschen des Profils bleibt sie dort stehen. Dazu stehen Stacktraces mit
+Fach und Thema drin. Stand Produktion: 5 Zeilen, keine mit Profil-ID.
 
-| Collection | Verweis auf das Profil | Beim Löschen |
-|---|---|---|
-| `memberships` | `profile_id` | `CASCADE` ✓ |
-| `exercises` | `profile_id` | `CASCADE` ✓ |
-| `corrections` | über `exercise_id` | `CASCADE` ✓ |
-| `learner_insights` | `profile_id` | **`NO ACTION`** — das Löschen scheitert am Fremdschlüssel |
-| `feedback` | `profile_id` | **keine Relation** — Zeilen bleiben verwaist stehen |
+**Ansatz.** Frist festlegen (Vorschlag: 30 Tage), in `src/lib/retention.ts` und
+`scripts/aufraeumen.ts` aufnehmen, in der Datenschutzerklärung nennen. Danach das Skript neu
+auf den Server kopieren (CLAUDE.md).
 
-Dazu: `corrections.solution_file` zeigt auf `directus_files`. Die Kaskade löscht die Korrektur,
-nicht das hochgeladene Lösungsfoto — Datei und Zeile bleiben im Uploads-Volume.
-
-Aus DSGVO-Sicht sollte mit dem Profil alles gehen, was sich auf das Kind bezieht.
-
-**Ansatz.** In Directus `learner_insights.profile_id` auf `CASCADE` umstellen und für
-`feedback.profile_id` eine Relation mit `SET NULL` — entschieden am 25.09.2026: Feedback bleibt
-anonym erhalten. Dafür prüfen, dass im Feedback-Text selbst nichts Personenbezogenes steht. Lösungsfotos brauchen
-nichts Eigenes mehr: Nach der Kaskade verweist nichts mehr auf sie, `scripts/aufraeumen.ts`
-löscht sie als verwaiste Dateien 30 Tage nach dem Upload. Vorher Backup.
-
-**Dateien.** `src/lib/server/repo/profiles.ts` (`deleteProfile`), Directus-Relationen
+**Dateien.** `scripts/aufraeumen.ts`, `src/lib/retention.ts`, `src/routes/datenschutz/+page.svelte`
 
 ## Erledigt
+
+### Profil löschen nahm abhängige Daten nicht vollständig mit — 27.09.2026
+
+`learner_insights.profile_id` stand auf `NO ACTION` (das Löschen wäre am Fremdschlüssel
+gescheitert), `feedback.profile_id` hatte keine Relation. Erste Änderung über den
+Snapshot-Weg (`docs/migrationen.md`):
+
+- `learner_insights.profile_id` → `ON DELETE CASCADE`
+- `feedback.profile_id`: Spalte von Text auf UUID, Relation auf `profiles` mit
+  `ON DELETE SET NULL` — das Feedback bleibt anonym erhalten (entschieden 25.09.2026).
+  Die Prüfung auf Personenbezogenes im Bestand entfiel: 0 Zeilen in Produktion.
+- `feature_requests.profile_ids` ist JSON, dafür gibt es keine Kaskade: `deleteProfile`
+  nimmt die ID vorher selbst heraus.
+- Aufgabenblätter und Lösungsfotos brauchen nichts Eigenes: `scripts/aufraeumen.ts` führt
+  beide Felder als Upload-Verweise und löscht die Dateien 30 Tage nach dem Upload.
+
+**Nebenbei behoben:** `feedback.id` und `feature_requests.id` fehlte der Spezialwert `uuid`.
+Die App schickt keine ID mit — jedes Feedback wäre mit „Fehler beim Speichern" gescheitert,
+Wünsche aus dem Chat gingen still verloren. In Produktion nie aufgetreten (0 Zeilen, kein
+Log-Eintrag).
+
+In der Probe über den echten Repo-Code geprüft (Vites SSR-Loader): fremde Familie abgewiesen,
+Profil samt Mitgliedschaft, Aufgabe, Korrektur und Erkenntnis weg, Feedback mit leerem
+`profile_id` erhalten, Wunsch ohne die ID bei gleichem Zähler, Lösungsfoto ohne Verweis.
+
+`deleteProfile` hat weiterhin keinen Aufrufer. Die Log-Löschfrist steht oben als eigener Punkt.
+
+**Dateien.** `schema/snapshot.json`, `src/lib/server/repo/profiles.ts`,
+`src/lib/server/repo/featureRequests.ts`
 
 ### Passwort-Reset entwertete keine laufenden Sitzungen — 26.09.2026
 

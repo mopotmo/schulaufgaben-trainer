@@ -69,6 +69,39 @@ eigenen Zwecken muss die Datenschutzerklärung nennen, falls sie über den Betri
 
 ---
 
+### Schuljahreswechsel: Klassen hochstufen oder nachfragen
+
+Wunsch vom 27.09.2026. `profiles.grade` ist eine feste Zahl und bleibt über den
+Schuljahreswechsel stehen — Aufgaben würden danach für die alte Jahrgangsstufe erzeugt. Für
+die bestehenden Familien stuft der Betreiber zum Schuljahr 2026/27 von Hand um; gebaut werden
+muss es bis zum nächsten Wechsel (Sommer 2027).
+
+Einfach hochzählen reicht nicht: Wiederholung, Übertritt nach der 4. Klasse (Grundschule →
+Gymnasium, Real- oder Mittelschule), Wechsel der Schulart, Abschluss nach der letzten Stufe.
+Deshalb nachfragen statt still ändern.
+
+**Ansatz.**
+
+- Ein Feld am Profil, für welches Schuljahr die Stufe bestätigt ist (z. B.
+  `profiles.grade_school_year`, Wert `2026/27`) — über den Snapshot-Weg. Das Schuljahr kommt
+  aus `schoolYearEnd` in `src/lib/retention.ts` (Wechsel am 31.08., wie bei den Büchern).
+- Ab dem 1. September fragt die Startseite die Eltern für jedes Profil mit altem Schuljahr:
+  „Ist Jakob jetzt in Klasse 9?" — vorausgewählt die nächste Stufe, änderbar samt Schulart.
+  Behutsam formulieren, eine Wiederholung ist ein gleichwertiger Knopf, kein Sonderfall.
+- Nur Eltern (Familiensitzung, `profile:update`), nicht in Ansichten der Kinder.
+- Bis zur Antwort nicht blockieren, sondern beim Generieren auf die unbestätigte Stufe
+  hinweisen.
+
+**Offen.** Was passiert nach der letzten Stufe (Profil archivieren, löschen, Hinweis)?
+Bundesländer mit abweichendem Schuljahresbeginn — reicht der 1. September als Stichtag? Die
+Lernerkenntnisse gelten je Fach und bleiben; soll die Generierung sie nach einem Wechsel der
+Schulart zurückstellen?
+
+**Dateien.** `src/routes/+page.svelte`, `src/routes/+page.server.ts`,
+`src/lib/server/repo/profiles.ts`, `src/lib/retention.ts`, `schema/snapshot.json`
+
+---
+
 ### Logs haben keine Löschfrist
 
 Festgestellt am 27.09.2026 beim Profil-Löschen. `logs` wächst unbegrenzt, `scripts/aufraeumen.ts`

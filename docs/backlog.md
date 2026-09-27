@@ -10,23 +10,6 @@ nicht beim Anfassen erst wieder diagnostizieren muss. Erledigtes wandert nach un
 
 ## Offen
 
-### Lösen-Ansicht: Der Blatt-Fuß landet in der letzten Teilaufgabe
-
-Am Ende eines Blatts steht oft eine Zeile wie `Gesamt: 24 Punkte`, durch `---` vom letzten
-Text abgetrennt. Getrennt wird aber am Wort „Aufgabe", und der Trenner steht nicht am Ende —
-also zählt beides zum Text der letzten Teilaufgabe und erscheint dort über dem Antwortfeld.
-
-Eine allgemeine Regel „nach einem `---` ist die Aufgabe zu Ende" wäre gefährlich: In
-Latein-Blättern trennt derselbe Strich den Übersetzungstext von der Frage. Dann würde die
-eigentliche Aufgabe verschwinden. Der Fuß müsste also am Inhalt erkannt werden, nicht an der
-Struktur — oder die Generierung dürfte ihn gar nicht erst als Teil des letzten Blocks setzen.
-
-Eine Zeile am Ende des Blatts, ohne Folgen für die Korrektur.
-
-**Dateien.** `src/lib/parseExercises.ts`
-
----
-
 ### Donate-Button
 
 Eltern sollen den Betrieb freiwillig unterstützen können (Wunsch vom 27.09.2026).
@@ -116,6 +99,25 @@ auf den Server kopieren (CLAUDE.md).
 **Dateien.** `scripts/aufraeumen.ts`, `src/lib/retention.ts`, `src/routes/datenschutz/+page.svelte`
 
 ## Erledigt
+
+### Lösen-Ansicht: Der Blatt-Fuß landete in der letzten Teilaufgabe — 27.09.2026
+
+`Gesamt: 26 Punkte` am Blattende stand, durch `---` abgetrennt, im Text der letzten
+Teilaufgabe über ihrem Antwortfeld. Getrennt wird nur an „Aufgabe", und eine Regel „nach `---`
+ist Schluss" hätte in Latein-Blättern die Frage nach dem Übersetzungstext verschluckt.
+
+`splitFooter` erkennt den Fuß am Inhalt: vom Blattende rückwärts nur Leerzeilen, Trennstriche
+und Zeilen wie „Gesamt/Insgesamt … Punkte" oder „Viel Erfolg/Glück", bei der ersten anderen
+Zeile ist Schluss. `ExerciseFields` zeigt ihn einmal unter der letzten Aufgabe, ohne
+Antwortfeld. Das PDF rendert weiter den ganzen Text.
+
+An allen 20 Blättern alt gegen neu geprüft: Anzahl und Titel der Antwortfelder gleich (Entwürfe
+im localStorage passen weiter), in 19 Blättern ändert sich nur die letzte Teilaufgabe, das Blatt
+ohne Fuß bleibt unverändert. Dazu Prüfungen für Latein (Frage nach dem Strich bleibt), doppelte
+Trenner und „Punkte" mitten in einer Aufgabe.
+
+**Dateien.** `src/lib/parseExercises.ts`, `src/lib/components/ExerciseFields.svelte`,
+`src/routes/loesen/+page.svelte`, `src/routes/generieren/+page.svelte`
 
 ### Lernerkenntnisse nur mit Opt-in der Eltern — 27.09.2026
 

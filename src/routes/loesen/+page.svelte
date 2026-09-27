@@ -5,7 +5,7 @@
 	import DrawCanvas from '$lib/components/DrawCanvas.svelte';
 	import ExerciseFields from '$lib/components/ExerciseFields.svelte';
 	import AiNotice from '$lib/components/AiNotice.svelte';
-	import { parseExercises, allParts } from '$lib/parseExercises';
+	import { parseExercises, allParts, sheetFooter } from '$lib/parseExercises';
 	import { renderMarkdown } from '$lib/renderMarkdown';
 	import { onMount } from 'svelte';
 	import 'katex/dist/katex.min.css';
@@ -268,6 +268,7 @@
 
 				<ExerciseFields
 					exercises={parsedExercises}
+					footer={sheetFooter(data.exercise.content)}
 					bind:answers
 					bind:modes
 					bind:drawings

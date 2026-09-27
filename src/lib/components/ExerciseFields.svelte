@@ -26,7 +26,9 @@
 		canvasRefs = $bindable(),
 		/** Nur „Lösen" braucht die Felder — für die Symbolleiste. */
 		textareaRefs = $bindable([]),
-		onfocusfield
+		onfocusfield,
+		/** „Gesamt: 26 Punkte" — einmal unter der letzten Aufgabe, ohne Antwortfeld (`sheetFooter`). */
+		footer = ''
 	}: {
 		exercises: ParsedExercise[];
 		answers: string[];
@@ -35,6 +37,7 @@
 		canvasRefs: (DrawCanvas | null)[];
 		textareaRefs?: (HTMLTextAreaElement | null)[];
 		onfocusfield?: (index: number) => void;
+		footer?: string;
 	} = $props();
 </script>
 
@@ -116,3 +119,9 @@
 		{/each}
 	</div>
 {/each}
+
+{#if footer}
+	<div class="prose prose-sm max-w-none border-t border-gray-100 pt-3 text-gray-600">
+		{@html renderMarkdown(footer)}
+	</div>
+{/if}

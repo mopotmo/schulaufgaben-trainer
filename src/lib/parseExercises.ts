@@ -34,7 +34,47 @@ function stripRules(text: string): string {
 		.trim();
 }
 
+const RULE = /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/;
+
+/**
+ * Zeilen, die nur als Abschluss eines Blatts vorkommen: „**Gesamt: 26 Punkte**",
+ * „Insgesamt 40 Punkte", „*Viel Erfolg!*". Am Inhalt erkannt, nicht am Trennstrich davor —
+ * in Latein-Blättern trennt derselbe Strich den Übersetzungstext von der eigentlichen Frage.
+ */
+const FOOTER_LINE =
+	/^\s*[*_]*\s*(?:(?:gesamt(?:punktzahl)?|insgesamt|summe)\b.*\bpunkte?\b|viel\s+(?:erfolg|glück)\b).*$/i;
+
+/**
+ * Trennt den Blatt-Fuß ab. Vom Ende rückwärts werden nur Leerzeilen, Trennstriche und
+ * Fuß-Zeilen eingesammelt; bei der ersten anderen Zeile ist Schluss. Ohne mindestens eine
+ * Fuß-Zeile bleibt das Blatt unverändert.
+ *
+ * Stand 27.09.2026: 19 von 20 Blättern enden so, 17-mal „Gesamt: N Punkte", einmal
+ * „Viel Erfolg!". Ohne das landete der Fuß im Text der letzten Teilaufgabe, über ihrem
+ * Antwortfeld.
+ */
+export function splitFooter(content: string): { body: string; footer: string } {
+	const lines = content.split('\n');
+	let cut = lines.length;
+	const footer: string[] = [];
+	for (let i = lines.length - 1; i >= 0; i--) {
+		const line = lines[i];
+		if (line.trim() === '' || RULE.test(line)) {
+			cut = i;
+			continue;
+		}
+		if (!FOOTER_LINE.test(line)) break;
+		footer.unshift(line.trim());
+		cut = i;
+	}
+	if (footer.length === 0) return { body: content, footer: '' };
+	return { body: lines.slice(0, cut).join('\n'), footer: footer.join('\n') };
+}
+
 export function parseExercises(content: string): ParsedExercise[] {
+	// Der Fuß gehört zu keiner Aufgabe — `sheetFooter` liefert ihn für die Anzeige.
+	content = splitFooter(content).body;
+
 	// Die Generierung setzt Aufgaben-Überschriften fett: `**Aufgabe 1 (4 Punkte): Thema**`.
 	// Getrennt wird aber *vor* dem Wort „Aufgabe" — die öffnenden Sternchen blieben dadurch
 	// am Ende des vorherigen Blocks hängen (ein einsames `**` über dem Antwortfeld) und die
@@ -101,6 +141,11 @@ export function parseExercises(content: string): ParsedExercise[] {
 	}
 
 	return exercises;
+}
+
+/** Der Blatt-Fuß („Gesamt: 26 Punkte") — steht einmal unter der letzten Aufgabe, ohne Antwortfeld. */
+export function sheetFooter(content: string): string {
+	return splitFooter(content).footer;
 }
 
 /** Alle Antwortfelder in der Reihenfolge, in der sie auf dem Blatt stehen. */

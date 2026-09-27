@@ -99,7 +99,7 @@
 
 				<div class="mt-4 space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
 					<h2 class="text-sm font-semibold text-gray-700">Einwilligung</h2>
-					<ConsentChecks hasChildren={false} name={form?.name ?? ''} />
+					<ConsentChecks hasChildren={false} name={form?.name ?? ''} offerInsights />
 					{@render submit('Zugang einrichten')}
 					<p class="text-xs text-gray-400">
 						Du kannst die Einwilligung jederzeit widerrufen — eine formlose Nachricht an

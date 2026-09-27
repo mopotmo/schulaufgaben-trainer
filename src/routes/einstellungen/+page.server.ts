@@ -4,6 +4,7 @@ import { setSession } from '$lib/session';
 import { requireActor } from '$lib/server/actor';
 import { assertCan } from '$lib/server/authz';
 import { getOwnGroup, changePassword } from '$lib/server/repo/groups';
+import { getInsightsConsent, grantInsightsConsent, revokeInsightsConsent } from '$lib/server/repo/consents';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -12,11 +13,36 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// das Formular und käme bis zum bcrypt-Vergleich — ein Orakel fürs Familienpasswort.
 	assertCan(actor, 'group:manage');
 
-	const group = await getOwnGroup(actor);
-	return { familyName: group.name, slug: group.slug };
+	const [group, insights] = await Promise.all([getOwnGroup(actor), getInsightsConsent(actor)]);
+	return { familyName: group.name, slug: group.slug, insights };
 };
 
 export const actions: Actions = {
+	/** Opt-in für Lernerkenntnisse — mit Namen als Nachweis, wer eingewilligt hat. */
+	enableInsights: async ({ request, locals }) => {
+		const actor = requireActor(locals);
+		assertCan(actor, 'consent:grant');
+
+		const form = await request.formData();
+		const name = ((form.get('name') as string) ?? '').trim();
+		if (form.get('insights') !== 'on') return fail(400, { insightsError: 'Bitte setze das Häkchen.' });
+		if (!name) return fail(400, { insightsError: 'Bitte gib deinen Namen an.' });
+
+		const group = await getOwnGroup(actor);
+		if (!group.email) return fail(400, { insightsError: 'Keine bestätigte E-Mail-Adresse hinterlegt.' });
+
+		await grantInsightsConsent(actor, { granted_by_name: name, granted_by_email: group.email });
+		return { insightsChanged: 'on' as const };
+	},
+
+	/** Widerruf: Die gesammelten Erkenntnisse werden dabei gelöscht. */
+	disableInsights: async ({ locals }) => {
+		const actor = requireActor(locals);
+		assertCan(actor, 'consent:grant');
+		await revokeInsightsConsent(actor);
+		return { insightsChanged: 'off' as const };
+	},
+
 	changePassword: async ({ request, locals, cookies }) => {
 		const actor = requireActor(locals);
 		// Vor jeder Verarbeitung, insbesondere vor dem Passwortvergleich.

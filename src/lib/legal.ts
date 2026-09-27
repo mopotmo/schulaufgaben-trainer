@@ -5,7 +5,7 @@
  * **Bei jedem Bump einen Eintrag oben in `CONSENT_HISTORY` ergänzen.** Die Einwilligungsseite
  * zeigt daraus, was sich seit der Version geändert hat, der die Familie zuletzt zugestimmt hat.
  */
-export const CONSENT_VERSION = '2026-09-v2';
+export const CONSENT_VERSION = '2026-09-v3';
 
 export type LegalDocument = 'privacy' | 'terms';
 
@@ -22,6 +22,15 @@ export type ConsentVersion = {
 
 /** Neueste oben. Die erste Version hat keine Änderungen, sie steht nur als Anker da. */
 export const CONSENT_HISTORY: ConsentVersion[] = [
+	{
+		version: '2026-09-v3',
+		documents: ['privacy'],
+		changes: [
+			'Lernerkenntnisse sind jetzt freiwillig: Nur wenn du unten zustimmst, leitet der Trainer aus eingereichten Lösungen Stärken und Schwächen je Fach ab und stimmt neue Aufgaben darauf ab. Ohne Zustimmung wird nichts ausgewertet.',
+			'Die Zustimmung lässt sich unter Einstellungen jederzeit zurücknehmen. Dabei wird alles Gesammelte sofort gelöscht.',
+			'Beim Einreichen einer Lösung kann man zusätzlich abwählen, dass genau diese Lösung ausgewertet wird.'
+		]
+	},
 	{
 		version: '2026-09-v2',
 		documents: ['privacy', 'terms'],

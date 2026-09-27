@@ -62,7 +62,11 @@ export const actions: Actions = {
 
 		// Einwilligung zuerst: Schlägt danach etwas fehl, ist der Einladungslink noch gültig und
 		// ein zweiter Versuch schreibt höchstens eine doppelte Einwilligung — kein halber Zugang.
-		await grantConsent(familyActor(group.id), { granted_by_name: consent.value.name, granted_by_email: email });
+		await grantConsent(
+			familyActor(group.id),
+			{ granted_by_name: consent.value.name, granted_by_email: email },
+			{ insights: consent.value.insights }
+		);
 		const passwordHash = await bcrypt.hash(pw.password, 12);
 		await setupFamily(group.id, { passwordHash, email });
 		setSession(cookies, group.id, passwordHash);

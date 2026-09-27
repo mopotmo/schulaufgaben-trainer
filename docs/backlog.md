@@ -27,6 +27,48 @@ Eine Zeile am Ende des Blatts, ohne Folgen für die Korrektur.
 
 ---
 
+### Donate-Button
+
+Eltern sollen den Betrieb freiwillig unterstützen können (Wunsch vom 27.09.2026).
+
+Rahmen, der schon feststeht:
+
+- **Nur ein Link**, kein eingebettetes Widget oder SDK — harte Regel 4 (keine externen
+  Ressourcen, sonst Cookie-Banner). Ziel z. B. PayPal.me, Ko-fi oder Buy Me a Coffee.
+- **Nur für Eltern sichtbar**, also in der Familiensitzung, nicht in Ansichten der Kinder.
+  Eine direkte Zahlungsaufforderung an Kinder ist unlauter (UWG, Anhang Nr. 28).
+- **Nicht „Spende" nennen**, solange kein gemeinnütziger Träger dahintersteht — das Wort
+  weckt die Erwartung einer Spendenquittung. „Unterstützen" oder „Kaffee spendieren".
+
+**Offen.** Anbieter, Platzierung (Startseite, Einstellungen, Fußzeile), ob die
+Datenschutzerklärung den externen Anbieter nennen muss (reiner Link: eher nein).
+
+**Dateien.** `src/routes/+page.svelte` oder `src/routes/einstellungen/+page.svelte`,
+`src/lib/config.ts` (Link)
+
+---
+
+### Statistiken über die Nutzung
+
+Wunsch vom 27.09.2026: sehen, wie die App genutzt wird.
+
+Kein Tracking im Frontend — harte Regel 4 (keine Analytics) und Regel 5 (nur das
+Session-Cookie). Die Zahlen stecken ohnehin schon in Directus: `exercises`, `corrections`,
+`feedback`, `books` mit Zeitstempeln und Profil- bzw. Gruppenbezug.
+
+**Ansatz.** Zuerst das eingebaute Insights-Modul von Directus (Dashboards mit Panels,
+nur für den Admin, kein Code, keine Collection): generierte Blätter und Korrekturen pro Woche,
+aktive Familien, Fächer, Daumen hoch/runter. Reicht das nicht, eine Admin-Seite in der App.
+Nur aggregiert anzeigen, keine Ranglisten einzelner Familien oder Kinder.
+
+**Offen.** Welche Fragen sollen die Zahlen beantworten (Kosten je Familie? Welche Fächer?
+Wird korrigiert oder nur generiert?) — danach richten sich die Panels. Eine Auswertung zu
+eigenen Zwecken muss die Datenschutzerklärung nennen, falls sie über den Betrieb hinausgeht.
+
+**Dateien.** Directus (Insights), ggf. `src/routes/admin/`
+
+---
+
 ### Logs haben keine Löschfrist
 
 Festgestellt am 27.09.2026 beim Profil-Löschen. `logs` wächst unbegrenzt, `scripts/aufraeumen.ts`
@@ -41,6 +83,46 @@ auf den Server kopieren (CLAUDE.md).
 **Dateien.** `scripts/aufraeumen.ts`, `src/lib/retention.ts`, `src/routes/datenschutz/+page.svelte`
 
 ## Erledigt
+
+### Lernerkenntnisse nur mit Opt-in der Eltern — 27.09.2026
+
+Aus Lösungen und Freitext-Feedback leitete das Modell für jedes Profil Stärken und Schwächen
+je Fach ab und gab sie in jede Generierung. Die Datenschutzerklärung nannte das nur als
+„daraus abgeleitete Lernhinweise", ohne Zweck und ohne eigene Einwilligung. Umgesetzt, solange
+in Produktion nur Testdaten lagen, als zwei Ebenen:
+
+| Ebene | Wer | Art |
+|---|---|---|
+| Lernerkenntnisse überhaupt | Eltern — Einwilligung, Einrichten, Einstellungen | **Opt-in**, nie vorangekreuzt, getrennt von der Pflicht-Einwilligung |
+| Diese eine Lösung | wer einreicht, auch das Kind | **Opt-out**-Schalter, nur sichtbar mit Opt-in |
+
+Begründung (entschieden 27.09.2026): Einwilligung nur als aktive Handlung (ErwG 32, EuGH
+*Planet49*), Datenschutz durch Voreinstellung für Kinder (Art. 25 Abs. 2), der Dienst läuft
+ohne (Art. 7 Abs. 4), und Kinder können nicht selbst einwilligen (Art. 8). Ob es Profiling
+nach Art. 4 Nr. 4 ist, bleibt für den Anwaltstermin.
+
+- Opt-in als eigene Zeile in `consents` (`type: 'insights'`) mit Name, Adresse, Zeitpunkt;
+  versionsunabhängig, gilt bis zum Widerruf.
+- **Eine Sperre für alles**: `upsertInsight` und `getInsightPrompt` prüfen das Opt-in der
+  Familie des Profils. Ohne Opt-in geht nichts ans Modell und nichts in die Generierung.
+- **Widerruf löscht** alle Erkenntnisse der Familie sofort (Art. 17 Abs. 1 lit. b, entschieden
+  27.09.2026).
+- Datenschutzerklärung: neuer Abschnitt 4 „Lernerkenntnisse (freiwillig)", folgende Abschnitte
+  um eins verschoben. `CONSENT_VERSION` → `2026-09-v3` mit Eintrag in `CONSENT_HISTORY`.
+
+In der Probe geprüft: über den Repo-Code ohne Opt-in keine Erkenntnisse in der Generierung und
+kein Modellaufruf beim Auswerten, mit Opt-in wieder da; im Browser Einwilligung ohne Opt-in
+(keine `insights`-Zeile, kein Schalter beim Lösen), Einschalten unter Einstellungen (Name als
+Pflicht), Schalter beim Lösen standardmäßig an, Widerruf löscht die Erkenntnis und setzt
+`revoked_at`; Einrichten bietet das Häkchen an.
+
+**Dateien.** `src/lib/server/learnerInsights.ts`, `src/lib/server/repo/consents.ts`,
+`src/lib/server/repo/insights.ts`, `src/lib/server/consentForm.ts`,
+`src/lib/components/ConsentChecks.svelte`, `src/routes/einwilligung/*`,
+`src/routes/einrichten/*`, `src/routes/einstellungen/*`, `src/routes/loesen/*`,
+`src/routes/korrigieren/*`, `src/routes/api/korrigieren/+server.ts`,
+`src/routes/datenschutz/+page.svelte`, `src/lib/legal.ts`, `src/lib/server/directus.ts`,
+`schema/snapshot.json`
 
 ### Profil löschen nahm abhängige Daten nicht vollständig mit — 27.09.2026
 

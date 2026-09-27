@@ -71,6 +71,7 @@ wurden nicht datiert festgehalten, das Datum ist das des letzten Commits am Skri
 
 | Datum | Was | Probe | Produktion |
 |---|---|---|---|
+| 27.09.2026 | `consents.type`: Auswahl `insights` (Opt-in Lernerkenntnisse); Daten: Test-Erkenntnis in `learner_insights` gelöscht | ✓ 27.09. | ✓ 27.09. |
 | 27.09.2026 | Profil löschen: `learner_insights` CASCADE, `feedback.profile_id` UUID + SET NULL, `feedback.id`/`feature_requests.id` mit `uuid` | ✓ 27.09. | ✓ 27.09. |
 | 26.09.2026 | Erster Snapshot aus Produktion (Directus 12.4.1, 12 Collections, 104 Felder, 11 Relationen) | — | Quelle |
 | 26.09.2026 | Directus 11.17.4 → 12.4.1 (8 Directus-Migrationen) | ✓ 26.09. | ✓ 26.09. |

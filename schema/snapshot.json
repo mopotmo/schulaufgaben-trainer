@@ -1330,7 +1330,7 @@
 				"group": null,
 				"hidden": false,
 				"interface": "select-dropdown",
-				"note": null,
+				"note": "privacy und terms sind Pflicht für den Zugang. insights ist das freiwillige Opt-in für Lernerkenntnisse; Widerruf über revoked_at, dabei werden die Erkenntnisse der Familie gelöscht.",
 				"options": {
 					"choices": [
 						{
@@ -1340,6 +1340,10 @@
 						{
 							"text": "Nutzungsbedingungen",
 							"value": "terms"
+						},
+						{
+							"text": "Lernerkenntnisse (optional)",
+							"value": "insights"
 						}
 					]
 				},

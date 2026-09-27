@@ -3,7 +3,7 @@ import { requireActor } from '$lib/server/actor';
 import { assertCan } from '$lib/server/authz';
 import { listProfiles } from '$lib/server/repo/profiles';
 import { getOwnGroup } from '$lib/server/repo/groups';
-import { grantConsent, hasValidConsent, lastConsentVersion } from '$lib/server/repo/consents';
+import { grantConsent, hasInsightsConsent, hasValidConsent, lastConsentVersion } from '$lib/server/repo/consents';
 import { changesSince } from '$lib/legal';
 import { readConsent } from '$lib/server/consentForm';
 import type { PageServerLoad, Actions } from './$types';
@@ -16,10 +16,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Schon erteilt? Dann hat hier niemand mehr etwas zu suchen.
 	if (await hasValidConsent(actor.session.groupId)) redirect(303, '/');
 
-	const [group, profiles, previous] = await Promise.all([
+	const [group, profiles, previous, insightsOn] = await Promise.all([
 		getOwnGroup(actor),
 		listProfiles(actor),
-		lastConsentVersion(actor)
+		lastConsentVersion(actor),
+		hasInsightsConsent(actor.session.groupId)
 	]);
 
 	// Frühere Einwilligung zu einer älteren Textversion → die Texte haben sich geändert.
@@ -28,6 +29,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		reason: previous ? ('changed' as const) : ('first' as const),
 		updates: updates.map((u) => ({ documents: u.documents, changes: u.changes })),
+		// Besteht das Opt-in schon, nicht noch einmal fragen — es gilt bis zum Widerruf.
+		offerInsights: !insightsOn,
 		familyName: group.name,
 		email: group.email,
 		children: profiles.map((p) => ({ name: p.name, grade: p.grade, avatar: p.avatar }))
@@ -46,7 +49,11 @@ export const actions: Actions = {
 		const group = await getOwnGroup(actor);
 		if (!group.email || !group.email_verified_at) error(403, 'E-Mail-Adresse nicht bestätigt');
 
-		await grantConsent(actor, { granted_by_name: consent.value.name, granted_by_email: group.email });
+		await grantConsent(
+			actor,
+			{ granted_by_name: consent.value.name, granted_by_email: group.email },
+			{ insights: consent.value.insights }
+		);
 		redirect(303, '/');
 	}
 };

@@ -23,6 +23,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const exerciseId = form.get('exerciseId') as string;
 	const showGrade = form.get('showGrade') === 'true';
+	// „Diese Lösung nicht auswerten" — schränkt nur ein; ob überhaupt ausgewertet wird,
+	// entscheidet das Opt-in der Eltern in `upsertInsight`.
+	const evaluate = form.get('evaluate') !== 'false';
 	const textAnswers = (form.get('textAnswers') as string | null)?.trim() ?? '';
 	const solutionFiles = form.getAll('solutionFiles') as File[];
 	const validFiles = solutionFiles.filter((f) => f && f.size > 0);
@@ -176,8 +179,10 @@ Sei konstruktiv und ermutigend.`;
 	});
 
 	// Insights asynchron extrahieren — nicht auf Ergebnis warten
-	const insightInput = `Korrektur der Aufgabe:\n${exercise.generated_content}\n\nKorrekturbericht:\n${result}`;
-	upsertInsight(actor, exercise.profile_id, exercise.subject, exercise.topic, insightInput).catch(() => {});
+	if (evaluate) {
+		const insightInput = `Korrektur der Aufgabe:\n${exercise.generated_content}\n\nKorrekturbericht:\n${result}`;
+		upsertInsight(actor, exercise.profile_id, exercise.subject, exercise.topic, insightInput).catch(() => {});
+	}
 
 	return json({ result, tokensUsed, correctionId: correction.id });
 };

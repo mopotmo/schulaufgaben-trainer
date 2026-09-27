@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { requireActor } from '$lib/server/actor';
 import { getExercise } from '$lib/server/repo/exercises';
 import { hasCorrection } from '$lib/server/repo/corrections';
+import { hasInsightsConsent } from '$lib/server/repo/consents';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
@@ -19,6 +20,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			topic: exercise.topic ?? '',
 			content: exercise.generated_content ?? ''
 		},
-		profile
+		profile,
+		// Nur dann den Schalter „Für Lernerkenntnisse nutzen" zeigen. Durchgesetzt wird das
+		// Opt-in serverseitig in `upsertInsight`, nicht hier.
+		insightsEnabled: await hasInsightsConsent(profile.group_id)
 	};
 };

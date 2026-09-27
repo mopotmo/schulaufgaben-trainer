@@ -3,7 +3,8 @@
  * `/einwilligung` (bestehende Familien, etwa nach einem Versions-Bump).
  */
 
-export type ConsentInput = { name: string };
+/** `insights`: das freiwillige Opt-in für Lernerkenntnisse — kein Pflichtfeld. */
+export type ConsentInput = { name: string; insights: boolean };
 
 export function readConsent(form: FormData): { ok: true; value: ConsentInput } | { ok: false; error: string; name: string } {
 	const name = ((form.get('name') as string) ?? '').trim();
@@ -14,7 +15,7 @@ export function readConsent(form: FormData): { ok: true; value: ConsentInput } |
 	// Alle drei Häkchen sind Pflicht und dürfen nicht vorangekreuzt sein (Konzept §3.3).
 	if (!custody || !privacy || !terms) return { ok: false, error: 'Bitte bestätige alle drei Punkte.', name };
 	if (!name) return { ok: false, error: 'Bitte gib deinen Namen an.', name };
-	return { ok: true, value: { name } };
+	return { ok: true, value: { name, insights: form.get('insights') === 'on' } };
 }
 
 /** Kleingeschrieben und getrimmt, damit „Passwort vergessen" die Adresse wiederfindet. */

@@ -53,7 +53,8 @@ export type Membership = {
 export type Consent = {
 	id: string;
 	group_id: string;
-	type: 'privacy' | 'terms';
+	/** `insights`: freiwilliges Opt-in für Lernerkenntnisse, unabhängig von der Textversion. */
+	type: 'privacy' | 'terms' | 'insights';
 	/** Entspricht CONSENT_VERSION in `src/lib/legal.ts`. */
 	version: string;
 	granted_at: string;

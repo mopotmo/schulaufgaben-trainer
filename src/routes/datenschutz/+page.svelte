@@ -26,6 +26,7 @@
 		<li>Erzeugung von Übungsaufgaben, passend zu Schulart, Jahrgangsstufe und Bundesland</li>
 		<li>KI-gestützte Korrektur eingereichter Lösungen</li>
 		<li>Anzeige des Lernfortschritts innerhalb der eigenen Familie</li>
+		<li>Nur mit gesonderter Einwilligung: Zuschnitt neuer Aufgaben auf Stärken und Schwächen des Kindes (Abschnitt 4)</li>
 		<li>Bestätigung der E-Mail-Adresse und Zusenden eines Links bei vergessenem Passwort</li>
 	</ul>
 
@@ -42,12 +43,33 @@
 		eines weiteren Profils wird die Sorgeberechtigung erneut bestätigt.
 	</p>
 
-	<h2>4. Welche Daten verarbeitet werden</h2>
+	<h2 id="lernerkenntnisse">4. Lernerkenntnisse (freiwillig)</h2>
+	<p>
+		Nur wenn Sie gesondert einwilligen, leitet das KI-Modell aus den Korrekturen eingereichter
+		Lösungen und aus Freitext-Rückmeldungen <strong>Lernerkenntnisse</strong> ab: je Kind und Fach
+		Stärken, Schwächen, Hinweise zur Arbeitsweise und eine Einschätzung, ob Aufgaben leichter oder
+		schwerer ausfallen sollten. Diese Erkenntnisse werden gespeichert und bei jeder neuen Aufgabe
+		für dieses Kind und Fach an {PROCESSORS.ai.name} übergeben, damit die Aufgaben besser passen.
+	</p>
+	<p>
+		Die Einwilligung ist freiwillig und getrennt von der Einwilligung in die übrige Verarbeitung
+		(Art. 6 Abs. 1 lit. a, Art. 7 Abs. 4 DSGVO); die App funktioniert ohne sie ebenso. Sie wird von
+		einem sorgeberechtigten Elternteil erteilt, nicht vom Kind. Beim Einreichen einer Lösung lässt
+		sich zusätzlich einzeln abwählen, dass diese Lösung ausgewertet wird.
+	</p>
+	<p>
+		Sie können die Einwilligung jederzeit unter <em>Einstellungen</em> widerrufen. Dabei werden
+		alle gesammelten Lernerkenntnisse der Familie sofort gelöscht. Ohne Einwilligung werden keine
+		Lernerkenntnisse abgeleitet, gespeichert oder verwendet.
+	</p>
+
+	<h2>5. Welche Daten verarbeitet werden</h2>
 	<ul>
 		<li><strong>Profil des Kindes:</strong> Anzeigename (Vorname oder Spitzname), Schulart, Jahrgangsstufe, Bundesland, ein Emoji als Avatar</li>
 		<li><strong>Eingaben:</strong> Fach, Thema, Hinweise der Lehrkraft, gewünschter Umfang</li>
 		<li><strong>Hochgeladene Dateien:</strong> Fotos oder PDFs von Aufgabenblättern und handschriftlichen Lösungen, Schulbücher als PDF</li>
-		<li><strong>Erzeugte Inhalte:</strong> Übungsaufgaben, Korrekturtexte, daraus abgeleitete Lernhinweise</li>
+		<li><strong>Erzeugte Inhalte:</strong> Übungsaufgaben, Korrekturtexte</li>
+		<li><strong>Lernerkenntnisse</strong> (nur mit gesonderter Einwilligung, Abschnitt 4): Stärken, Schwächen, Hinweise zur Arbeitsweise und Schwierigkeitseinschätzung je Kind und Fach</li>
 		<li><strong>Kontaktdaten der einwilligenden Person:</strong> Name und E-Mail-Adresse, Zeitpunkt der Bestätigung der Adresse</li>
 		<li><strong>Einmal-Links:</strong> zufällige Kennungen für Bestätigungs- und Passwort-Links samt Ablaufzeitpunkt</li>
 		<li><strong>Technische Daten:</strong> ein Sitzungs-Cookie sowie Fehlerprotokolle des Servers</li>
@@ -57,7 +79,7 @@
 		im Klartext erhoben.
 	</p>
 
-	<h2>5. Empfänger</h2>
+	<h2>6. Empfänger</h2>
 	<ul>
 		<li>
 			<strong>{PROCESSORS.ai.name}</strong> ({PROCESSORS.ai.country}) — Auftragsverarbeiter für
@@ -78,7 +100,7 @@
 		Dritte findet nicht statt, insbesondere nicht an Schulen oder Lehrkräfte.
 	</p>
 
-	<h2>6. Übermittlung in die USA</h2>
+	<h2>7. Übermittlung in die USA</h2>
 	<p>
 		Die Verarbeitung durch {PROCESSORS.ai.name} findet in den USA statt. Grundlage sind die
 		Standardvertragsklauseln der EU-Kommission zusammen mit dem Auftragsverarbeitungsvertrag. Nach
@@ -86,7 +108,7 @@
 		Training von Modellen verwendet.
 	</p>
 
-	<h2>7. Websuche</h2>
+	<h2>8. Websuche</h2>
 	<p>
 		Bei der Erzeugung von Aufgaben kann das KI-Modell eine Websuche nutzen, um Lehrplanbezug oder
 		Kapitelstruktur zu recherchieren. Dabei können das eingegebene <strong>Thema und Hinweise der
@@ -94,14 +116,15 @@
 		übermittelt.
 	</p>
 
-	<h2>8. Speicherdauer</h2>
+	<h2>9. Speicherdauer</h2>
 	<ul>
 		<li>Hochgeladene Aufgabenblätter und Lösungen: {UPLOAD_RETENTION_DAYS} Tage, danach automatische Löschung</li>
 		<li>
 			Hochgeladene Schulbücher: bis sie 90 Tage lang nicht zum Erzeugen von Aufgaben genutzt wurden,
 			spätestens bis zum Ende des Schuljahres am 31. August
 		</li>
-		<li>Aufgaben, Korrekturen und Lernhinweise: bis zur Löschung des Zugangs</li>
+		<li>Aufgaben und Korrekturen: bis zur Löschung des Zugangs</li>
+		<li>Lernerkenntnisse: bis zum Widerruf der gesonderten Einwilligung, zur Löschung des Profils oder des Zugangs — je nachdem, was zuerst eintritt</li>
 		<li>Nachweis der Einwilligung: bis zur Löschung des Zugangs, zur Erfüllung der Rechenschaftspflicht</li>
 		<li>
 			Einmal-Links: verwendbar nur 48 Stunden (Bestätigung) bzw. eine Stunde (Passwort), gelöscht
@@ -118,7 +141,7 @@
 		Ausfall wiederherzustellen.
 	</p>
 
-	<h2>9. Ihre Rechte</h2>
+	<h2>10. Ihre Rechte</h2>
 	<p>
 		Sie haben das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17),
 		Einschränkung der Verarbeitung (Art. 18) und Datenübertragbarkeit (Art. 20).
@@ -136,14 +159,14 @@
 		(<a href={SUPERVISORY_AUTHORITY.url} rel="noreferrer">{SUPERVISORY_AUTHORITY.url}</a>).
 	</p>
 
-	<h2>10. Keine automatisierte Entscheidung</h2>
+	<h2>11. Keine automatisierte Entscheidung</h2>
 	<p>
 		Es findet <strong>keine automatisierte Entscheidung im Sinne des Art. 22 DSGVO</strong> statt.
 		Die angezeigten Korrekturen und Notenschätzungen haben keine rechtliche Wirkung und keinen
 		Einfluss auf schulische Bewertungen.
 	</p>
 
-	<h2>11. Cookies</h2>
+	<h2>12. Cookies</h2>
 	<p>
 		{PROJECT.name} setzt genau ein Cookie: die Sitzungskennung, die Sie angemeldet hält. Sie ist
 		technisch notwendig, enthält keine Tracking-Merkmale und wird nach 30 Tagen ungültig. Es werden

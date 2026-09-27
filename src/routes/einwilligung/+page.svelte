@@ -74,7 +74,7 @@
 			}}
 			class="mt-4 space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
 		>
-			<ConsentChecks hasChildren={data.children.length > 0} name={form?.name ?? ''} />
+			<ConsentChecks hasChildren={data.children.length > 0} name={form?.name ?? ''} offerInsights={data.offerInsights} />
 
 			{#if data.email}
 				<p class="text-xs text-gray-500">

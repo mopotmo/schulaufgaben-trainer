@@ -2,9 +2,9 @@
  * Lernerkenntnisse. Der Inhalt fließt in den System-Prompt der Generierung — deshalb darf
  * hier nichts landen, das nicht aus dem Scope des Actors stammt.
  */
-import { readItems, createItem, updateItem } from '@directus/sdk';
+import { readItems, createItem, updateItem, deleteItems } from '@directus/sdk';
 import { getDirectus, type LearnerInsight } from '$lib/server/directus';
-import { assertCan, assertInScope, type Actor } from '../authz';
+import { assertCan, assertInScope, currentGroupId, type Actor } from '../authz';
 import { resolveProfileGroup } from './profiles';
 
 /**
@@ -95,4 +95,19 @@ export async function upsertInsight(
 			})
 		);
 	}
+}
+
+/**
+ * Alle Erkenntnisse der Profile der eigenen Familie löschen — beim Widerruf des Opt-ins.
+ * Über die Profile der Gruppe gefiltert; die Liste ist leer, wenn es keine gibt, und dann
+ * wird nichts gelöscht (harte Regel 3: kein Filter aus einem leeren Wert).
+ */
+export async function deleteInsightsOfGroup(actor: Actor): Promise<void> {
+	assertCan(actor, 'consent:grant');
+	const profiles = await getDirectus().request(
+		readItems('profiles', { filter: { group_id: { _eq: currentGroupId(actor) } }, fields: ['id'], limit: -1 })
+	);
+	const ids = profiles.map((p) => p.id);
+	if (ids.length === 0) return;
+	await getDirectus().request(deleteItems('learner_insights', { filter: { profile_id: { _in: ids } } }));
 }

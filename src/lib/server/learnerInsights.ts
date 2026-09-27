@@ -11,6 +11,17 @@ import type { LearnerInsight } from '$lib/server/directus';
 import type { Actor } from '$lib/server/authz';
 import { getInsight, upsertInsight as persistInsight, type InsightUpdate } from '$lib/server/repo/insights';
 import { logError } from '$lib/server/logger';
+import { hasInsightsConsent } from '$lib/server/repo/consents';
+import { resolveProfileGroup } from '$lib/server/repo/profiles';
+
+/**
+ * Nur mit Opt-in der Familie, zu der das Profil gehört — nicht der Gruppe der Sitzung.
+ * Die einzige Stelle, an der das geprüft wird: Auswerten (Korrektur, Feedback) und Nutzen
+ * (Generierung) laufen beide hier durch.
+ */
+async function insightsAllowed(actor: Actor, profileId: string): Promise<boolean> {
+	return hasInsightsConsent(await resolveProfileGroup(actor, profileId));
+}
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -138,6 +149,8 @@ export async function upsertInsight(
 	topic: string,
 	inputText: string
 ): Promise<void> {
+	// Vor dem Modellaufruf: ohne Opt-in geht der Text gar nicht erst zur Auswertung raus.
+	if (!(await insightsAllowed(actor, profileId))) return;
 	const existing = await getInsight(actor, profileId, subject);
 	const update = await extractInsightsFromText(subject, topic, inputText, existing);
 	if (!update) return;
@@ -152,6 +165,7 @@ export async function getInsightPrompt(
 	profileId: string,
 	subject: string
 ): Promise<string> {
+	if (!(await insightsAllowed(actor, profileId).catch(() => false))) return '';
 	const insight = await getInsight(actor, profileId, subject).catch(() => null);
 	if (!insight) return '';
 

@@ -39,8 +39,13 @@ Kleinere Punkte ohne eigenes Konzept stehen in `docs/backlog.md`.
 - Änderungen am Datenmodell immer zuerst in Directus, dann im Code — und die Typen in
   `src/lib/server/directus.ts` mitziehen. **Beim Entfernen umgekehrt:** erst den Code, der das
   Feld nicht mehr liest, dann in Directus löschen.
-- Schemaänderungen als idempotentes Skript in `scripts/` mit `--dry`, nicht von Hand in Directus —
-  so sind sie reviewbar und gegen eine Backup-Kopie wiederholbar (Muster: `scripts/email-verification.ts`).
+- Das Datenmodell steht in `schema/snapshot.json`; Directus folgt der Datei. Schemaänderungen in
+  der Probe per Oberfläche, dann `npm run schema:pull`, committen, per `npm run schema:apply`
+  nach Produktion — nie von Hand direkt in Produktion. Ablauf in `docs/migrationen.md`.
+  `schema:apply` löscht nur mit `--mit-loeschen`.
+- Daten, Flows und Berechtigungen stehen nicht im Snapshot: dafür ein idempotentes Skript in
+  `scripts/` mit `--dry` (Gerüst: `scripts/lib/cli.ts`). Jeder Lauf ins Protokoll in
+  `docs/migrationen.md`.
 - Vor jeder Migration: DB-Backup. Nicht optional — Vorgehen in `docs/backup-und-restore.md`.
   Der erste echte Lauf geht gegen eine lokal wiederhergestellte Kopie, erst dann Produktion.
 - Nach größeren Änderungen `npm run build` und `npm run check` laufen lassen.

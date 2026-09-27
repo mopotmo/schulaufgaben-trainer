@@ -66,6 +66,9 @@ In der Probe über den echten Repo-Code geprüft (Vites SSR-Loader): fremde Fami
 Profil samt Mitgliedschaft, Aufgabe, Korrektur und Erkenntnis weg, Feedback mit leerem
 `profile_id` erhalten, Wunsch ohne die ID bei gleichem Zähler, Lösungsfoto ohne Verweis.
 
+In Produktion am 27.09.2026 per `schema:apply` (15 Änderungen, danach `schema:check` ohne
+Abweichung, Fremdschlüssel in Postgres nachgesehen).
+
 `deleteProfile` hat weiterhin keinen Aufrufer. Die Log-Löschfrist steht oben als eigener Punkt.
 
 **Dateien.** `schema/snapshot.json`, `src/lib/server/repo/profiles.ts`,

@@ -26,6 +26,27 @@ export async function hasValidConsent(groupId: string | null | undefined): Promi
 	return rows.length > 0;
 }
 
+/**
+ * Version der letzten nicht widerrufenen Datenschutz-Einwilligung der eigenen Gruppe, oder
+ * `null`, wenn es keine gibt. Für die Einwilligungsseite: erstmalig oder geänderte Texte?
+ */
+export async function lastConsentVersion(actor: Actor): Promise<string | null> {
+	assertCan(actor, 'consent:grant');
+	const [row] = await getDirectus().request(
+		readItems('consents', {
+			filter: {
+				group_id: { _eq: currentGroupId(actor) },
+				type: { _eq: 'privacy' },
+				revoked_at: { _null: true }
+			},
+			fields: ['version'],
+			sort: ['-granted_at'],
+			limit: 1
+		})
+	);
+	return row?.version ?? null;
+}
+
 export type NewConsent = {
 	granted_by_name: string;
 	granted_by_email: string;

@@ -3,7 +3,8 @@ import { requireActor } from '$lib/server/actor';
 import { assertCan } from '$lib/server/authz';
 import { listProfiles } from '$lib/server/repo/profiles';
 import { getOwnGroup } from '$lib/server/repo/groups';
-import { grantConsent, hasValidConsent } from '$lib/server/repo/consents';
+import { grantConsent, hasValidConsent, lastConsentVersion } from '$lib/server/repo/consents';
+import { changesSince } from '$lib/legal';
 import { readConsent } from '$lib/server/consentForm';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -15,9 +16,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Schon erteilt? Dann hat hier niemand mehr etwas zu suchen.
 	if (await hasValidConsent(actor.session.groupId)) redirect(303, '/');
 
-	const [group, profiles] = await Promise.all([getOwnGroup(actor), listProfiles(actor)]);
+	const [group, profiles, previous] = await Promise.all([
+		getOwnGroup(actor),
+		listProfiles(actor),
+		lastConsentVersion(actor)
+	]);
+
+	// Frühere Einwilligung zu einer älteren Textversion → die Texte haben sich geändert.
+	const updates = previous ? changesSince(previous) : [];
 
 	return {
+		reason: previous ? ('changed' as const) : ('first' as const),
+		updates: updates.map((u) => ({ documents: u.documents, changes: u.changes })),
 		familyName: group.name,
 		email: group.email,
 		children: profiles.map((p) => ({ name: p.name, grade: p.grade, avatar: p.avatar }))

@@ -9,7 +9,7 @@
 		<li>· Es werden Übungsaufgaben erzeugt, passend zu Schulart, Klasse und Bundesland.</li>
 		<li>· Eingereichte Lösungen werden von einer KI korrigiert — auch hochgeladene Fotos.</li>
 		<li>· Dafür gehen Eingaben und Uploads an Anthropic in den USA. Gehostet wird in Nürnberg.</li>
-		<li>· Hochgeladene Dateien werden nach 30 Tagen automatisch gelöscht.</li>
+		<li>· Aufgabenblätter und Lösungsfotos werden nach 30 Tagen gelöscht, Schulbücher nach 90 Tagen ohne Nutzung.</li>
 		<li>· Nichts davon geht an die Schule. KI-Korrekturen können falsch sein.</li>
 	</ul>
 	<p class="mt-3 text-sm text-gray-500">

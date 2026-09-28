@@ -127,6 +127,16 @@ auf den Server kopieren (CLAUDE.md).
 
 ## Erledigt
 
+### README.md war noch die Vorlage von `sv create` — 28.09.2026
+
+Die README beschrieb, wie man ein neues Svelte-Projekt anlegt. Jetzt: Zweck, Funktionen, Stack,
+lokale Einrichtung mit den Variablen aus `.env.example` (samt Hinweis, dass Puppeteer lokal
+Chrome braucht, weil `.npmrc` den Download unterdrückt), npm-Befehle einschließlich `schema:*`,
+Aufbau, Verweise auf `CLAUDE.md` und `docs/`. Bewusst ohne Serveradressen, Zugänge und
+Sicherheitsdetails — das Repo ist öffentlich.
+
+**Dateien.** `README.md`
+
 ### Lösen-Ansicht: Der Blatt-Fuß landete in der letzten Teilaufgabe — 27.09.2026
 
 `Gesamt: 26 Punkte` am Blattende stand, durch `---` abgetrennt, im Text der letzten

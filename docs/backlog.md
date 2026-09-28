@@ -37,6 +37,44 @@ ausgeschlossen), Abschnitt „Offene Punkte", Nr. 2–5.
 
 ---
 
+### Feedback und Feature-Wünsche: Bezug zum Kind und stille Auswertung
+
+Festgestellt am 28.09.2026 bei der Frage nach einer Löschfrist.
+
+- **Nicht in der Datenschutzerklärung.** Weder Feedback (Daumen, Freitext des Kindes,
+  Profil-ID) noch Feature-Wünsche (Zusammenfassung durch das Modell, Liste der Profil-IDs)
+  stehen bei Daten, Zwecken oder Fristen.
+- **Stille Auswertung im Chat.** `api/chat` weist das Modell an, Verbesserungswünsche „still"
+  zu erkennen und unsichtbar anzuhängen; sie landen samt Profil-ID in `feature_requests`.
+  Eine verdeckte Auswertung von Äußerungen von Kindern verträgt sich schlecht mit dem
+  Transparenzgebot (Art. 5 Abs. 1 lit. a, Art. 13, ErwG 58).
+- **Kein eigener Zweck für den Bezug zum Kind.** Heute gilt „bis das Profil gelöscht wird"
+  (dann `SET NULL` bzw. ID entfernt). Zum Verbessern der App braucht man nach der Auswertung
+  nicht zu wissen, welches Kind etwas gesagt hat (Art. 5 Abs. 1 lit. c, e).
+
+Stand Produktion: 0 Zeilen in beiden — jetzt ohne Altlasten lösbar.
+
+**Wege**, von klein nach groß:
+
+1. **Bezug weglassen:** keine Profil-IDs in `feedback` und `feature_requests` speichern. Beim
+   Feedback wird das Profil nur im Moment der Abgabe für die Lernerkenntnisse gebraucht, bei
+   Wünschen reicht der Zähler. Übrig bleibt Freitext ohne Bezug; eine eigene Frist ist dann
+   kaum nötig.
+2. **Stille Auswertung beenden** — oder offenlegen. Beenden ist einfacher: Wünsche lassen sich
+   im Feedback-Feld äußern.
+3. **Beides**, dazu Feedback kurz in der Datenschutzerklärung nennen.
+
+Jede Textänderung an der Datenschutzerklärung heißt `v4` und erneute Einwilligung — mit
+anderen Änderungen bündeln. Weg 1 und das Beenden der stillen Auswertung gehen ohne neuen
+Text, wenn danach nichts Personenbezogenes mehr gespeichert wird (prüfen).
+
+**Dateien.** `src/routes/api/chat/+server.ts`, `src/routes/api/feedback/+server.ts`,
+`src/lib/server/repo/feedback.ts`, `src/lib/server/repo/featureRequests.ts`,
+`src/lib/server/repo/profiles.ts` (`deleteProfile`), ggf. `schema/snapshot.json`,
+`src/routes/datenschutz/+page.svelte`
+
+---
+
 ### Donate-Button
 
 Eltern sollen den Betrieb freiwillig unterstützen können (Wunsch vom 27.09.2026).

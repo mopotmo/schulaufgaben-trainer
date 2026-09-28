@@ -303,7 +303,9 @@ async function addFlow() {
 			description: `Verschickt Bestätigungs- und Reset-Links samt Login-Daten. Wird von der App über neue Zeilen in email_tokens ausgelöst. Angelegt von scripts/email-verification.ts — ${FLOW_VERSION}.`,
 			status: 'active',
 			trigger: 'event',
-			accountability: 'all',
+			// Nur „wer/wann", kein Laufprotokoll: Das enthielte E-Mail-Adresse und Einmal-Link
+			// (Backlog „Directus-Revisionen", 28.09.2026).
+			accountability: 'activity',
 			options: { type: 'action', scope: ['items.create'], collections: ['email_tokens'] }
 		})
 	);

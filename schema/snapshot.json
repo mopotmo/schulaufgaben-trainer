@@ -3,7 +3,7 @@
 		{
 			"collection": "books",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -33,7 +33,7 @@
 		{
 			"collection": "consents",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -63,7 +63,7 @@
 		{
 			"collection": "corrections",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -93,7 +93,7 @@
 		{
 			"collection": "email_tokens",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -123,7 +123,7 @@
 		{
 			"collection": "exercises",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -153,7 +153,7 @@
 		{
 			"collection": "feature_requests",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -183,7 +183,7 @@
 		{
 			"collection": "feedback",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -213,7 +213,7 @@
 		{
 			"collection": "groups",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -243,7 +243,7 @@
 		{
 			"collection": "learner_insights",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -273,7 +273,7 @@
 		{
 			"collection": "logs",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -303,7 +303,7 @@
 		{
 			"collection": "memberships",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,
@@ -333,7 +333,7 @@
 		{
 			"collection": "profiles",
 			"meta": {
-				"accountability": "all",
+				"accountability": "activity",
 				"archive_app_filter": true,
 				"archive_field": null,
 				"archive_value": null,

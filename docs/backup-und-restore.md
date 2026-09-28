@@ -35,6 +35,8 @@ docker run -d --name trainer-directus --network trainer-net -p 8055:8055 \
   -e DB_CLIENT=pg -e DB_HOST=trainer-restore -e DB_PORT=5432 -e DB_DATABASE=directus \
   -e DB_USER=postgres -e DB_PASSWORD=test -e KEY=probe -e SECRET=probe \
   -e CACHE_ENABLED=false -e TELEMETRY=false -e IP_TRUST_PROXY=true \
+  -e RETENTION_ENABLED=true -e REVISIONS_RETENTION=1d -e FLOW_LOGS_RETENTION=1d \
+  -e ACTIVITY_RETENTION=90d \
   directus/directus:12.4.1
 ```
 

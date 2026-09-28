@@ -17,6 +17,12 @@ export const BOOK_IDLE_DAYS = 90;
 /** Verbrauchte oder abgelaufene Einmal-Links aus `email_tokens`. */
 export const EMAIL_TOKEN_RETENTION_DAYS = 7;
 
+/**
+ * Fehlerprotokolle in `logs` — sie tragen Stacktraces, Fach, Thema und teils eine Profil-ID.
+ * Die Datenschutzerklärung sagt „kurzfristig, zur Fehlersuche" (entschieden 28.09.2026).
+ */
+export const LOG_RETENTION_DAYS = 30;
+
 const DAY = 24 * 60 * 60 * 1000;
 
 export function daysAgo(days: number, now = new Date()): Date {

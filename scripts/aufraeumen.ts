@@ -7,6 +7,7 @@
  *    Die Verweise in `exercises` / `corrections` werden geleert, Aufgaben und Korrekturtexte bleiben.
  * 3. Verwaiste Dateien: 30 Tage nach dem Upload, wenn nichts auf sie verweist
  * 4. `email_tokens`: verbraucht oder abgelaufen, älter als 7 Tage
+ * 5. Fehlerprotokolle in `logs`: 30 Tage nach dem Eintrag
  *
  * Warum ein Skript und kein Directus-Flow: Die Flow-Operation „Delete Data" löscht in
  * `directus_files` nur die Zeile, nicht die Datei auf der Platte (sie nutzt den ItemsService,
@@ -27,6 +28,7 @@
  */
 import {
 	EMAIL_TOKEN_RETENTION_DAYS,
+	LOG_RETENTION_DAYS,
 	UPLOAD_RETENTION_DAYS,
 	daysAgo,
 	isBookExpired
@@ -203,6 +205,18 @@ async function emailTokens() {
 	deleted += tokens.length;
 }
 
+async function logs() {
+	// `created_at` setzt Directus beim Anlegen selbst (Spezialwert `date-created`).
+	const cutoff = daysAgo(LOG_RETENTION_DAYS, now).toISOString();
+	const rows = await api<{ id: string }[]>(
+		'GET',
+		`/items/logs${q({ fields: 'id', filter: { created_at: { _lt: cutoff } }, limit: -1 })}`
+	);
+	log(`logs: älter als ${LOG_RETENTION_DAYS} Tage: ${rows.length}`);
+	if (rows.length && !DRY) await api('DELETE', '/items/logs', rows.map((r) => r.id));
+	deleted += rows.length;
+}
+
 async function push(status: 'up' | 'down', msg: string) {
 	if (!PUSH_URL || DRY) return;
 	await fetch(`${PUSH_URL}${q({ status, msg: msg.slice(0, 200) })}`).catch(() => undefined);
@@ -213,6 +227,7 @@ async function main() {
 	const bookFiles = await books();
 	await uploads(bookFiles);
 	await emailTokens();
+	await logs();
 	const summary = `${DRY ? 'würde löschen' : 'gelöscht'}: ${deleted}`;
 	log(summary);
 	await push('up', summary);

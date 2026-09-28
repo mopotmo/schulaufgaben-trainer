@@ -110,22 +110,21 @@ Schulart zurückstellen?
 **Dateien.** `src/routes/+page.svelte`, `src/routes/+page.server.ts`,
 `src/lib/server/repo/profiles.ts`, `src/lib/retention.ts`, `schema/snapshot.json`
 
----
-
-### Logs haben keine Löschfrist
-
-Festgestellt am 27.09.2026 beim Profil-Löschen. `logs` wächst unbegrenzt, `scripts/aufraeumen.ts`
-fasst die Collection nicht an. `learnerInsights/persist` schreibt bei Fehlern die `profileId`
-in `details`; nach dem Löschen des Profils bleibt sie dort stehen. Dazu stehen Stacktraces mit
-Fach und Thema drin. Stand Produktion: 5 Zeilen, keine mit Profil-ID.
-
-**Ansatz.** Frist festlegen (Vorschlag: 30 Tage), in `src/lib/retention.ts` und
-`scripts/aufraeumen.ts` aufnehmen, in der Datenschutzerklärung nennen. Danach das Skript neu
-auf den Server kopieren (CLAUDE.md).
-
-**Dateien.** `scripts/aufraeumen.ts`, `src/lib/retention.ts`, `src/routes/datenschutz/+page.svelte`
-
 ## Erledigt
+
+### Logs hatten keine Löschfrist — 28.09.2026
+
+`logs` wuchs unbegrenzt; die Einträge tragen Stacktraces, Fach, Thema und teils eine Profil-ID.
+Jetzt löscht `scripts/aufraeumen.ts` (Schritt 5) Einträge älter als 30 Tage
+(`LOG_RETENTION_DAYS` in `src/lib/retention.ts`). Die Datenschutzerklärung sagt
+„kurzfristig, zur Fehlersuche" — das deckt 30 Tage, kein Versionssprung.
+
+Trockenlauf gegen Produktion und auf dem Server in der Cron-Umgebung: 4 Einträge vom Juni
+würden gelöscht, der vom 22.09. bleibt. Das Löschen selbst ist nicht gegen eine Kopie getestet;
+erster echter Lauf 29.09.2026, 01:45 UTC. Skript und Regeln am 28.09.2026 nach
+`/opt/trainer-aufraeumen/` kopiert, alte Fassung dort als `*.bak-20260928`.
+
+**Dateien.** `scripts/aufraeumen.ts`, `src/lib/retention.ts`
 
 ### README.md war noch die Vorlage von `sv create` — 28.09.2026
 

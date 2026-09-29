@@ -76,6 +76,4 @@ Es gibt keine App-UI zum Einladen — so gewollt.
 
 Offen:
 
-- Profil löschen nimmt `learner_insights` und `feedback` nicht mit (Backlog) — folgenlos, solange
-  `deleteProfile` keinen Aufrufer hat.
 - Übrige Punkte aus Stufe 0 und 2: `docs/klassen-freigabe-konzept.md` §6/§7 und `docs/backlog.md`.

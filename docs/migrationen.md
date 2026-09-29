@@ -71,7 +71,8 @@ wurden nicht datiert festgehalten, das Datum ist das des letzten Commits am Skri
 
 | Datum | Was | Probe | Produktion |
 |---|---|---|---|
-| 28.09.2026 | `accountability` aller 12 Collections und des Mail-Flows `all` → `activity` (keine Datensatz-Kopien mehr in `directus_revisions`); Directus-Fristen per Umgebung: Revisionen und Flow-Protokolle 1 Tag, Aktivität 90 Tage | ✓ 28.09. | offen |
+| 29.09.2026 | `feature_requests` gelöscht (0 Zeilen; Code liest sie seit f9eb5f7 nicht mehr) | ✓ 29.09. | offen |
+| 28.09.2026 | `accountability` aller 12 Collections und des Mail-Flows `all` → `activity` (keine Datensatz-Kopien mehr in `directus_revisions`); Directus-Fristen per Umgebung: Revisionen und Flow-Protokolle 1 Tag, Aktivität 90 Tage | ✓ 28.09. | ✓ (am 29.09. per `schema:check` bestätigt, Datum der Anwendung nicht festgehalten) |
 | 27.09.2026 | `consents.type`: Auswahl `insights` (Opt-in Lernerkenntnisse); Daten: Test-Erkenntnis in `learner_insights` gelöscht | ✓ 27.09. | ✓ 27.09. |
 | 27.09.2026 | Profil löschen: `learner_insights` CASCADE, `feedback.profile_id` UUID + SET NULL, `feedback.id`/`feature_requests.id` mit `uuid` | ✓ 27.09. | ✓ 27.09. |
 | 26.09.2026 | Erster Snapshot aus Produktion (Directus 12.4.1, 12 Collections, 104 Felder, 11 Relationen) | — | Quelle |

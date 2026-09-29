@@ -18,18 +18,6 @@ ausgeschlossen), Abschnitt „Offene Punkte", Nr. 2–5.
 
 ---
 
-### `feature_requests` in Directus löschen
-
-Folgt aus „Feedback: Bezug zum Kind, keine stille Auswertung" (unten, 29.09.2026). Seitdem
-liest und schreibt kein Code mehr die Collection. Erst nach dem Deploy löschen — Reihenfolge
-laut `CLAUDE.md`: erst der Code, dann Directus. In der Probe per Oberfläche entfernen,
-`npm run schema:pull`, committen, nach Produktion per `npm run schema:apply --mit-loeschen`.
-Vorher Backup; Stand Produktion 0 Zeilen. Gibt einen der 25 Plätze im Core-Tarif frei.
-
-**Dateien.** `schema/snapshot.json`
-
----
-
 ### Donate-Button
 
 Eltern sollen den Betrieb freiwillig unterstützen können (Wunsch vom 27.09.2026).
@@ -104,6 +92,15 @@ Schulart zurückstellen?
 `src/lib/server/repo/profiles.ts`, `src/lib/retention.ts`, `schema/snapshot.json`
 
 ## Erledigt
+
+### `feature_requests` gelöscht — 29.09.2026
+
+Nach dem Deploy von f9eb5f7 (kein Code liest die Collection mehr, 0 Zeilen) in der Probe
+gelöscht, `schema:pull`, dann `schema:apply --produktion --mit-loeschen` — der Trockenlauf
+zeigte genau diese eine Löschung. Danach `schema:check` ohne Abweichung. Backup: das von
+08:01 desselben Tages (vor dem Deploy), entschieden 29.09.2026. Ein Platz im Core-Tarif frei.
+
+**Dateien.** `schema/snapshot.json`
 
 ### Feedback: Bezug zum Kind, keine stille Auswertung — 29.09.2026
 

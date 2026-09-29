@@ -134,7 +134,8 @@ Zeile, Lernerkenntnis entsteht (mit Opt-in). Per `curl` abgewiesen: zweiter Komm
 leer / keine UUID / über 1000 Zeichen (400), fremde Familie (403), Zeile ohne Profil (404),
 älter als eine Stunde (409). `aufraeumen.ts` an einer auf 31 Tage gealterten Zeile: Trockenlauf
 1, echter Lauf leert beide Verweise, zweiter Lauf 0. Trockenlauf gegen Produktion: 0 Zeilen.
-Nach dem Deploy Skript und Regeln nach `/opt/trainer-aufraeumen/` kopieren.
+Skript und Regeln am 29.09.2026 nach `/opt/trainer-aufraeumen/` kopiert (alte Fassung dort als
+`*.bak-20260929`), Trockenlauf in der Cron-Umgebung ohne Fehler.
 
 **Dateien.** `src/routes/api/chat/+server.ts`, `src/routes/api/feedback/+server.ts`,
 `src/lib/server/repo/feedback.ts`, `src/lib/components/FeedbackWidget.svelte`,

@@ -9,7 +9,6 @@ import { readItem, readItems, createItem, updateItem, deleteItem } from '@direct
 import { error } from '@sveltejs/kit';
 import { getDirectus, type Profile } from '$lib/server/directus';
 import { assertCan, assertInScope, assertOwnProfile, currentGroupId, type Actor } from '../authz';
-import { forgetProfileInFeatureRequests } from './featureRequests';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -121,16 +120,13 @@ export async function updateProfile(
  * meiste selbst (`schema/snapshot.json`):
  * - `memberships`, `exercises`, `learner_insights`: ON DELETE CASCADE,
  *   `corrections` über `exercises` ebenso
- * - `feedback`: ON DELETE SET NULL — das Feedback bleibt anonym erhalten
+ * - `feedback`: ON DELETE SET NULL — das Feedback bleibt anonym erhalten; sonst leert
+ *   `scripts/aufraeumen.ts` den Bezug nach `FEEDBACK_LINK_DAYS`
  * - Aufgabenblätter und Lösungsfotos: Nach der Kaskade zeigt nichts mehr auf sie,
  *   `scripts/aufraeumen.ts` löscht sie als verwaiste Dateien 30 Tage nach dem Upload
- *
- * Nur `feature_requests.profile_ids` (JSON, keine Relation) muss der Code selbst räumen —
- * vorher, damit ein fehlgeschlagener Versuch sich einfach wiederholen lässt.
  */
 export async function deleteProfile(actor: Actor, profileId: unknown): Promise<void> {
 	assertCan(actor, 'profile:delete');
 	const profile = await getProfile(actor, profileId);
-	await forgetProfileInFeatureRequests(profile.id);
 	await getDirectus().request(deleteItem('profiles', profile.id));
 }

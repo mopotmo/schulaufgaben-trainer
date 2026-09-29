@@ -23,6 +23,14 @@ export const EMAIL_TOKEN_RETENTION_DAYS = 7;
  */
 export const LOG_RETENTION_DAYS = 30;
 
+/**
+ * Bezug einer Rückmeldung in `feedback` zum Kind (`profile_id`) und zur Aufgabe (`ref_id`) —
+ * nur für eine Rückfrage bei der Familie. Danach bleiben Typ, Daumen, Kommentar und Zeitpunkt
+ * ohne Bezug (entschieden 29.09.2026). Beide Verweise zusammen: Über die Aufgabe käme man
+ * sonst weiter zum Profil.
+ */
+export const FEEDBACK_LINK_DAYS = 30;
+
 const DAY = 24 * 60 * 60 * 1000;
 
 export function daysAgo(days: number, now = new Date()): Date {

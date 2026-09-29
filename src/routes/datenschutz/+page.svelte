@@ -8,7 +8,7 @@
 		SUPERVISORY_AUTHORITY,
 		UPLOAD_RETENTION_DAYS
 	} from '$lib/config';
-	import { EMAIL_TOKEN_RETENTION_DAYS } from '$lib/retention';
+	import { EMAIL_TOKEN_RETENTION_DAYS, FEEDBACK_LINK_DAYS } from '$lib/retention';
 	import { CONSENT_VERSION } from '$lib/legal';
 </script>
 
@@ -28,6 +28,7 @@
 		<li>Anzeige des Lernfortschritts innerhalb der eigenen Familie</li>
 		<li>Nur mit gesonderter Einwilligung: Zuschnitt neuer Aufgaben auf Stärken und Schwächen des Kindes (Abschnitt 4)</li>
 		<li>Bestätigung der E-Mail-Adresse und Zusenden eines Links bei vergessenem Passwort</li>
+		<li>Verbesserung der App anhand freiwilliger Rückmeldungen, bei Bedarf mit Rückfrage an die Eltern</li>
 	</ul>
 
 	<h2>3. Rechtsgrundlage</h2>
@@ -70,6 +71,7 @@
 		<li><strong>Hochgeladene Dateien:</strong> Fotos oder PDFs von Aufgabenblättern und handschriftlichen Lösungen, Schulbücher als PDF</li>
 		<li><strong>Erzeugte Inhalte:</strong> Übungsaufgaben, Korrekturtexte</li>
 		<li><strong>Lernerkenntnisse</strong> (nur mit gesonderter Einwilligung, Abschnitt 4): Stärken, Schwächen, Hinweise zur Arbeitsweise und Schwierigkeitseinschätzung je Kind und Fach</li>
+		<li><strong>Rückmeldungen:</strong> Daumen hoch oder runter und ein freiwilliger Kommentar zu Aufgaben, Korrekturen oder dem Chat, dazu für {FEEDBACK_LINK_DAYS} Tage der Bezug zum Profil und zur Aufgabe, um bei Ihnen nachfragen zu können</li>
 		<li><strong>Kontaktdaten der einwilligenden Person:</strong> Name und E-Mail-Adresse, Zeitpunkt der Bestätigung der Adresse</li>
 		<li><strong>Einmal-Links:</strong> zufällige Kennungen für Bestätigungs- und Passwort-Links samt Ablaufzeitpunkt</li>
 		<li><strong>Technische Daten:</strong> ein Sitzungs-Cookie sowie Fehlerprotokolle des Servers</li>
@@ -131,6 +133,11 @@
 			{EMAIL_TOKEN_RETENTION_DAYS} Tage nach Verwendung bzw. Ablauf
 		</li>
 		<li>Fehlerprotokolle: kurzfristig, zur Fehlersuche</li>
+		<li>
+			Rückmeldungen: Der Bezug zu Profil und Aufgabe wird {FEEDBACK_LINK_DAYS} Tage nach der Abgabe
+			gelöscht, bei Löschung des Profils sofort. Bewertung und Kommentar bleiben danach ohne Bezug
+			zu Kind oder Familie zur Verbesserung der App erhalten.
+		</li>
 	</ul>
 	<p>
 		Zum Schutz vor Datenverlust wird der gesamte Datenbestand täglich gesichert, einschließlich der

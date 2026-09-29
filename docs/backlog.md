@@ -10,25 +10,6 @@ nicht beim Anfassen erst wieder diagnostizieren muss. Erledigtes wandert nach un
 
 ## Offen
 
-### Directus-Revisionen halten gelöschte Daten
-
-Festgestellt am 27.09.2026 bei VVT/TOM (internes Dokument, offener Punkt 1). Alle Collections
-stehen auf `accountability: all`: Directus legt bei jedem Anlegen und Ändern eine vollständige
-Kopie in `directus_revisions` ab. Unsere Löschungen — Widerruf der Lernerkenntnisse, Profil
-löschen, `aufraeumen.ts` — erfassen sie nicht. In Produktion lagen die am selben Tag gelöschte
-Lernerkenntnis (Stärken, Schwächen), 12 alte Passwort-Hashes und frühere Stände von Profilen,
-Aufgaben und Korrekturen. Die Datenschutzerklärung sagt „sofort gelöscht".
-
-**Ansatz.** `accountability` auf `activity` umstellen (nur wer/wann, kein Datensatz) — über den
-Snapshot-Weg — und die vorhandenen Revisionen der Nutz-Collections löschen. Alternativ eine
-Aufbewahrungsfrist für Revisionen in Directus, falls die Version das hergibt (prüfen). Danach
-im internen VVT/TOM-Dokument nachziehen. Vorher Backup; die Sicherungen enthalten die Revisionen noch
-30 Tage.
-
-**Dateien.** `schema/snapshot.json`, ggf. `scripts/`
-
----
-
 ### Server härten
 
 Aus der Prüfung am Server für VVT/TOM am 27.09.2026; betrifft den ganzen Server, nicht nur
@@ -37,41 +18,15 @@ ausgeschlossen), Abschnitt „Offene Punkte", Nr. 2–5.
 
 ---
 
-### Feedback und Feature-Wünsche: Bezug zum Kind und stille Auswertung
+### `feature_requests` in Directus löschen
 
-Festgestellt am 28.09.2026 bei der Frage nach einer Löschfrist.
+Folgt aus „Feedback: Bezug zum Kind, keine stille Auswertung" (unten, 29.09.2026). Seitdem
+liest und schreibt kein Code mehr die Collection. Erst nach dem Deploy löschen — Reihenfolge
+laut `CLAUDE.md`: erst der Code, dann Directus. In der Probe per Oberfläche entfernen,
+`npm run schema:pull`, committen, nach Produktion per `npm run schema:apply --mit-loeschen`.
+Vorher Backup; Stand Produktion 0 Zeilen. Gibt einen der 25 Plätze im Core-Tarif frei.
 
-- **Nicht in der Datenschutzerklärung.** Weder Feedback (Daumen, Freitext des Kindes,
-  Profil-ID) noch Feature-Wünsche (Zusammenfassung durch das Modell, Liste der Profil-IDs)
-  stehen bei Daten, Zwecken oder Fristen.
-- **Stille Auswertung im Chat.** `api/chat` weist das Modell an, Verbesserungswünsche „still"
-  zu erkennen und unsichtbar anzuhängen; sie landen samt Profil-ID in `feature_requests`.
-  Eine verdeckte Auswertung von Äußerungen von Kindern verträgt sich schlecht mit dem
-  Transparenzgebot (Art. 5 Abs. 1 lit. a, Art. 13, ErwG 58).
-- **Kein eigener Zweck für den Bezug zum Kind.** Heute gilt „bis das Profil gelöscht wird"
-  (dann `SET NULL` bzw. ID entfernt). Zum Verbessern der App braucht man nach der Auswertung
-  nicht zu wissen, welches Kind etwas gesagt hat (Art. 5 Abs. 1 lit. c, e).
-
-Stand Produktion: 0 Zeilen in beiden — jetzt ohne Altlasten lösbar.
-
-**Wege**, von klein nach groß:
-
-1. **Bezug weglassen:** keine Profil-IDs in `feedback` und `feature_requests` speichern. Beim
-   Feedback wird das Profil nur im Moment der Abgabe für die Lernerkenntnisse gebraucht, bei
-   Wünschen reicht der Zähler. Übrig bleibt Freitext ohne Bezug; eine eigene Frist ist dann
-   kaum nötig.
-2. **Stille Auswertung beenden** — oder offenlegen. Beenden ist einfacher: Wünsche lassen sich
-   im Feedback-Feld äußern.
-3. **Beides**, dazu Feedback kurz in der Datenschutzerklärung nennen.
-
-Jede Textänderung an der Datenschutzerklärung heißt `v4` und erneute Einwilligung — mit
-anderen Änderungen bündeln. Weg 1 und das Beenden der stillen Auswertung gehen ohne neuen
-Text, wenn danach nichts Personenbezogenes mehr gespeichert wird (prüfen).
-
-**Dateien.** `src/routes/api/chat/+server.ts`, `src/routes/api/feedback/+server.ts`,
-`src/lib/server/repo/feedback.ts`, `src/lib/server/repo/featureRequests.ts`,
-`src/lib/server/repo/profiles.ts` (`deleteProfile`), ggf. `schema/snapshot.json`,
-`src/routes/datenschutz/+page.svelte`
+**Dateien.** `schema/snapshot.json`
 
 ---
 
@@ -149,6 +104,55 @@ Schulart zurückstellen?
 `src/lib/server/repo/profiles.ts`, `src/lib/retention.ts`, `schema/snapshot.json`
 
 ## Erledigt
+
+### Feedback: Bezug zum Kind, keine stille Auswertung — 29.09.2026
+
+Festgestellt am 28.09.2026: Feedback und Feature-Wünsche fehlten in der Datenschutzerklärung,
+der Chat wies das Modell an, Verbesserungswünsche „still" zu erkennen und samt Profil-ID in
+`feature_requests` zu speichern (Art. 5 Abs. 1 lit. a, Art. 13, ErwG 58), und der Bezug zum
+Kind hatte keinen eigenen Zweck und keine Frist.
+
+- **Stille Auswertung beendet**, Feature-Wünsche ganz entfernt: Anweisung und Marker im Chat,
+  der tote Pfad in `api/feedback` (das Widget schickte nie einen Wunsch mit),
+  `repo/featureRequests.ts` samt `forgetProfileInFeatureRequests` in `deleteProfile`, der Typ.
+  Die Collection selbst steht oben als eigener Punkt.
+- **Bezug mit Frist statt ganz weglassen** (entschieden 29.09.2026): Im ersten Moment soll
+  eine Rückfrage bei der Familie möglich sein. `scripts/aufraeumen.ts` (Schritt 6) leert nach
+  `FEEDBACK_LINK_DAYS` = 30 Tagen **beide** Verweise, `profile_id` und `ref_id` — über die
+  Aufgabe käme man sonst weiter zum Profil. Typ, Daumen, Kommentar und Zeitpunkt bleiben.
+- **Kommentarfeld erreichbar, auch bei Daumen hoch.** Vorher schickte der Klick auf den
+  Daumen sofort ab und das Widget zeigte nur noch „Danke" — das Feld (nur bei Daumen runter)
+  war praktisch nie zu sehen. Jetzt speichert `POST /api/feedback` den Daumen und gibt die ID
+  zurück; `PATCH` ergänzt den Kommentar in derselben Zeile (`addFeedbackComment`: nur eigenes
+  Profil, nur ohne Kommentar, höchstens eine Stunde alt, max. 1000 Zeichen). Die
+  Lernerkenntnis aus dem Kommentar entsteht jetzt beim `PATCH`.
+- Datenschutzerklärung: Zweck, Datenkategorie „Rückmeldungen" und Speicherdauer.
+  `CONSENT_VERSION` → `2026-09-v4` mit Eintrag in `CONSENT_HISTORY`.
+
+In der Probe mit einer Testfamilie geprüft: Daumen hoch im Browser, Kommentar ergänzt dieselbe
+Zeile, Lernerkenntnis entsteht (mit Opt-in). Per `curl` abgewiesen: zweiter Kommentar (409),
+leer / keine UUID / über 1000 Zeichen (400), fremde Familie (403), Zeile ohne Profil (404),
+älter als eine Stunde (409). `aufraeumen.ts` an einer auf 31 Tage gealterten Zeile: Trockenlauf
+1, echter Lauf leert beide Verweise, zweiter Lauf 0. Trockenlauf gegen Produktion: 0 Zeilen.
+Nach dem Deploy Skript und Regeln nach `/opt/trainer-aufraeumen/` kopieren.
+
+**Dateien.** `src/routes/api/chat/+server.ts`, `src/routes/api/feedback/+server.ts`,
+`src/lib/server/repo/feedback.ts`, `src/lib/components/FeedbackWidget.svelte`,
+`src/lib/server/repo/profiles.ts`, `src/lib/server/directus.ts`, `src/lib/retention.ts`,
+`scripts/aufraeumen.ts`, `src/routes/datenschutz/+page.svelte`, `src/lib/legal.ts`
+
+### Directus-Revisionen hielten gelöschte Daten — 28.09.2026
+
+Festgestellt am 27.09.2026 bei VVT/TOM: Alle Collections standen auf `accountability: all`,
+Directus legte bei jedem Anlegen und Ändern eine vollständige Kopie in `directus_revisions`
+ab — auch von später gelöschten Lernerkenntnissen, alten Passwort-Hashes und Profilständen.
+
+Jetzt `activity` (nur wer/wann) über den Snapshot-Weg, ebenso der Mail-Flow. Die Altlasten
+räumt die Directus-Aufbewahrung weg (Umgebung in Coolify: Revisionen und Flow-Protokolle
+1 Tag, Aktivität 90 Tage). In der Probe unter 12.4.1 geprüft (Commit cae107f).
+
+**Dateien.** `schema/snapshot.json`, `scripts/email-verification.ts`,
+`docs/backup-und-restore.md`
 
 ### Logs hatten keine Löschfrist — 28.09.2026
 

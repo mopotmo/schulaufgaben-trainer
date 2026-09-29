@@ -8,6 +8,7 @@
  * 3. Verwaiste Dateien: 30 Tage nach dem Upload, wenn nichts auf sie verweist
  * 4. `email_tokens`: verbraucht oder abgelaufen, älter als 7 Tage
  * 5. Fehlerprotokolle in `logs`: 30 Tage nach dem Eintrag
+ * 6. `feedback`: Bezug zu Profil und Aufgabe 30 Tage nach der Abgabe leeren, die Rückmeldung bleibt
  *
  * Warum ein Skript und kein Directus-Flow: Die Flow-Operation „Delete Data" löscht in
  * `directus_files` nur die Zeile, nicht die Datei auf der Platte (sie nutzt den ItemsService,
@@ -28,6 +29,7 @@
  */
 import {
 	EMAIL_TOKEN_RETENTION_DAYS,
+	FEEDBACK_LINK_DAYS,
 	LOG_RETENTION_DAYS,
 	UPLOAD_RETENTION_DAYS,
 	daysAgo,
@@ -217,6 +219,27 @@ async function logs() {
 	deleted += rows.length;
 }
 
+async function feedbackLinks() {
+	const cutoff = daysAgo(FEEDBACK_LINK_DAYS, now).toISOString();
+	const rows = await api<{ id: string }[]>(
+		'GET',
+		`/items/feedback${q({
+			fields: 'id',
+			filter: {
+				_and: [
+					{ created_at: { _lt: cutoff } },
+					{ _or: [{ profile_id: { _nnull: true } }, { ref_id: { _nnull: true } }] }
+				]
+			},
+			limit: -1
+		})}`
+	);
+	log(`feedback: Bezug älter als ${FEEDBACK_LINK_DAYS} Tage: ${rows.length}`);
+	if (rows.length && !DRY)
+		await api('PATCH', '/items/feedback', { keys: rows.map((r) => r.id), data: { profile_id: null, ref_id: null } });
+	deleted += rows.length;
+}
+
 async function push(status: 'up' | 'down', msg: string) {
 	if (!PUSH_URL || DRY) return;
 	await fetch(`${PUSH_URL}${q({ status, msg: msg.slice(0, 200) })}`).catch(() => undefined);
@@ -228,6 +251,7 @@ async function main() {
 	await uploads(bookFiles);
 	await emailTokens();
 	await logs();
+	await feedbackLinks();
 	const summary = `${DRY ? 'würde löschen' : 'gelöscht'}: ${deleted}`;
 	log(summary);
 	await push('up', summary);

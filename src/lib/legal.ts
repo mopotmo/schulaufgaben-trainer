@@ -5,7 +5,7 @@
  * **Bei jedem Bump einen Eintrag oben in `CONSENT_HISTORY` ergänzen.** Die Einwilligungsseite
  * zeigt daraus, was sich seit der Version geändert hat, der die Familie zuletzt zugestimmt hat.
  */
-export const CONSENT_VERSION = '2026-09-v3';
+export const CONSENT_VERSION = '2026-09-v4';
 
 export type LegalDocument = 'privacy' | 'terms';
 
@@ -22,6 +22,14 @@ export type ConsentVersion = {
 
 /** Neueste oben. Die erste Version hat keine Änderungen, sie steht nur als Anker da. */
 export const CONSENT_HISTORY: ConsentVersion[] = [
+	{
+		version: '2026-09-v4',
+		documents: ['privacy'],
+		changes: [
+			'Rückmeldungen (Daumen hoch oder runter, Kommentar) werden 30 Tage lang mit dem Profil und der Aufgabe verknüpft, damit wir bei dir nachfragen können. Danach wird die Verknüpfung gelöscht, die Rückmeldung selbst bleibt ohne Bezug erhalten.',
+			'Der Trainer wertet Chat-Nachrichten nicht mehr im Hintergrund auf Verbesserungswünsche aus.'
+		]
+	},
 	{
 		version: '2026-09-v3',
 		documents: ['privacy'],

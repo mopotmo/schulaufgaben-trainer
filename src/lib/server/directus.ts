@@ -115,17 +115,6 @@ export type Feedback = {
 	created_at: string;
 };
 
-export type FeatureRequest = {
-	id: string;
-	title: string;
-	description: string | null;
-	count: number;
-	profile_ids: string[] | null;
-	source: 'chat_auto' | 'feedback_comment' | null;
-	created_at: string;
-	updated_at: string;
-};
-
 export type LearnerInsight = {
 	id: string;
 	profile_id: string;
@@ -180,7 +169,6 @@ type Schema = {
 	corrections: Correction[];
 	logs: Log[];
 	feedback: Feedback[];
-	feature_requests: FeatureRequest[];
 	learner_insights: LearnerInsight[];
 	books: Book[];
 };

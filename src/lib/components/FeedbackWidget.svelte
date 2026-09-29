@@ -7,66 +7,87 @@
 
 	let { type, refId, profileId }: Props = $props();
 
+	// Der Daumen wird sofort gespeichert, der Kommentar ergänzt dieselbe Zeile (PATCH).
 	let rating = $state<'positive' | 'negative' | null>(null);
+	let feedbackId = $state<string | null>(null);
 	let comment = $state('');
-	let submitted = $state(false);
+	let commentSent = $state(false);
 	let submitting = $state(false);
 
-	async function submit(r: 'positive' | 'negative') {
+	async function rate(r: 'positive' | 'negative') {
+		if (rating || submitting) return;
 		rating = r;
-		// Submit immediately on thumbs click, comment can follow
-		await send();
-	}
-
-	async function send() {
-		if (!rating || submitting) return;
 		submitting = true;
 		try {
-			await fetch('/api/feedback', {
+			const res = await fetch('/api/feedback', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ type, refId, profileId, rating, comment: comment || null })
+				body: JSON.stringify({ type, refId, profileId, rating: r })
 			});
-			submitted = true;
+			if (!res.ok) throw new Error();
+			feedbackId = (await res.json()).id;
 		} catch {
-			// Silent fail — feedback is non-critical
+			// Feedback ist nicht kritisch — Auswahl zurücknehmen, damit man es erneut versuchen kann.
+			rating = null;
+		} finally {
+			submitting = false;
+		}
+	}
+
+	async function sendComment() {
+		if (!feedbackId || !comment.trim() || submitting) return;
+		submitting = true;
+		try {
+			const res = await fetch('/api/feedback', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: feedbackId, comment })
+			});
+			if (res.ok) commentSent = true;
+		} catch {
+			// Silent fail — der Daumen ist schon gespeichert
 		} finally {
 			submitting = false;
 		}
 	}
 </script>
 
-{#if submitted}
+{#if commentSent}
 	<p class="text-xs text-gray-400">Danke für dein Feedback!</p>
 {:else}
 	<div class="flex items-center gap-3 flex-wrap">
-		<span class="text-xs text-gray-400">War das hilfreich?</span>
+		<span class="text-xs text-gray-400">{feedbackId ? 'Danke!' : 'War das hilfreich?'}</span>
 		<div class="flex gap-1">
 			<button
-				onclick={() => submit('positive')}
-				disabled={submitting}
-				class="text-lg leading-none transition-transform hover:scale-125 disabled:opacity-40 {rating === 'positive' ? 'grayscale-0' : 'grayscale opacity-50'}"
+				onclick={() => rate('positive')}
+				disabled={rating !== null || submitting}
+				class="text-lg leading-none transition-transform enabled:hover:scale-125 {rating === 'positive' ? 'grayscale-0' : 'grayscale opacity-50'}"
 				aria-label="Hilfreich"
+				aria-pressed={rating === 'positive'}
 			>👍</button>
 			<button
-				onclick={() => submit('negative')}
-				disabled={submitting}
-				class="text-lg leading-none transition-transform hover:scale-125 disabled:opacity-40 {rating === 'negative' ? 'grayscale-0' : 'grayscale opacity-50'}"
+				onclick={() => rate('negative')}
+				disabled={rating !== null || submitting}
+				class="text-lg leading-none transition-transform enabled:hover:scale-125 {rating === 'negative' ? 'grayscale-0' : 'grayscale opacity-50'}"
 				aria-label="Nicht hilfreich"
+				aria-pressed={rating === 'negative'}
 			>👎</button>
 		</div>
-		{#if rating === 'negative'}
+		{#if feedbackId}
 			<input
 				bind:value={comment}
 				type="text"
-				placeholder="Was hat nicht gepasst? (optional)"
+				maxlength="1000"
+				placeholder={rating === 'positive' ? 'Was war gut? (optional)' : 'Was hat nicht gepasst? (optional)'}
+				aria-label="Kommentar"
 				class="flex-1 min-w-0 border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-gray-300"
-				onkeydown={(e) => e.key === 'Enter' && send()}
+				onkeydown={(e) => e.key === 'Enter' && sendComment()}
 			/>
 			{#if comment.trim()}
 				<button
-					onclick={send}
-					class="text-xs bg-gray-800 hover:bg-gray-900 text-white px-2.5 py-1 rounded-lg transition-colors"
+					onclick={sendComment}
+					disabled={submitting}
+					class="text-xs bg-gray-800 hover:bg-gray-900 disabled:opacity-40 text-white px-2.5 py-1 rounded-lg transition-colors"
 				>
 					Senden
 				</button>

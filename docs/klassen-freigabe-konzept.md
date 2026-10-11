@@ -319,7 +319,7 @@ Mehr nicht.
 |---|---|---|
 | 1 | Seiten `/impressum`, `/datenschutz`, `/nutzungsbedingungen` + Links, auch auf der Login-Seite — erledigt 22.09.2026 | S |
 | 2 | `consents`-Collection + blockierendes Consent-Gate beim ersten Login — erledigt 22.09.2026 | M |
-| 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen — Hinweistext beim Anlegen und Nennung in `/datenschutz` erledigt 22.09.2026; **Bereinigung der Bestandsdaten nicht belegt, offen** | S |
+| 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen — Hinweistext beim Anlegen und Nennung in `/datenschutz` erledigt 22.09.2026; Bestandsprofile am 11.10.2026 vom Betreiber geprüft, alle in Ordnung | S |
 | 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen; Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) — `scripts/aufraeumen.ts`, Cronjob statt Flow (§3.5) — erledigt 25.09.2026, Cronjob läuft auf dem Server | M |
 | 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` — erledigt: keine externen Ressourcen, ein Cookie (`src/lib/session.ts`), `static/robots.txt` und `noindex` in `src/app.html` (Stand 10.10.2026) | S |
 | 6 | AVV Anthropic, Hetzner und netcup abschließen und ablegen — erledigt 25./26.09.2026 | S |
@@ -354,8 +354,7 @@ Der Klassenbeitritt (früher Nr. 14) ist am 20.09.2026 aus Stufe 1 herausgenomme
 Consent-Gate an eine Datenstruktur zu hängen, die zwei Tage später umbenannt wird, ist doppelte
 Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entstehen.
 
-**Stand 10.10.2026:** Stufe 1 ist fertig, von Stufe 0 fehlt nur die Bereinigung der
-Bestandsdaten aus Nr. 3.
+**Stand 11.10.2026:** Stufe 0 und Stufe 1 sind vollständig umgesetzt.
 
 ---
 
@@ -371,7 +370,7 @@ Bestandsdaten aus Nr. 3.
 - KI-Transparenzhinweise nach Art. 50 KI-VO: umgesetzt am 22.09.2026 (§3.8)
 - AVV mit Hetzner abgeschlossen, DPA von Anthropic abgelegt (25.09.2026), AVV mit netcup
   abgeschlossen (26.09.2026) — alle drei Auftragsverarbeiter aus `/datenschutz` abgedeckt (§3.4)
-- Stufe 1 vollständig umgesetzt (Stand 25.09.2026), Stufe 0 bis auf die Bestandsdaten aus Nr. 3
+- Stufe 1 vollständig umgesetzt (Stand 25.09.2026), Stufe 0 vollständig (Stand 11.10.2026)
 - Die drei technischen Detailfragen am Ende der Spec sind am 20.09.2026 entschieden:
   keine Eltern-Profile in Stufe 1, kein Klassenbeitritt in Stufe 1, Migration als Node-Skript.
   Begründungen in der Spec, §10.
@@ -380,7 +379,6 @@ Bestandsdaten aus Nr. 3.
 
 **Offen:**
 
-- Stufe 0, Nr. 3: Bestandsprofile auf Vorname/Spitzname prüfen und ggf. bereinigen
 - Stufe 2 (§6), dazu die kleineren Punkte in `docs/backlog.md`
 - **KI-VO, Anhang III Nr. 3 Buchst. b**: Ist die Korrektur- und Notenfunktion eine
   „Bewertung von Lernergebnissen"? Argumente in §3.8. Für den Anwaltstermin.

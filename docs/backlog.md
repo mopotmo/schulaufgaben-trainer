@@ -85,6 +85,35 @@ Schulart zurückstellen?
 **Dateien.** `src/routes/+page.svelte`, `src/routes/+page.server.ts`,
 `src/lib/server/repo/profiles.ts`, `src/lib/retention.ts`, `schema/snapshot.json`
 
+---
+
+### Fächer im Bestand vereinheitlichen
+
+Gesehen am 11.10.2026 im Insights-Panel „Fächer": `Mathe`, `Mathematik` und `mathematik`
+stehen getrennt, `Latein ` mit angehängtem Leerzeichen ebenso. Das Fach ist Freitext; seit
+22.09.2026 schlägt das Formular die schon benutzten Fächer vor (siehe „Lernerkenntnisse fanden
+sich wegen Freitext nicht wieder"), der Bestand davor ist aber uneinheitlich. Folgen: Die
+Auswertung je Fach ist kaum brauchbar, und die Vorschlagsliste bietet alte Schreibweisen
+weiter an.
+
+**Ansatz.** Einmaliges Skript in `scripts/` mit `--dry` (Gerüst `scripts/lib/cli.ts`):
+Leerzeichen trimmen, dann eine feste Zuordnung auf eine Schreibweise (`Mathe`/`mathematik`
+→ `Mathematik` usw.). Die Liste zeigt der Trockenlauf; Fächer, die keiner Zuordnung
+entsprechen, nur melden, nicht raten.
+
+**Offen.**
+
+- Welche Schreibweise gilt jeweils („Mathematik" oder „Mathe")?
+- `learner_insights` hat ein Feld `subject` und einen Datensatz je Profil und Fach. Hat ein
+  Kind Erkenntnisse unter `Mathe` *und* `Mathematik`, entstehen beim Umbenennen zwei
+  Datensätze zum selben Fach — zusammenführen (Inhalt per Modell?) oder den älteren verwerfen?
+- `books.subject` mitziehen, oder bleibt das unabhängig?
+- An der Quelle: reicht die Vorschlagsliste, oder ein festes Fächerverzeichnis (Auswahl statt
+  Freitext)? Dann wäre das Skript eine Übergangslösung.
+
+**Dateien.** neues Skript in `scripts/`, ggf. `src/routes/generieren/+page.svelte`,
+`src/lib/server/repo/exercises.ts` (`listSubjects`), `src/lib/server/repo/insights.ts`
+
 ## Erledigt
 
 ### Unterstützen-Link für Eltern — 11.10.2026

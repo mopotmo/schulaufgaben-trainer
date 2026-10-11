@@ -317,29 +317,35 @@ Mehr nicht.
 
 | # | Aufgabe | Aufwand |
 |---|---|---|
-| 1 | Seiten `/impressum`, `/datenschutz`, `/nutzungsbedingungen` + Links, auch auf der Login-Seite | S |
-| 2 | `consents`-Collection + blockierendes Consent-Gate beim ersten Login | M |
-| 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen | S |
-| 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen; Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) — `scripts/aufraeumen.ts`, Cronjob statt Flow (§3.5) | M |
-| 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` | S |
+| 1 | Seiten `/impressum`, `/datenschutz`, `/nutzungsbedingungen` + Links, auch auf der Login-Seite — erledigt 22.09.2026 | S |
+| 2 | `consents`-Collection + blockierendes Consent-Gate beim ersten Login — erledigt 22.09.2026 | M |
+| 3 | Profilname auf Vorname/Spitzname umstellen, Hinweistext, Bestandsdaten bereinigen — Hinweistext beim Anlegen und Nennung in `/datenschutz` erledigt 22.09.2026; **Bereinigung der Bestandsdaten nicht belegt, offen** | S |
+| 4 | Auto-Löschung der Upload-Dateien nach 30 Tagen; Schulbücher 90 Tage ohne Nutzung, spätestens 31.08. (§3.6) — `scripts/aufraeumen.ts`, Cronjob statt Flow (§3.5) — erledigt 25.09.2026, Cronjob läuft auf dem Server | M |
+| 5 | Audit: externe Fonts/CDN/Analytics raus, nur Session-Cookie, `robots.txt` + `noindex` — erledigt: keine externen Ressourcen, ein Cookie (`src/lib/session.ts`), `static/robots.txt` und `noindex` in `src/app.html` (Stand 10.10.2026) | S |
 | 6 | AVV Anthropic, Hetzner und netcup abschließen und ablegen — erledigt 25./26.09.2026 | S |
 | 7 | VVT + TOM als internes Dokument — erstellt 27.09.2026, nicht im Repo, lokal unter `docs/vvt-tom.md`, per `.gitignore` ausgeschlossen | S |
 | 8 | Login härten: Rate-Limiting — umgesetzt 27.09.2026 (`src/lib/server/rateLimit.ts`, im App-Speicher: Login 10 Fehlversuche pro IP und 20 pro Familie in 15 Min., Passwort vergessen/Einrichten/Zurücksetzen 5 pro IP und Stunde). Slugs bleiben die Familiennamen — entschieden 27.09.2026, der Schutz liegt beim Rate-Limiting | S |
 
-### Stufe 1 — der Refactor (Spec liegt vor)
+### Stufe 1 — der Refactor — vollständig umgesetzt, Stand 25.09.2026
 
 | # | Aufgabe | Aufwand |
 |---|---|---|
-| 9 | **IDOR-Fix**: Ownership-Prüfung in allen API-Routen | M |
-| 10 | `families` → `groups` mit `type`, `parent_group`, `tenant` (Migration) | M |
-| 11 | `memberships` einführen, bestehende Profile migrieren | M |
-| 12 | Session-Refactor: profilbasiert, signierter Payload, Ablauf | M |
-| 13 | `authz.ts` + Repository-Layer | M |
-| 14 | Klassenbeitritt über Einladungscode | M |
+| 9 | **IDOR-Fix**: Ownership-Prüfung in allen API-Routen — erledigt 20.09.2026 | M |
+| 10 | `families` → `groups` mit `type`, `parent_group`, `tenant` (Migration) — erledigt, `families` entfernt | M |
+| 11 | `memberships` einführen, bestehende Profile migrieren — erledigt | M |
+| 12 | Session-Refactor: profilbasiert, signierter Payload, Ablauf — erledigt | M |
+| 13 | `authz.ts` + Repository-Layer — erledigt | M |
+
+Der Klassenbeitritt (früher Nr. 14) ist am 20.09.2026 aus Stufe 1 herausgenommen worden
+(Spec §10.2) und steht jetzt in Stufe 2.
 
 ### Stufe 2 — nach dem Start
 
-- Self-Service-Registrierung (Double-Opt-In ist seit 25.09.2026 umgesetzt, §3.3)
+- Self-Service-Registrierung (Double-Opt-In ist seit 25.09.2026 umgesetzt, §3.3) — vorerst
+  bewusst nicht: neue Familien legt nur der Admin in Directus an
+- Klassenbeitritt über Einladungscode — braucht vorher Sichtbarkeitsregeln in der Klasse und einen
+  eigenen `consents`-Typ (§3.3, Spec §10.2). Vorbereitet: Spalte `groups.invite_code` (ungenutzt),
+  `Actor.groupIds` als Array in `src/lib/server/authz.ts`
 - Eltern-Bereich „Meine Daten ansehen / alles löschen"
 - Aktivitäts-Feed für die Klasse — nur Opt-in, nur Vornamen
 - Lehrer-Rolle, erst mit Freigabe durch die Schule
@@ -347,6 +353,9 @@ Mehr nicht.
 **Reihenfolge:** Stufe 1 zuerst (9–13), dann Stufe 0 draufsetzen (1–8), dann freigeben. Das
 Consent-Gate an eine Datenstruktur zu hängen, die zwei Tage später umbenannt wird, ist doppelte
 Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entstehen.
+
+**Stand 10.10.2026:** Stufe 1 ist fertig, von Stufe 0 fehlt nur die Bereinigung der
+Bestandsdaten aus Nr. 3.
 
 ---
 
@@ -362,6 +371,7 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 - KI-Transparenzhinweise nach Art. 50 KI-VO: umgesetzt am 22.09.2026 (§3.8)
 - AVV mit Hetzner abgeschlossen, DPA von Anthropic abgelegt (25.09.2026), AVV mit netcup
   abgeschlossen (26.09.2026) — alle drei Auftragsverarbeiter aus `/datenschutz` abgedeckt (§3.4)
+- Stufe 1 vollständig umgesetzt (Stand 25.09.2026), Stufe 0 bis auf die Bestandsdaten aus Nr. 3
 - Die drei technischen Detailfragen am Ende der Spec sind am 20.09.2026 entschieden:
   keine Eltern-Profile in Stufe 1, kein Klassenbeitritt in Stufe 1, Migration als Node-Skript.
   Begründungen in der Spec, §10.
@@ -370,6 +380,7 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 
 **Offen:**
 
-- Stufe 1 ab Aufgabe 10 (Datenmodell, Session, Repo-Layer) und Stufe 0 vollständig
+- Stufe 0, Nr. 3: Bestandsprofile auf Vorname/Spitzname prüfen und ggf. bereinigen
+- Stufe 2 (§6), dazu die kleineren Punkte in `docs/backlog.md`
 - **KI-VO, Anhang III Nr. 3 Buchst. b**: Ist die Korrektur- und Notenfunktion eine
   „Bewertung von Lernergebnissen"? Argumente in §3.8. Für den Anwaltstermin.

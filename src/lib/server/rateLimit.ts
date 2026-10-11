@@ -83,6 +83,12 @@ export const loginBySlug = new Limiter(20, 15 * MINUTE, 15 * MINUTE);
  */
 export const tokenByIp = new Limiter(5, 60 * MINUTE, 60 * MINUTE);
 
+/**
+ * Familie löschen pro Familie: 5 falsche Passwörter pro Stunde. Schützt das Familienpasswort
+ * vor Raten durch jemanden, der nur eine offene Sitzung hat.
+ */
+export const deleteByGroup = new Limiter(5, 60 * MINUTE, 60 * MINUTE);
+
 /** Client-IP des Aufrufers. Fehlt der Header (etwa bei direktem Zugriff auf den Container), eine feste Kennung. */
 export function clientIp(event: Pick<RequestEvent, 'getClientAddress'>): string {
 	try {

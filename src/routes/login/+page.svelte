@@ -14,6 +14,12 @@
 			<p class="text-gray-500 text-sm mt-1">Melde dich mit deinem Familien-Login an.</p>
 		</div>
 
+		{#if data.geloescht}
+			<p class="mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+				Der Familienzugang und alle zugehörigen Daten sind gelöscht.
+			</p>
+		{/if}
+
 		{#if data.bestaetigt}
 			<p class="mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
 				Danke, deine E-Mail-Adresse ist bestätigt. Melde dich jetzt an.

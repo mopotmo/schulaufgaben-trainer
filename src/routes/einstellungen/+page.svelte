@@ -163,6 +163,19 @@
 	</div>
 
 	<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md mt-6">
+		<h2 class="text-lg font-semibold text-gray-800 mb-2">Meine Daten</h2>
+		<p class="text-sm text-gray-600 mb-4">
+			Ansehen, was gespeichert ist, alles herunterladen oder den Familienzugang löschen.
+		</p>
+		<a
+			href="/einstellungen/daten"
+			class="block w-full text-center border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold py-2.5 rounded-xl transition-colors"
+		>
+			Meine Daten
+		</a>
+	</div>
+
+	<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md mt-6">
 		<h2 class="text-lg font-semibold text-gray-800 mb-2">Unterstützen</h2>
 		<p class="text-sm text-gray-600 mb-4">
 			{PROJECT.name} ist kostenlos, KI und Server kosten aber Geld. Wer mag, kann den Betrieb

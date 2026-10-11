@@ -346,7 +346,8 @@ Der Klassenbeitritt (früher Nr. 14) ist am 20.09.2026 aus Stufe 1 herausgenomme
 - Klassenbeitritt über Einladungscode — braucht vorher Sichtbarkeitsregeln in der Klasse und einen
   eigenen `consents`-Typ (§3.3, Spec §10.2). Vorbereitet: Spalte `groups.invite_code` (ungenutzt),
   `Actor.groupIds` als Array in `src/lib/server/authz.ts`
-- Eltern-Bereich „Meine Daten ansehen / alles löschen"
+- Eltern-Bereich „Meine Daten ansehen / alles löschen" — erledigt 11.10.2026: `/einstellungen/daten`
+  mit Übersicht, JSON-Download und Löschen der ganzen Familie (`src/lib/server/repo/familyData.ts`)
 - Aktivitäts-Feed für die Klasse — nur Opt-in, nur Vornamen
 - Lehrer-Rolle, erst mit Freigabe durch die Schule
 

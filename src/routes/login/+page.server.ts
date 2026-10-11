@@ -9,7 +9,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	if (locals.actor) redirect(303, '/');
 	return {
 		weiter: url.searchParams.get('weiter') ?? '/',
-		bestaetigt: url.searchParams.has('bestaetigt')
+		bestaetigt: url.searchParams.has('bestaetigt'),
+		geloescht: url.searchParams.has('geloescht')
 	};
 };
 

@@ -116,6 +116,35 @@ entsprechen, nur melden, nicht raten.
 
 ## Erledigt
 
+### Eltern-Bereich „Meine Daten" — 11.10.2026
+
+Konzept §6, Stufe 2. Bisher gingen Auskunft und Löschung nur per Mail an den Betreiber
+(`/datenschutz` §10). Jetzt unter Einstellungen → Meine Daten (`/einstellungen/daten`), nur
+für Eltern (`group:manage`). Entschieden 11.10.2026:
+
+- **Übersicht und JSON-Download** (Art. 15, Art. 20): Familie, Einwilligungen, je Profil
+  Aufgaben samt Korrekturen, Lernerkenntnisse und Rückmeldungen im Volltext, Bücher, Dateiliste
+  (ohne Inhalte). Ohne Passwort-Hash und Einladungstoken.
+- **Löschen der ganzen Familie mit dem Familienpasswort**, 5 Fehlversuche pro Familie und
+  Stunde (`deleteByGroup`). Die Kaskade an `groups` nimmt fast alles mit; von Hand gelöscht
+  werden Bücher (`owner_group` steht auf SET NULL) samt PDF und die hochgeladenen Dateien.
+  Feedback bleibt anonym (SET NULL). Einwilligungsnachweise gehen mit.
+- **Nachricht an den Betreiber** als Directus-Notification an das Konto hinter dem App-Token;
+  Directus schickt sie bei `email_notifications` zugleich als Mail. Kein Flow nötig. Enthält
+  den Familiennamen — nach Kenntnisnahme in Directus löschen. Scheitert sie, steht ein `warn`
+  in `logs`, die Löschung läuft trotzdem.
+
+In der Probe mit einer Testfamilie geprüft: Übersicht und Download vollständig, kein Hash im
+Export; falsches Passwort abgewiesen; nach dem Löschen Gruppe, Profil, Mitgliedschaft,
+Einwilligungen, Aufgabe, Korrektur, Lernerkenntnis, Buch und Datei weg, Feedback anonym,
+Notification angelegt, Weiterleitung auf `/login?geloescht`. Nicht geprüft: der Mailversand
+(die Probe hat keinen Mailserver) und der Fall „Kind angemeldet" — Profilsitzungen erzeugt die
+App derzeit nirgends.
+
+**Dateien.** `src/lib/server/repo/familyData.ts`, `src/routes/einstellungen/daten/`,
+`src/routes/einstellungen/+page.svelte`, `src/lib/server/rateLimit.ts`,
+`src/routes/login/`, `src/routes/datenschutz/+page.svelte`
+
 ### Unterstützen-Link für Eltern — 11.10.2026
 
 Wunsch vom 27.09.2026: Eltern sollen den Betrieb freiwillig unterstützen können. Entschieden

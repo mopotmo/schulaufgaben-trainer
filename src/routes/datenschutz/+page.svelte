@@ -165,6 +165,11 @@
 		Einschränkung der Verarbeitung (Art. 18) und Datenübertragbarkeit (Art. 20).
 	</p>
 	<p>
+		Unter <strong>Einstellungen → Meine Daten</strong> sehen Sie, was zu Ihrer Familie gespeichert
+		ist, können alles als Datei herunterladen und den Familienzugang mit allen Daten selbst löschen.
+		Über eine solche Löschung erhält der Betreiber eine kurze Nachricht mit dem Familiennamen.
+	</p>
+	<p>
 		<strong>Die Einwilligung können Sie jederzeit widerrufen</strong>, ohne dass dies die
 		Rechtmäßigkeit der bis dahin erfolgten Verarbeitung berührt. Eine formlose Nachricht an
 		<a href="mailto:{OPERATOR.email}">{OPERATOR.email}</a> genügt. Der Zugang und alle zugehörigen

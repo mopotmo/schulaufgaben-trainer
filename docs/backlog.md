@@ -23,19 +23,34 @@ ausgeschlossen), Abschnitt „Offene Punkte", Nr. 2–5.
 Wunsch vom 27.09.2026: sehen, wie die App genutzt wird.
 
 Kein Tracking im Frontend — harte Regel 4 (keine Analytics) und Regel 5 (nur das
-Session-Cookie). Die Zahlen stecken ohnehin schon in Directus: `exercises`, `corrections`,
-`feedback`, `books` mit Zeitstempeln und Profil- bzw. Gruppenbezug.
+Session-Cookie). Die Zahlen stecken ohnehin schon in Directus.
 
-**Ansatz.** Zuerst das eingebaute Insights-Modul von Directus (Dashboards mit Panels,
-nur für den Admin, kein Code, keine Collection): generierte Blätter und Korrekturen pro Woche,
-aktive Familien, Fächer, Daumen hoch/runter. Reicht das nicht, eine Admin-Seite in der App.
-Nur aggregiert anzeigen, keine Ranglisten einzelner Familien oder Kinder.
+**Entschieden 11.10.2026.**
 
-**Offen.** Welche Fragen sollen die Zahlen beantworten (Kosten je Familie? Welche Fächer?
-Wird korrigiert oder nur generiert?) — danach richten sich die Panels. Eine Auswertung zu
-eigenen Zwecken muss die Datenschutzerklärung nennen, falls sie über den Betrieb hinausgeht.
+- **Je Familie, nicht je Kind.** Gefragt waren die aktivsten Profile; eine Rangliste einzelner
+  Kinder wäre ein neuer Zweck, den die Einwilligungen nicht abdecken. Zweck ist Betrieb und
+  Kosten, Rechtsgrundlage berechtigtes Interesse — `/datenschutz#statistik`.
+- **Directus Insights**, Dashboard „Nutzung" per `scripts/insights-dashboard.ts`: Aufgaben,
+  Korrekturen und aktive Familien (30 Tage und je Woche), Tokens je Woche, Fächer,
+  Rückmeldungen samt Kommentaren, Fehler je Tag.
+- **Rangliste je Familie und Korrekturquote im Terminal**, `npm run statistik` — das
+  Insights-Panel zeigt eine Gruppierung nach `group_id` nur als UUID.
+- **`group_id` an `exercises` und `corrections`**, nur für die Statistik: Directus kann in
+  Aggregaten nicht über eine Relation gruppieren (am 11.10.2026 gegen Produktion getestet,
+  Serverfehler). Der Scope läuft weiter über das Profil. Bestand: `scripts/statistik-group-id.ts`.
+- **Keine Euro-Umrechnung.** `tokens_used` addiert Ein- und Ausgabe (unterschiedlich teuer)
+  und deckt nur Generierung und Korrektur ab, nicht Chat, Nachschärfen, Folgefragen und
+  Buchanalyse. Echte Kosten: Anthropic Console.
 
-**Dateien.** Directus (Insights), ggf. `src/routes/admin/`
+**Stand 11.10.2026.** Schema, Bestand und Dashboard in Produktion (Protokoll in
+`docs/migrationen.md`). **Offen:** nach dem Deploy prüfen, dass neue Aufgaben und Korrekturen
+`group_id` tragen — `npm run statistik` warnt sonst mit „Zeile(n) ohne group_id". Danach nach
+„Erledigt".
+
+**Dateien.** `scripts/insights-dashboard.ts`, `scripts/statistik.ts`,
+`scripts/statistik-group-id.ts`, `src/lib/server/repo/exercises.ts`,
+`src/lib/server/repo/corrections.ts`, `src/lib/server/directus.ts`,
+`src/routes/datenschutz/+page.svelte`, `schema/snapshot.json`
 
 ---
 

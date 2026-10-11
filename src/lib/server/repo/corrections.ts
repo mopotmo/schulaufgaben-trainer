@@ -54,6 +54,8 @@ export async function createCorrection(
 	data: NewCorrection
 ): Promise<Correction> {
 	assertCan(actor, 'correction:create');
-	const { exercise } = await getExercise(actor, exerciseId);
-	return getDirectus().request(createItem('corrections', { ...data, exercise_id: exercise.id }));
+	const { exercise, profile } = await getExercise(actor, exerciseId);
+	return getDirectus().request(
+		createItem('corrections', { ...data, exercise_id: exercise.id, group_id: profile.group_id })
+	);
 }

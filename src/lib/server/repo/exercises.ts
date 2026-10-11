@@ -1,6 +1,7 @@
 /**
- * Aufgaben. `exercises` trägt nur `profile_id` — der Scope läuft also über das Profil
- * und dessen `group_id` (Spec §3.4).
+ * Aufgaben. Der Scope läuft über `profile_id` und die `group_id` des Profils (Spec §3.4).
+ * `exercises.group_id` wird beim Anlegen mitgeschrieben, dient aber nur der
+ * Nutzungsstatistik — für Berechtigungen zählt allein das Profil.
  */
 import { readItem, readItems, createItem, updateItem, deleteItem } from '@directus/sdk';
 import { error } from '@sveltejs/kit';
@@ -96,7 +97,9 @@ export async function createExercise(
 ): Promise<Exercise> {
 	assertCan(actor, 'exercise:create');
 	const profile = await getProfile(actor, profileId);
-	return getDirectus().request(createItem('exercises', { ...data, profile_id: profile.id }));
+	return getDirectus().request(
+		createItem('exercises', { ...data, profile_id: profile.id, group_id: profile.group_id })
+	);
 }
 
 export async function updateExerciseContent(

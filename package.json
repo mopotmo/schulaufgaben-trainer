@@ -13,6 +13,7 @@
 		"schema:check": "node --experimental-strip-types --no-warnings --env-file=.env scripts/schema.ts check",
 		"schema:pull": "node --experimental-strip-types --no-warnings --env-file=.env scripts/schema.ts pull",
 		"schema:apply": "node --experimental-strip-types --no-warnings --env-file=.env scripts/schema.ts apply",
+		"statistik": "node --experimental-strip-types --no-warnings --env-file=.env scripts/statistik.ts",
 		"start": "node build/index.js"
 	},
 	"devDependencies": {

@@ -78,6 +78,8 @@ export type Profile = {
 export type Exercise = {
 	id: string;
 	profile_id: string;
+	/** Nur für die Nutzungsstatistik (Insights). Der Scope läuft weiter über `profile_id`. */
+	group_id: string | null;
 	subject: string;
 	topic: string;
 	teacher_notes: string;
@@ -90,6 +92,8 @@ export type Exercise = {
 export type Correction = {
 	id: string;
 	exercise_id: string;
+	/** Nur für die Nutzungsstatistik (Insights). Der Scope läuft weiter über `exercise_id`. */
+	group_id: string | null;
 	solution_file: string | null;
 	correction_result: string;
 	created_at: string;

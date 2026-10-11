@@ -1529,6 +1529,52 @@
 		},
 		{
 			"collection": "corrections",
+			"field": "group_id",
+			"meta": {
+				"collection": "corrections",
+				"conditions": null,
+				"display": null,
+				"display_options": null,
+				"field": "group_id",
+				"group": null,
+				"hidden": false,
+				"interface": "select-dropdown-m2o",
+				"note": "Familie — nur für die Nutzungsstatistik (Insights, scripts/statistik.ts). Berechtigungen laufen über das Profil.",
+				"options": null,
+				"readonly": true,
+				"required": false,
+				"searchable": true,
+				"sort": 7,
+				"special": [
+					"m2o"
+				],
+				"translations": null,
+				"validation": null,
+				"validation_message": null,
+				"width": "half"
+			},
+			"schema": {
+				"data_type": "uuid",
+				"default_value": null,
+				"foreign_key_column": "id",
+				"foreign_key_table": "groups",
+				"generation_expression": null,
+				"has_auto_increment": false,
+				"is_generated": false,
+				"is_indexed": true,
+				"is_nullable": true,
+				"is_primary_key": false,
+				"is_unique": false,
+				"max_length": null,
+				"name": "group_id",
+				"numeric_precision": null,
+				"numeric_scale": null,
+				"table": "corrections"
+			},
+			"type": "uuid"
+		},
+		{
+			"collection": "corrections",
 			"field": "id",
 			"meta": {
 				"collection": "corrections",
@@ -2121,6 +2167,52 @@
 				"table": "exercises"
 			},
 			"type": "text"
+		},
+		{
+			"collection": "exercises",
+			"field": "group_id",
+			"meta": {
+				"collection": "exercises",
+				"conditions": null,
+				"display": null,
+				"display_options": null,
+				"field": "group_id",
+				"group": null,
+				"hidden": false,
+				"interface": "select-dropdown-m2o",
+				"note": "Familie — nur für die Nutzungsstatistik (Insights, scripts/statistik.ts). Berechtigungen laufen über das Profil.",
+				"options": null,
+				"readonly": true,
+				"required": false,
+				"searchable": true,
+				"sort": 10,
+				"special": [
+					"m2o"
+				],
+				"translations": null,
+				"validation": null,
+				"validation_message": null,
+				"width": "half"
+			},
+			"schema": {
+				"data_type": "uuid",
+				"default_value": null,
+				"foreign_key_column": "id",
+				"foreign_key_table": "groups",
+				"generation_expression": null,
+				"has_auto_increment": false,
+				"is_generated": false,
+				"is_indexed": true,
+				"is_nullable": true,
+				"is_primary_key": false,
+				"is_unique": false,
+				"max_length": null,
+				"name": "group_id",
+				"numeric_precision": null,
+				"numeric_scale": null,
+				"table": "exercises"
+			},
+			"type": "uuid"
 		},
 		{
 			"collection": "exercises",
@@ -4920,6 +5012,31 @@
 			}
 		},
 		{
+			"collection": "corrections",
+			"field": "group_id",
+			"meta": {
+				"junction_field": null,
+				"many_collection": "corrections",
+				"many_field": "group_id",
+				"one_allowed_collections": null,
+				"one_collection": "groups",
+				"one_collection_field": null,
+				"one_deselect_action": "nullify",
+				"one_field": null,
+				"sort_field": null
+			},
+			"related_collection": "groups",
+			"schema": {
+				"column": "group_id",
+				"constraint_name": "corrections_group_id_foreign",
+				"foreign_key_column": "id",
+				"foreign_key_table": "groups",
+				"on_delete": "CASCADE",
+				"on_update": "NO ACTION",
+				"table": "corrections"
+			}
+		},
+		{
 			"collection": "email_tokens",
 			"field": "group_id",
 			"meta": {
@@ -4942,6 +5059,31 @@
 				"on_delete": "CASCADE",
 				"on_update": "NO ACTION",
 				"table": "email_tokens"
+			}
+		},
+		{
+			"collection": "exercises",
+			"field": "group_id",
+			"meta": {
+				"junction_field": null,
+				"many_collection": "exercises",
+				"many_field": "group_id",
+				"one_allowed_collections": null,
+				"one_collection": "groups",
+				"one_collection_field": null,
+				"one_deselect_action": "nullify",
+				"one_field": null,
+				"sort_field": null
+			},
+			"related_collection": "groups",
+			"schema": {
+				"column": "group_id",
+				"constraint_name": "exercises_group_id_foreign",
+				"foreign_key_column": "id",
+				"foreign_key_table": "groups",
+				"on_delete": "CASCADE",
+				"on_update": "NO ACTION",
+				"table": "exercises"
 			}
 		},
 		{

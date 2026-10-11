@@ -71,6 +71,7 @@ wurden nicht datiert festgehalten, das Datum ist das des letzten Commits am Skri
 
 | Datum | Was | Probe | Produktion |
 |---|---|---|---|
+| 11.10.2026 | `exercises.group_id` und `corrections.group_id` (m2o → `groups`, CASCADE, nur für die Statistik); Bestand per `scripts/statistik-group-id.ts` (54 Zeilen in der Probe); Dashboard „Nutzung" per `scripts/insights-dashboard.ts` | ✓ 11.10. | ✓ 11.10. (Backup 17:01 desselben Tages); 54 Zeilen nachgetragen, Dashboard angelegt |
 | 29.09.2026 | `feature_requests` gelöscht (0 Zeilen; Code liest sie seit f9eb5f7 nicht mehr) | ✓ 29.09. | ✓ 29.09. (Backup 08:01 desselben Tages, vor dem Deploy) |
 | 28.09.2026 | `accountability` aller 12 Collections und des Mail-Flows `all` → `activity` (keine Datensatz-Kopien mehr in `directus_revisions`); Directus-Fristen per Umgebung: Revisionen und Flow-Protokolle 1 Tag, Aktivität 90 Tage | ✓ 28.09. | ✓ (am 29.09. per `schema:check` bestätigt, Datum der Anwendung nicht festgehalten) |
 | 27.09.2026 | `consents.type`: Auswahl `insights` (Opt-in Lernerkenntnisse); Daten: Test-Erkenntnis in `learner_insights` gelöscht | ✓ 27.09. | ✓ 27.09. |

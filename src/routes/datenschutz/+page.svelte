@@ -12,7 +12,7 @@
 	import { CONSENT_VERSION } from '$lib/legal';
 </script>
 
-<LegalPage title="Datenschutzerklärung" updated="September 2026">
+<LegalPage title="Datenschutzerklärung" updated="Oktober 2026">
 	<p>Informationen nach Art. 13 DSGVO. Textversion: <code>{CONSENT_VERSION}</code></p>
 
 	<h2>1. Verantwortlicher</h2>
@@ -29,6 +29,7 @@
 		<li>Nur mit gesonderter Einwilligung: Zuschnitt neuer Aufgaben auf Stärken und Schwächen des Kindes (Abschnitt 4)</li>
 		<li>Bestätigung der E-Mail-Adresse und Zusenden eines Links bei vergessenem Passwort</li>
 		<li>Verbesserung der App anhand freiwilliger Rückmeldungen, bei Bedarf mit Rückfrage an die Eltern</li>
+		<li>Nutzungsstatistik für Betrieb und Kostenplanung, nur zusammengefasst (siehe unten)</li>
 	</ul>
 
 	<h2>3. Rechtsgrundlage</h2>
@@ -42,6 +43,16 @@
 		Die Einwilligung gilt für alle Kinder, für die das sorgeberechtigte Elternteil in seinem
 		Familienzugang ein Profil anlegt — auch für solche, die erst später hinzukommen. Beim Anlegen
 		eines weiteren Profils wird die Sorgeberechtigung erneut bestätigt.
+	</p>
+
+	<p id="statistik">
+		<strong>Nutzungsstatistik:</strong> Aus den ohnehin gespeicherten Aufgaben, Korrekturen,
+		Rückmeldungen und Fehlerprotokollen zählt der Betreiber, wie viel die App genutzt wird —
+		insgesamt, je Woche und je Familienzugang (Anzahl erstellter Aufgaben und Korrekturen,
+		Verbrauch des KI-Dienstes). Es werden dafür keine zusätzlichen Daten erhoben, und es gibt
+		keine Auswertung einzelner Kinder. Die Zahlen sieht nur der Betreiber; sie dienen dazu, den
+		Betrieb zu planen, Kosten zu überblicken und Fehler zu erkennen. Rechtsgrundlage ist das
+		berechtigte Interesse am wirtschaftlichen und stabilen Betrieb (Art. 6 Abs. 1 lit. f DSGVO).
 	</p>
 
 	<h2 id="lernerkenntnisse">4. Lernerkenntnisse (freiwillig)</h2>

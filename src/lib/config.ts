@@ -22,6 +22,15 @@ export const OPERATOR = {
 	email: 'mail@schulaufgaben-check.de'
 } as const;
 
+/**
+ * Freiwillige Unterstützung des Betriebs — nur ein Link, kein eingebettetes Widget (harte
+ * Regel 4). Nur in den Einstellungen, nicht in Ansichten der Kinder (UWG, Anhang Nr. 28).
+ */
+export const SUPPORT = {
+	provider: 'Ko-fi',
+	url: 'https://ko-fi.com/manurobledo'
+} as const;
+
 /** Auftragsverarbeiter, in der Datenschutzerklärung namentlich zu nennen (Konzept §3.2). */
 export const PROCESSORS = {
 	ai: { name: 'Anthropic PBC', purpose: 'KI-Generierung und -Korrektur', country: 'USA' },

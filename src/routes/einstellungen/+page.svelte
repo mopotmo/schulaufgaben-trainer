@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { PROJECT, SUPPORT } from '$lib/config';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let loading = $state(false);
@@ -159,5 +160,21 @@
 				</button>
 			</form>
 		{/if}
+	</div>
+
+	<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md mt-6">
+		<h2 class="text-lg font-semibold text-gray-800 mb-2">Unterstützen</h2>
+		<p class="text-sm text-gray-600 mb-4">
+			{PROJECT.name} ist kostenlos, KI und Server kosten aber Geld. Wer mag, kann den Betrieb
+			mit einem freiwilligen Beitrag unterstützen.
+		</p>
+		<a
+			href={SUPPORT.url}
+			target="_blank"
+			rel="noopener noreferrer"
+			class="block w-full text-center border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold py-2.5 rounded-xl transition-colors"
+		>
+			Bei {SUPPORT.provider} unterstützen
+		</a>
 	</div>
 </main>

@@ -18,27 +18,6 @@ ausgeschlossen), Abschnitt „Offene Punkte", Nr. 2–5.
 
 ---
 
-### Donate-Button
-
-Eltern sollen den Betrieb freiwillig unterstützen können (Wunsch vom 27.09.2026).
-
-Rahmen, der schon feststeht:
-
-- **Nur ein Link**, kein eingebettetes Widget oder SDK — harte Regel 4 (keine externen
-  Ressourcen, sonst Cookie-Banner). Ziel z. B. PayPal.me, Ko-fi oder Buy Me a Coffee.
-- **Nur für Eltern sichtbar**, also in der Familiensitzung, nicht in Ansichten der Kinder.
-  Eine direkte Zahlungsaufforderung an Kinder ist unlauter (UWG, Anhang Nr. 28).
-- **Nicht „Spende" nennen**, solange kein gemeinnütziger Träger dahintersteht — das Wort
-  weckt die Erwartung einer Spendenquittung. „Unterstützen" oder „Kaffee spendieren".
-
-**Offen.** Anbieter, Platzierung (Startseite, Einstellungen, Fußzeile), ob die
-Datenschutzerklärung den externen Anbieter nennen muss (reiner Link: eher nein).
-
-**Dateien.** `src/routes/+page.svelte` oder `src/routes/einstellungen/+page.svelte`,
-`src/lib/config.ts` (Link)
-
----
-
 ### Statistiken über die Nutzung
 
 Wunsch vom 27.09.2026: sehen, wie die App genutzt wird.
@@ -92,6 +71,22 @@ Schulart zurückstellen?
 `src/lib/server/repo/profiles.ts`, `src/lib/retention.ts`, `schema/snapshot.json`
 
 ## Erledigt
+
+### Unterstützen-Link für Eltern — 11.10.2026
+
+Wunsch vom 27.09.2026: Eltern sollen den Betrieb freiwillig unterstützen können. Entschieden
+11.10.2026: Ko-fi, Platz in den Einstellungen.
+
+- **Nur in den Einstellungen.** Die Startseite läuft zwar in der Familiensitzung, dort wählen
+  aber die Kinder ihr Profil — eine Zahlungsaufforderung an Kinder ist unlauter (UWG, Anhang
+  Nr. 28). `/einstellungen` ist über `group:manage` ohnehin Elternsache.
+- **Nur ein Link** (harte Regel 4), neuer Tab, `rel="noopener noreferrer"` — Ko-fi sieht nicht,
+  von welcher Seite der Besuch kommt. Text sagt „Unterstützen", nicht „Spende" (kein
+  gemeinnütziger Träger, keine Spendenquittung).
+- **Datenschutzerklärung unverändert:** Die App übermittelt nichts an Ko-fi; was dort passiert,
+  geschieht erst nach dem Klick auf deren Seite.
+
+**Dateien.** `src/lib/config.ts` (`SUPPORT`), `src/routes/einstellungen/+page.svelte`
 
 ### `feature_requests` gelöscht — 29.09.2026
 

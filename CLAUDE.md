@@ -13,7 +13,8 @@ Vor größeren Änderungen lesen:
 - `docs/klassen-freigabe-konzept.md` — rechtlicher Rahmen, Rollenmodell, Gesamtplan
 - `docs/spec-gruppen-rollen-einwilligung.md` — konkrete Umsetzungs-Spec für den aktuellen Umbau
 
-Kleinere Punkte ohne eigenes Konzept stehen in `docs/backlog.md`.
+Offene Punkte ohne eigenes Konzept stehen in den GitHub Issues (`gh issue list`), Erledigtes bis
+Oktober 2026 in `docs/backlog.md`.
 
 ## Harte Regeln
 
@@ -50,6 +51,12 @@ Kleinere Punkte ohne eigenes Konzept stehen in `docs/backlog.md`.
   Der erste echte Lauf geht gegen eine lokal wiederhergestellte Kopie, erst dann Produktion.
 - Nach größeren Änderungen `npm run build` und `npm run check` laufen lassen.
 - Mehrere Lösungsansätze vorschlagen, wenn es mehr als einen sinnvollen gibt.
+- **Offene Punkte pflegen wir in GitHub Issues**: neu anlegen, dort fortschreiben, beim Abschluss
+  mit Ergebnis schließen. Ins Repo kommt nur, was dauerhaft gebraucht wird (Regeln, Abläufe,
+  Entscheidungen), mit Verweis auf das Issue.
+- **Das Repo ist öffentlich, Issues also auch.** Keine Namen von Kindern oder Familien, keine
+  Kontaktdaten, keine Nutzungszahlen je Familie, keine Details zu Sicherheitslücken. Solche
+  Details gehören in `docs/vvt-tom.md` (nur lokal), das Issue verweist nur darauf.
 
 ## Bekannte offene Punkte
 
@@ -76,4 +83,4 @@ Es gibt keine App-UI zum Einladen — so gewollt.
 
 Offen:
 
-- Übrige Punkte aus Stufe 0 und 2: `docs/klassen-freigabe-konzept.md` §6/§7 und `docs/backlog.md`.
+- GitHub Issues (`gh issue list`), dazu die Rechtsfragen in `docs/klassen-freigabe-konzept.md` §7.

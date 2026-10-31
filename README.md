@@ -105,7 +105,8 @@ in [`CLAUDE.md`](CLAUDE.md).
 - [`docs/migrationen.md`](docs/migrationen.md) – wie sich das Datenmodell ändert, mit Protokoll
 - [`docs/backup-und-restore.md`](docs/backup-und-restore.md) – Sicherung, Wiederherstellung,
   lokale Probeumgebung
-- [`docs/backlog.md`](docs/backlog.md) – offene und erledigte kleinere Punkte
+- [GitHub Issues](https://github.com/mopotmo/schulaufgaben-trainer/issues) – offene Punkte
+- [`docs/backlog.md`](docs/backlog.md) – Archiv erledigter Punkte bis Oktober 2026
 
 ## Betrieb
 

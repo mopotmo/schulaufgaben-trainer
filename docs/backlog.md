@@ -1,24 +1,15 @@
-# Backlog
+# Backlog-Archiv
 
-Kleinere Punkte, die kein eigenes Konzept brauchen. Größere Vorhaben stehen in
-`klassen-freigabe-konzept.md` (Stufen 0–2) und `spec-gruppen-rollen-einwilligung.md`.
-
-Konvention: ein Abschnitt pro Punkt, mit Ursache und betroffenen Dateien — damit man
-nicht beim Anfassen erst wieder diagnostizieren muss. Erledigtes wandert nach unten.
-
----
-
-## Offen
-
-### Server härten
-
-Aus der Prüfung am Server für VVT/TOM am 27.09.2026; betrifft den ganzen Server, nicht nur
-diese App. Einzelheiten im internen Dokument `docs/vvt-tom.md` (nur lokal, per `.gitignore`
-ausgeschlossen), Abschnitt „Offene Punkte", Nr. 2–5.
+Offene Punkte stehen seit dem 31.10.2026 in den
+[GitHub Issues](https://github.com/mopotmo/schulaufgaben-trainer/issues). Hier bleibt, was man
+später noch braucht: erledigte Punkte aus der Zeit davor, mit Ursache, Entscheidung und
+betroffenen Dateien. Neue Punkte kommen nicht mehr hierher.
 
 ---
 
-### Statistiken über die Nutzung
+## Erledigt
+
+### Statistiken über die Nutzung — 11.10.2026
 
 Wunsch vom 27.09.2026: sehen, wie die App genutzt wird.
 
@@ -42,79 +33,13 @@ Session-Cookie). Die Zahlen stecken ohnehin schon in Directus.
   und deckt nur Generierung und Korrektur ab, nicht Chat, Nachschärfen, Folgefragen und
   Buchanalyse. Echte Kosten: Anthropic Console.
 
-**Stand 11.10.2026.** Schema, Bestand und Dashboard in Produktion (Protokoll in
-`docs/migrationen.md`). **Offen:** nach dem Deploy prüfen, dass neue Aufgaben und Korrekturen
-`group_id` tragen — `npm run statistik` warnt sonst mit „Zeile(n) ohne group_id". Danach nach
-„Erledigt".
+Schema, Bestand und Dashboard am 11.10.2026 in Produktion (Protokoll in `docs/migrationen.md`).
+Am 31.10.2026 geprüft: Alle 15 Aufgaben und 12 Korrekturen seit dem Deploy tragen `group_id`.
 
 **Dateien.** `scripts/insights-dashboard.ts`, `scripts/statistik.ts`,
 `scripts/statistik-group-id.ts`, `src/lib/server/repo/exercises.ts`,
 `src/lib/server/repo/corrections.ts`, `src/lib/server/directus.ts`,
 `src/routes/datenschutz/+page.svelte`, `schema/snapshot.json`
-
----
-
-### Schuljahreswechsel: Klassen hochstufen oder nachfragen
-
-Wunsch vom 27.09.2026. `profiles.grade` ist eine feste Zahl und bleibt über den
-Schuljahreswechsel stehen — Aufgaben würden danach für die alte Jahrgangsstufe erzeugt. Für
-die bestehenden Familien stuft der Betreiber zum Schuljahr 2026/27 von Hand um; gebaut werden
-muss es bis zum nächsten Wechsel (Sommer 2027).
-
-Einfach hochzählen reicht nicht: Wiederholung, Übertritt nach der 4. Klasse (Grundschule →
-Gymnasium, Real- oder Mittelschule), Wechsel der Schulart, Abschluss nach der letzten Stufe.
-Deshalb nachfragen statt still ändern.
-
-**Ansatz.**
-
-- Ein Feld am Profil, für welches Schuljahr die Stufe bestätigt ist (z. B.
-  `profiles.grade_school_year`, Wert `2026/27`) — über den Snapshot-Weg. Das Schuljahr kommt
-  aus `schoolYearEnd` in `src/lib/retention.ts` (Wechsel am 31.08., wie bei den Büchern).
-- Ab dem 1. September fragt die Startseite die Eltern für jedes Profil mit altem Schuljahr:
-  „Ist Jakob jetzt in Klasse 9?" — vorausgewählt die nächste Stufe, änderbar samt Schulart.
-  Behutsam formulieren, eine Wiederholung ist ein gleichwertiger Knopf, kein Sonderfall.
-- Nur Eltern (Familiensitzung, `profile:update`), nicht in Ansichten der Kinder.
-- Bis zur Antwort nicht blockieren, sondern beim Generieren auf die unbestätigte Stufe
-  hinweisen.
-
-**Offen.** Was passiert nach der letzten Stufe (Profil archivieren, löschen, Hinweis)?
-Bundesländer mit abweichendem Schuljahresbeginn — reicht der 1. September als Stichtag? Die
-Lernerkenntnisse gelten je Fach und bleiben; soll die Generierung sie nach einem Wechsel der
-Schulart zurückstellen?
-
-**Dateien.** `src/routes/+page.svelte`, `src/routes/+page.server.ts`,
-`src/lib/server/repo/profiles.ts`, `src/lib/retention.ts`, `schema/snapshot.json`
-
----
-
-### Fächer im Bestand vereinheitlichen
-
-Gesehen am 11.10.2026 im Insights-Panel „Fächer": `Mathe`, `Mathematik` und `mathematik`
-stehen getrennt, `Latein ` mit angehängtem Leerzeichen ebenso. Das Fach ist Freitext; seit
-22.09.2026 schlägt das Formular die schon benutzten Fächer vor (siehe „Lernerkenntnisse fanden
-sich wegen Freitext nicht wieder"), der Bestand davor ist aber uneinheitlich. Folgen: Die
-Auswertung je Fach ist kaum brauchbar, und die Vorschlagsliste bietet alte Schreibweisen
-weiter an.
-
-**Ansatz.** Einmaliges Skript in `scripts/` mit `--dry` (Gerüst `scripts/lib/cli.ts`):
-Leerzeichen trimmen, dann eine feste Zuordnung auf eine Schreibweise (`Mathe`/`mathematik`
-→ `Mathematik` usw.). Die Liste zeigt der Trockenlauf; Fächer, die keiner Zuordnung
-entsprechen, nur melden, nicht raten.
-
-**Offen.**
-
-- Welche Schreibweise gilt jeweils („Mathematik" oder „Mathe")?
-- `learner_insights` hat ein Feld `subject` und einen Datensatz je Profil und Fach. Hat ein
-  Kind Erkenntnisse unter `Mathe` *und* `Mathematik`, entstehen beim Umbenennen zwei
-  Datensätze zum selben Fach — zusammenführen (Inhalt per Modell?) oder den älteren verwerfen?
-- `books.subject` mitziehen, oder bleibt das unabhängig?
-- An der Quelle: reicht die Vorschlagsliste, oder ein festes Fächerverzeichnis (Auswahl statt
-  Freitext)? Dann wäre das Skript eine Übergangslösung.
-
-**Dateien.** neues Skript in `scripts/`, ggf. `src/routes/generieren/+page.svelte`,
-`src/lib/server/repo/exercises.ts` (`listSubjects`), `src/lib/server/repo/insights.ts`
-
-## Erledigt
 
 ### Eltern-Bereich „Meine Daten" — 11.10.2026
 

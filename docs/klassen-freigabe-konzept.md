@@ -341,15 +341,15 @@ Der Klassenbeitritt (früher Nr. 14) ist am 20.09.2026 aus Stufe 1 herausgenomme
 
 ### Stufe 2 — nach dem Start
 
-- Self-Service-Registrierung (Double-Opt-In ist seit 25.09.2026 umgesetzt, §3.3) — vorerst
-  bewusst nicht: neue Familien legt nur der Admin in Directus an
-- Klassenbeitritt über Einladungscode — braucht vorher Sichtbarkeitsregeln in der Klasse und einen
-  eigenen `consents`-Typ (§3.3, Spec §10.2). Vorbereitet: Spalte `groups.invite_code` (ungenutzt),
-  `Actor.groupIds` als Array in `src/lib/server/authz.ts`
-- Eltern-Bereich „Meine Daten ansehen / alles löschen" — erledigt 11.10.2026: `/einstellungen/daten`
-  mit Übersicht, JSON-Download und Löschen der ganzen Familie (`src/lib/server/repo/familyData.ts`)
-- Aktivitäts-Feed für die Klasse — nur Opt-in, nur Vornamen
-- Lehrer-Rolle, erst mit Freigabe durch die Schule
+Offene Vorhaben werden seit dem 31.10.2026 in GitHub Issues gepflegt:
+
+- [Self-Service-Registrierung (#7)](https://github.com/mopotmo/schulaufgaben-trainer/issues/7) — zurückgestellt
+- [Klassenbeitritt über Einladungscode (#8)](https://github.com/mopotmo/schulaufgaben-trainer/issues/8)
+- [Aktivitäts-Feed für die Klasse (#9)](https://github.com/mopotmo/schulaufgaben-trainer/issues/9)
+- [Lehrer-Rolle (#10)](https://github.com/mopotmo/schulaufgaben-trainer/issues/10) — erst mit Freigabe durch die Schule
+
+Erledigt: Eltern-Bereich „Meine Daten ansehen / alles löschen" (11.10.2026, `/einstellungen/daten`,
+`src/lib/server/repo/familyData.ts`).
 
 **Reihenfolge:** Stufe 1 zuerst (9–13), dann Stufe 0 draufsetzen (1–8), dann freigeben. Das
 Consent-Gate an eine Datenstruktur zu hängen, die zwei Tage später umbenannt wird, ist doppelte
@@ -380,6 +380,6 @@ Arbeit. Die Rechtstexte (1) hängen an keiner Tabelle und können parallel entst
 
 **Offen:**
 
-- Stufe 2 (§6), dazu die kleineren Punkte in `docs/backlog.md`
+- Stufe 2 und die kleineren Punkte: [GitHub Issues](https://github.com/mopotmo/schulaufgaben-trainer/issues)
 - **KI-VO, Anhang III Nr. 3 Buchst. b**: Ist die Korrektur- und Notenfunktion eine
   „Bewertung von Lernergebnissen"? Argumente in §3.8. Für den Anwaltstermin.

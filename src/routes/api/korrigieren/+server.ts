@@ -150,38 +150,66 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	let result = '';
 	let tokensUsed = 0;
 
-	try {
-		const stream = await anthropic.messages.stream({
-			model: 'claude-opus-4-8',
-			max_tokens: mode.taskKind === 'free_text' ? 8192 : 4096,
-			thinking: { type: 'adaptive' },
-			// Erzwungene Werkzeugwahl verträgt sich nicht mit Thinking — deshalb `auto` und die
-			// Anweisung, das Werkzeug zu benutzen. Ohne Werkzeugaufruf kein Ergebnis.
-			...(mode.hintsOnly ? { tools: [HINTS_TOOL], tool_choice: { type: 'auto' as const } } : {}),
-			system: [
-				'Du bist ein korrigierender Lehrer. Sei konstruktiv, ermutigend, aber präzise bei Fehlern.',
-				mode.hintsOnly ? HINTS_ONLY_CHAT : ''
-			]
-				.filter(Boolean)
-				.join('\n\n'),
-			messages: [{ role: 'user', content: userContent }]
-		});
+	const system = [
+		'Du bist ein korrigierender Lehrer. Sei konstruktiv, ermutigend, aber präzise bei Fehlern.',
+		mode.hintsOnly ? HINTS_ONLY_CHAT : ''
+	]
+		.filter(Boolean)
+		.join('\n\n');
+	const usage = (m: Anthropic.Message) => (m.usage.input_tokens ?? 0) + (m.usage.output_tokens ?? 0);
+	const logContext = {
+		exerciseId,
+		mode: useSheet ? 'sheet' : hasMeta ? 'browser' : hasText ? 'text' : 'scan',
+		hintsOnly: mode.hintsOnly
+	};
 
-		const message = await stream.finalMessage();
-		if (mode.hintsOnly) {
-			const call = message.content.find((b) => b.type === 'tool_use');
-			if (!call) throw new Error(`Keine Werkzeugantwort (stop_reason: ${message.stop_reason})`);
-			result = renderHints(call.input);
-		} else {
+	try {
+		const message = await anthropic.messages
+			.stream({
+				model: 'claude-opus-4-8',
+				// Mit Thinking geht ein Teil des Budgets ans Nachdenken; reicht der Rest nicht, bricht
+				// der Werkzeugaufruf ab und kommt leer an.
+				max_tokens: mode.hintsOnly ? 16000 : mode.taskKind === 'free_text' ? 8192 : 4096,
+				thinking: { type: 'adaptive' },
+				// Erzwungene Werkzeugwahl verträgt sich nicht mit Thinking — deshalb `auto` und die
+				// Anweisung, das Werkzeug zu benutzen.
+				...(mode.hintsOnly ? { tools: [HINTS_TOOL], tool_choice: { type: 'auto' as const } } : {}),
+				system,
+				messages: [{ role: 'user', content: userContent }]
+			})
+			.finalMessage();
+		tokensUsed = usage(message);
+
+		if (!mode.hintsOnly) {
 			result = finalText(message);
+		} else {
+			const call = message.content.find((b) => b.type === 'tool_use');
+			try {
+				result = renderHints(call?.input);
+			} catch (e) {
+				// Zweiter Versuch: Werkzeug erzwungen, ohne Thinking. Lieber etwas weniger gründlich
+				// als gar keine Korrektur.
+				await logError('api/korrigieren/hinweise', e, {
+					...logContext,
+					stopReason: message.stop_reason,
+					input: JSON.stringify(call?.input ?? null).slice(0, 500)
+				});
+				const retry = await anthropic.messages
+					.stream({
+						model: 'claude-opus-4-8',
+						max_tokens: 8192,
+						tools: [HINTS_TOOL],
+						tool_choice: { type: 'tool', name: HINTS_TOOL.name },
+						system,
+						messages: [{ role: 'user', content: userContent }]
+					})
+					.finalMessage();
+				tokensUsed += usage(retry);
+				result = renderHints(retry.content.find((b) => b.type === 'tool_use')?.input);
+			}
 		}
-		tokensUsed = (message.usage.input_tokens ?? 0) + (message.usage.output_tokens ?? 0);
 	} catch (e) {
-		await logError('api/korrigieren', e, {
-			exerciseId,
-			mode: useSheet ? 'sheet' : hasMeta ? 'browser' : hasText ? 'text' : 'scan',
-			hintsOnly: mode.hintsOnly
-		});
+		await logError('api/korrigieren', e, logContext);
 		error(502, 'Fehler bei der Korrektur');
 	}
 

@@ -17,11 +17,13 @@ bekommt dieselbe Art Rückmeldung wie bei einer Trainer-Aufgabe.
 |---|---|
 | Ansatz | **A** — fremde Aufgabe als `exercises`-Datensatz mit `origin` (§3) |
 | Wer darf das | Kinder **und** Eltern (Rechte `exercise:create`/`correction:create` gibt es für beide) |
-| Fehler in der Lösung | **Nur Hinweise**, keine vollständige Lösung; das Kind bessert nach (§4.4) |
+| Fehler in der Lösung | **Nur Hinweise** statt vollständiger Lösung, das Kind bessert nach. **Pro Profil einstellbar**, gilt dann für fremde *und* generierte Aufgaben (§4.4, §4.7) |
 | Einstieg | **Eigener Menüpunkt** (§4) |
 | Mehrere Fotos | **Alle speichern**, auch bei der bestehenden Korrektur und beim Aufgabenblatt der Generierung (§4.5) |
 | Freie Textaufgaben | **Mit abdecken** — Aufsatz, Erörterung, Übersetzung (§4.6) |
 | `CONSENT_VERSION` | **Keine neue** Version; Nutzungsbedingungen werden ergänzt, ohne Neueinwilligung |
+| Mehrere Fotos, Ablage | **Zwei Junctions** `exercises_files`, `corrections_files` (Ansatz M, §4.5) |
+| Aufgabentyp | **Eigenes Feld** `exercises.task_kind` (§4.6) |
 
 ---
 
@@ -138,10 +140,12 @@ eine Aufgabe immer einem Profil gehört. `profil` aus der Query wird wie überal
 
 ### 4.4 Hinweise statt Lösung, Nachbessern
 
-Entschieden: Bei fremden Aufgaben zeigt die Korrektur **nicht die richtige Lösung**. Hausaufgaben
-sollen selbst gelöst werden; eine fertige Lösung zum Abschreiben wäre das Gegenteil.
+Ist für das Profil „nur Hinweise" eingestellt (§4.7), zeigt die Korrektur **nicht die richtige
+Lösung** — bei fremden wie bei generierten Aufgaben. Hausaufgaben sollen selbst gelöst werden;
+eine fertige Lösung zum Abschreiben wäre das Gegenteil. Ist die Einstellung aus, erklärt die
+Korrektur wie heute auch die richtige Lösung.
 
-- Je Teilaufgabe: richtig / teilweise richtig / falsch, **wo** der Fehler steckt (Zeile,
+- Je Teilaufgabe: richtig / teilweise richtig / falsch (bei generierten Aufgaben mit Punkten), **wo** der Fehler steckt (Zeile,
   Rechenschritt, Satz) und ein **Hinweis**, der in die richtige Richtung zeigt, ohne das
   Ergebnis zu nennen. Beispiel: „Prüf noch mal das Vorzeichen beim Ausmultiplizieren der
   zweiten Klammer" statt „richtig wäre −6x".
@@ -153,8 +157,9 @@ sollen selbst gelöst werden; eine fertige Lösung zum Abschreiben wäre das Geg
   wird eine weitere Zeile in `corrections` zur selben Aufgabe. Der Prompt bekommt die vorige
   Korrektur mit und bewertet nur noch die offenen Teilaufgaben. Heute geht das UI von genau
   einer Korrektur je Aufgabe aus (`hasCorrection`, „Bereits korrigiert") — für `external`
-  aufheben, die Historie zeigt dann alle Durchgänge.
-- **Rückfragen-Chat:** Der Chat zur Korrektur (`/api/chat`) bekommt bei `external` dieselbe
+  und bei „nur Hinweise" aufheben, die Historie zeigt dann alle Durchgänge. Das betrifft auch
+  `/loesen` und den Lösen-Teil von `/generieren`.
+- **Rückfragen-Chat:** Der Chat zur Korrektur (`/api/chat`) und `/api/folgefrage` bekommen bei „nur Hinweise" dieselbe
   Vorgabe — erklären, Fragen stellen, Lösung nicht verraten. Sonst ist der Chat der Weg um
   die Regel herum.
 - Wie viele Durchgänge? Kein festes Limit vorgesehen; die Tokenkosten fallen je Durchgang an.
@@ -218,7 +223,22 @@ es kein „richtig/falsch" je Teilaufgabe.
 - Insights: Hinweise aus Aufsätzen sind für `learner_insights` wertvoll (wiederkehrende
   Fehler), laufen aber wie bisher nur mit Opt-in.
 
-### 4.7 Nachgelagerte Funktionen
+### 4.7 Einstellung „Nur Hinweise" je Profil
+
+- Neues Feld `profiles.hints_only` (Boolean, nicht null).
+- Einstellen dürfen **nur Eltern** (`profile:update`; `learner` hat das Recht nicht — sonst
+  schaltet das Kind es selbst ab). Ort: `/einstellungen`, je Kinderprofil ein Schalter.
+  Heute gibt es dort keine Profilbearbeitung; `updateProfile` existiert im Repo, wird aber von
+  keiner Route genutzt.
+- Gelesen wird die Einstellung **serverseitig** aus dem Profil der Aufgabe
+  (`getExercise` → `profile`), nie aus dem Formular. Sonst könnte das Kind sie per Request
+  umgehen (harte Regel 2 sinngemäß).
+- Wirkt auf: Korrektur-Prompt und Ausgabeformat (§4.4), Chat, Folgefrage, Nachbessern.
+  Generierte Aufgaben enthalten ohnehin keine Musterlösungen (Prompt in `/api/generieren`).
+- Bereits gespeicherte Korrekturen bleiben, wie sie sind; die Einstellung wirkt ab der nächsten
+  Korrektur.
+
+### 4.8 Nachgelagerte Funktionen
 
 | Funktion | Verhalten bei `external` |
 |---|---|
@@ -266,10 +286,11 @@ Zwei getrennte Migrationen, in dieser Reihenfolge:
 4. Erst danach `source_file`/`solution_file` in der Probe löschen, `schema:pull`, `schema:apply
    --mit-loeschen`.
 
-**6b — Fremde Aufgaben**
+**6b — Fremde Aufgaben und Hinweis-Modus**
 
 1. In der Probe: `exercises.origin`, Typ String, Dropdown `generated`/`external`,
-   Default `generated`, nicht null; ggf. `exercises.task_kind` (§4.6).
+   Default `generated`, nicht null; `exercises.task_kind` (`structured`/`free_text`, Default
+   `structured`, nicht null); `profiles.hints_only` (Boolean, Default siehe §8).
 2. `npm run schema:pull`, committen; Typ `Exercise` in `src/lib/server/directus.ts` ergänzen.
 3. Bestand: Default greift für neue Zeilen; vorhandene Zeilen per idempotentem Skript
    (`scripts/`, `--dry`) auf `generated` setzen, falls Directus den Default nicht nachträgt.
@@ -285,11 +306,12 @@ Keine neuen Berechtigungen: `learner` und Eltern haben schon `exercise:create` u
 Schritt 1 lässt sich unabhängig ausliefern und behebt einen bestehenden Mangel.
 
 1. **Mehrere Fotos** (§4.5, §6a) — für Generierung und bestehende Korrektur
-2. Schema `origin` (§6b); `createExercise`/`listExercises` erweitern
+2. Schema `origin`, `task_kind`, `hints_only` (§6b); Repo-Funktionen und Typen erweitern;
+   Schalter „Nur Hinweise" je Profil in `/einstellungen`
 3. Route `/eigene-aufgabe`, Menüpunkt auf der Profilkarte
 4. Endpunkt Transkription + Prüfansicht (bei `free_text` inkl. Lösungstranskript)
-5. Korrektur-Prompt nach `origin` und Aufgabentyp, strukturierte Hinweise statt Lösung (§4.4,
-   §4.6); Chat-Vorgabe
+5. Korrektur-Prompt nach `origin`, `task_kind` und `hints_only`, strukturierte Hinweise statt
+   Lösung (§4.4, §4.6); Vorgabe für Chat und Folgefrage
 6. Nachbessern: mehrere Korrekturen je Aufgabe, Historie zeigt Durchgänge
 7. Historie-Kennzeichnung, Folgefrage/Nachschärfen/PDF ausblenden
 8. Hinweise (Upload, Prüfansicht), Nutzungsbedingungen, Datenschutzerklärung, `vvt-tom.md`
@@ -297,7 +319,7 @@ Schritt 1 lässt sich unabhängig ausliefern und behebt einen bestehenden Mangel
 
 ## 8. Offene Fragen
 
-- [ ] Mehrere Fotos: Ansatz M (zwei Junctions) bestätigen?
-- [ ] Hinweise statt Lösung nur bei fremden Aufgaben — oder auch bei den vom Trainer
-      generierten Übungen? (Heute erklären die Korrekturen dort auch die richtige Lösung.)
-- [ ] `task_kind` als eigenes Feld oder nur im Prompt ableiten?
+- [ ] Default für `profiles.hints_only`: Empfehlung **an** für neue Profile (passt zur
+      Entscheidung, dass Hausaufgaben nicht vorgelöst werden). Bestehende Profile: **aus**
+      lassen, damit sich für laufende Profile nichts unbemerkt ändert, und die Eltern per Hinweis
+      in den Einstellungen auf den neuen Schalter aufmerksam machen — oder ebenfalls an?

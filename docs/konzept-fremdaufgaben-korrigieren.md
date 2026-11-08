@@ -1,6 +1,6 @@
 # Fremde Aufgaben korrigieren (Hausaufgaben, Übungsblätter)
 
-Stand: 08.11.2026 · Status: **Konzept, nicht umgesetzt** · Issue: #11
+Stand: 08.11.2026 · Status: **Konzept, Grundsatzfragen entschieden, nicht umgesetzt** · Issue: #11
 
 Bisher korrigiert der Trainer nur Aufgaben, die er selbst erzeugt hat: Die Korrektur bekommt
 `exercises.generated_content` als Aufgabenstellung samt Punkten. Neu: Ein Kind (oder ein
@@ -10,6 +10,18 @@ bekommt dieselbe Art Rückmeldung wie bei einer Trainer-Aufgabe.
 
 > Kein Rechtsrat. Die Punkte in §5 gehören zu den offenen Rechtsfragen in
 > `docs/klassen-freigabe-konzept.md` §7.
+
+## 0. Entscheidungen (08.11.2026)
+
+| Frage | Entscheidung |
+|---|---|
+| Ansatz | **A** — fremde Aufgabe als `exercises`-Datensatz mit `origin` (§3) |
+| Wer darf das | Kinder **und** Eltern (Rechte `exercise:create`/`correction:create` gibt es für beide) |
+| Fehler in der Lösung | **Nur Hinweise**, keine vollständige Lösung; das Kind bessert nach (§4.4) |
+| Einstieg | **Eigener Menüpunkt** (§4) |
+| Mehrere Fotos | **Alle speichern**, auch bei der bestehenden Korrektur und beim Aufgabenblatt der Generierung (§4.5) |
+| Freie Textaufgaben | **Mit abdecken** — Aufsatz, Erörterung, Übersetzung (§4.6) |
+| `CONSENT_VERSION` | **Keine neue** Version; Nutzungsbedingungen werden ergänzt, ohne Neueinwilligung |
 
 ---
 
@@ -31,12 +43,13 @@ bekommt dieselbe Art Rückmeldung wie bei einer Trainer-Aufgabe.
 3. **Aufgabe abgetippt** — Kind tippt die Aufgabenstellung ab oder kopiert sie, löst im Browser.
 4. **Mehrseitig** — zwei, drei Seiten Arbeitsblatt.
 
-Nicht im Umfang: Aufsätze/Erörterungen mit ausführlicher Textkritik (geht technisch, braucht aber
-einen eigenen Prompt und eine eigene Diskussion), Klassenarbeiten mit echter Note der Lehrkraft.
+5. **Freie Textaufgabe** — Aufsatz, Erörterung, Bildbeschreibung, Übersetzung (§4.6).
+
+Nicht im Umfang: Klassenarbeiten mit echter Note der Lehrkraft.
 
 ## 3. Lösungsansätze
 
-### A — Fremde Aufgabe als `exercises`-Datensatz mit Herkunft *(Empfehlung)*
+### A — Fremde Aufgabe als `exercises`-Datensatz mit Herkunft *(entschieden)*
 
 Neues Feld `exercises.origin` (`generated` | `external`, Default `generated`). Eine fremde
 Aufgabe wird beim Hochladen zu einem normalen Aufgaben-Datensatz: Das Modell **transkribiert**
@@ -71,7 +84,7 @@ Aufgabenstellung.
 ## 4. Ablauf (Ansatz A)
 
 ```
-/korrigieren?profil=…  ──►  „Eigene Aufgabe korrigieren"
+Startseite, Profilkarte  ──►  neuer Menüpunkt „Eigene Aufgabe"  ──►  /eigene-aufgabe?profil=…
         │
         ▼
 1. Aufgabe erfassen        Fotos (Aufgabe, ggf. mit Lösung) oder Text
@@ -88,7 +101,16 @@ Aufgabenstellung.
         │                  Lösung schon auf dem Aufgabenfoto ist
         ▼
 5. Korrektur               POST /api/korrigieren mit exerciseId — wie bisher, Prompt je nach origin
+        │
+        ▼
+6. Nachbessern             nur bei external: Hinweise lesen, korrigierte Lösung erneut
+                           einreichen → zweite Korrektur zur selben Aufgabe (§4.4)
 ```
+
+Der Menüpunkt sitzt neben „Generieren", „Korrigieren" und „Historie" auf der Profilkarte, weil
+eine Aufgabe immer einem Profil gehört. `profil` aus der Query wird wie überall per
+`getProfile(actor, …)` geprüft. Die Route bekommt eine eigene Seite statt eines Modus von
+`/korrigieren`; die Korrektur selbst läuft trotzdem über denselben Endpunkt.
 
 ### 4.1 Transkription (neuer Endpunkt)
 
@@ -99,33 +121,114 @@ Aufgabenstellung.
   vgl. #6).
 - Ausgabe strukturiert (Tool-Use/JSON): `content`, `subject`, `topic`, `solution_on_sheet: boolean`,
   `unreadable: string[]` (Stellen, die das Modell nicht lesen konnte — in der Prüfansicht markieren).
-- Bilder bleiben im Request für Schritt 5 erhalten (Client hält sie), damit nicht zweimal
-  hochgeladen werden muss. Gespeichert wird wie bisher in `source_file` — dabei gleich das
-  Problem „nur erste Datei" angehen oder bewusst so lassen (offene Frage).
+- Die Fotos werden beim Erfassen gespeichert und hängen an der Aufgabe (§4.5). Liegt die
+  Lösung mit auf dem Blatt, verweist die Korrektur in Schritt 5 auf dieselben Dateien, statt
+  sie erneut hochzuladen.
 
 ### 4.2 Korrektur-Prompt für `origin = 'external'`
 
 - **Keine Punkte vorgegeben** → Format „Richtig / Teilweise richtig / Falsch" je Teilaufgabe,
   keine Punktsumme, kein Prozentsatz.
 - Keine Musterlösung vorhanden: Das Modell löst selbst. Im Prompt ausdrücklich: bei
-  Unsicherheit sagen, statt als falsch zu werten; Rechenweg zeigen.
+  Unsicherheit sagen, statt als falsch zu werten. Die eigene Lösung dient nur dem Abgleich und
+  wird nicht ausgegeben.
 - Optional: Lösungen aus dem Buchanhang als zusätzliches Foto („Lösungsblatt"), dann wird
   dagegen geprüft.
-- Hausaufgabe heißt oft: Das Kind soll es selbst können. Die Korrektur erklärt Fehler, gibt
-  aber **nicht die komplette Lösung** der falsch gelösten Teilaufgaben vor, sondern einen Hinweis
-  und lässt nachbessern (offene Frage — pädagogische Entscheidung).
+- **Nur Hinweise** bei Fehlern (§4.4).
 
-### 4.3 Nachgelagerte Funktionen
+### 4.4 Hinweise statt Lösung, Nachbessern
+
+Entschieden: Bei fremden Aufgaben zeigt die Korrektur **nicht die richtige Lösung**. Hausaufgaben
+sollen selbst gelöst werden; eine fertige Lösung zum Abschreiben wäre das Gegenteil.
+
+- Je Teilaufgabe: richtig / teilweise richtig / falsch, **wo** der Fehler steckt (Zeile,
+  Rechenschritt, Satz) und ein **Hinweis**, der in die richtige Richtung zeigt, ohne das
+  Ergebnis zu nennen. Beispiel: „Prüf noch mal das Vorzeichen beim Ausmultiplizieren der
+  zweiten Klammer" statt „richtig wäre −6x".
+- Richtig gelöste Teilaufgaben werden bestätigt, gern mit kurzem Warum.
+- **Der Prompt allein reicht nicht als Garantie.** Modelle rutschen in die Lösung. Darum
+  zweistufig: Die Korrektur liefert strukturiert (Tool-Use) `verdict`, `location`, `hint` je
+  Teilaufgabe; die Oberfläche rendert nur diese Felder. Ein freies Feld „Lösung" gibt es nicht.
+- **Nachbessern:** Nach der Korrektur kann das Kind eine überarbeitete Lösung einreichen. Das
+  wird eine weitere Zeile in `corrections` zur selben Aufgabe. Der Prompt bekommt die vorige
+  Korrektur mit und bewertet nur noch die offenen Teilaufgaben. Heute geht das UI von genau
+  einer Korrektur je Aufgabe aus (`hasCorrection`, „Bereits korrigiert") — für `external`
+  aufheben, die Historie zeigt dann alle Durchgänge.
+- **Rückfragen-Chat:** Der Chat zur Korrektur (`/api/chat`) bekommt bei `external` dieselbe
+  Vorgabe — erklären, Fragen stellen, Lösung nicht verraten. Sonst ist der Chat der Weg um
+  die Regel herum.
+- Wie viele Durchgänge? Kein festes Limit vorgesehen; die Tokenkosten fallen je Durchgang an.
+  Wenn das teuer wird, später ein Limit pro Aufgabe.
+- Eltern sehen in der Historie dieselben Hinweise. Eine Taste „Lösung anzeigen" nur für Eltern
+  wäre denkbar, ist aber **nicht** Teil dieser Umsetzung.
+
+### 4.5 Mehrere Fotos speichern
+
+Heute speichern `generieren` und `korrigieren` nur die **erste** Datei (`validFiles[0]`,
+`sourceFiles[0]`), obwohl alle ans Modell gehen. Bei mehrseitigen Lösungen fehlt danach der Rest
+— in der Historie, im Export und für das Nachbessern. Das wird für alle Wege behoben.
+
+`exercises.source_file` und `corrections.solution_file` sind einzelne Verweise (M2O auf
+`directus_files`). Drei Möglichkeiten:
+
+| | Ansatz | Bewertung |
+|---|---|---|
+| **M** | Zwei M2M-Junctions in Directus: `exercises_files`, `corrections_files` (je `file`, Eltern-FK, `sort`) | Directus-Standard, jede Junction hat genau einen Eigentümer → Scope eindeutig über die Aufgabe bzw. Korrektur; Löschen der Aufgabe kaskadiert. +2 Collections (11 → 13 von 25). **Empfehlung.** |
+| U | Eine Collection `uploads` mit `file`, `exercise_id` *oder* `correction_id` | Eine Collection weniger, aber „genau eins von zwei" muss der Code sicherstellen; zwei Scope-Pfade in einer Tabelle |
+| J | JSON-Feld mit Datei-IDs | Keine Relation, die Directus kennt. `scripts/aufraeumen.ts` würde die Dateien nicht als verwiesen erkennen — **gefährlich**, verworfen |
+
+Folgen für **M**:
+
+- `scripts/aufraeumen.ts`: Das Skript liest alle Relationen auf `directus_files` und **löscht
+  nie eine Datei mit unbekanntem Verweis**. Die neuen Felder `exercises_files.file` und
+  `corrections_files.file` müssen in `UPLOAD_REFS`, sonst greift die 30-Tage-Frist nicht. Nach
+  der Änderung von Hand auf den Server kopieren (CLAUDE.md, Cronjobs).
+- Nach Ablauf der Frist: Datei löschen **und** die Junction-Zeile (sonst verwaiste Zeilen).
+- `familyData.ts` (Export, Familie löschen): Datei-IDs aus den Junctions statt aus den
+  Einzelfeldern sammeln.
+- `files.ts`: `uploadFiles` mehrfach; die Datei hängt erst nach dem Anlegen der Junction-Zeile
+  an einer geprüften Ressource — Reihenfolge Upload → Aufgabe/Korrektur → Junction, bei Fehler
+  hochgeladene Dateien wieder löschen.
+- **Altfelder:** `source_file`/`solution_file` per Skript (`--dry`) in die Junctions
+  übernehmen. Entfernen in der vorgeschriebenen Reihenfolge: erst Code, der sie nicht mehr
+  liest, deployen, dann in Directus löschen (`schema:apply --mit-loeschen`).
+- Das ist der größte Teil der Migration und **unabhängig von fremden Aufgaben** — sinnvoll als
+  eigener erster Schritt.
+
+### 4.6 Freie Textaufgaben
+
+Aufsatz, Erörterung, Inhaltsangabe, Bildbeschreibung, Übersetzung (Latein/Englisch). Hier gibt
+es kein „richtig/falsch" je Teilaufgabe.
+
+- Beim Erfassen erkennt das Modell den Typ: `task_kind: 'structured' | 'free_text'`. Kein
+  eigenes Datenbankfeld nötig, wenn der Typ im Transkript als Kopf steht — besser aber als
+  Feld `exercises.task_kind`, weil der Korrektur-Prompt davon abhängt (Entscheidung beim Bau).
+- Korrektur bei `free_text`, ebenfalls nur Hinweise:
+  - **Aufgabe erfüllt?** Thema, Textsorte, Umfang, Operator („erörtere", „beschreibe").
+  - **Aufbau** — Einleitung, Hauptteil, Schluss; Gliederung, Absätze.
+  - **Inhalt** — Argumente, Belege, roter Faden.
+  - **Sprache** — Ausdruck, Satzbau; Rechtschreibung und Grammatik als markierte Stellen mit
+    Hinweis auf die Regel, **nicht** als korrigierter Text.
+  - **Übersetzung:** Stellen markieren, an denen Grammatik oder Wortwahl nicht stimmt
+    (Kasus, Tempus, Konstruktion), Hinweis auf das Phänomen, keine Musterübersetzung.
+  - Zwei, drei Stärken und die zwei wichtigsten Baustellen — nicht 30 Anmerkungen.
+- Handschrift: lange Texte als Foto sind die schwierigste Eingabe. In der Prüfansicht (Schritt 3)
+  wird bei `free_text` **auch die Lösung transkribiert** und angezeigt, damit Lesefehler nicht als
+  Rechtschreibfehler gewertet werden.
+- Insights: Hinweise aus Aufsätzen sind für `learner_insights` wertvoll (wiederkehrende
+  Fehler), laufen aber wie bisher nur mit Opt-in.
+
+### 4.7 Nachgelagerte Funktionen
 
 | Funktion | Verhalten bei `external` |
 |---|---|
 | Historie | Eintrag mit Kennzeichnung „Eigene Aufgabe" |
 | Lernerkenntnisse | wie bisher, Opt-in der Eltern gilt unverändert |
-| Chat / Rückfrage | unverändert |
+| Chat / Rückfrage | mit der Vorgabe „keine Lösung verraten" (§4.4) |
 | Folgefrage / Nachschärfen | ausblenden — beides setzt eine vom Trainer erzeugte Aufgabe voraus |
 | Lösen im Browser (`/loesen`) | möglich (Schritt 4), PDF-Export ausblenden |
 | Nutzungsstatistik | `origin` als zusätzliche Dimension |
-| Datenexport / Familie löschen | läuft über `exercises`, nichts zu tun |
+| Datenexport / Familie löschen | läuft über `exercises`; Dateien aus den Junctions (§4.5) |
 
 ## 5. Datenschutz und KI-VO
 
@@ -145,38 +248,56 @@ Aufgabenstellung.
   geht nirgendwohin außer an die Familie. Den Punkt im Anwaltstermin ausdrücklich ansprechen.
 - **Art. 50:** Der bestehende KI-Hinweis auf der Korrekturseite gilt auch hier; zusätzlich in der
   Prüfansicht („Text wurde von der KI aus dem Foto gelesen").
-- **Nutzungsbedingungen:** Satz ergänzen, dass auch eigene Aufgaben korrigiert werden können und
-  die Korrektur falsch sein kann. Prüfen, ob das eine neue `CONSENT_VERSION` braucht.
+- **Nutzungsbedingungen:** Satz ergänzen, dass auch eigene Aufgaben (Hausaufgaben, Arbeitsblätter)
+  korrigiert werden können und die Korrektur falsch sein kann. **Keine neue `CONSENT_VERSION`**
+  (entschieden 08.11.2026): Zweck, Empfänger und Datenkategorien bleiben gleich.
 
 ## 6. Datenmodell und Migration
 
+Zwei getrennte Migrationen, in dieser Reihenfolge:
+
+**6a — Mehrere Dateien (§4.5)**
+
+1. In der Probe: Junctions `exercises_files` und `corrections_files` (M2M auf `directus_files`,
+   `sort`, Löschen der Aufgabe/Korrektur kaskadiert auf die Junction).
+2. `schema:pull`, Typen in `directus.ts`, Skript für die Übernahme der Altfelder (`--dry`).
+3. Code umstellen (Lesen und Schreiben), `aufraeumen.ts` und `familyData.ts`, deployen,
+   Skript laufen lassen, Cronjob-Skript auf den Server.
+4. Erst danach `source_file`/`solution_file` in der Probe löschen, `schema:pull`, `schema:apply
+   --mit-loeschen`.
+
+**6b — Fremde Aufgaben**
+
 1. In der Probe: `exercises.origin`, Typ String, Dropdown `generated`/`external`,
-   Default `generated`, nicht null.
+   Default `generated`, nicht null; ggf. `exercises.task_kind` (§4.6).
 2. `npm run schema:pull`, committen; Typ `Exercise` in `src/lib/server/directus.ts` ergänzen.
 3. Bestand: Default greift für neue Zeilen; vorhandene Zeilen per idempotentem Skript
    (`scripts/`, `--dry`) auf `generated` setzen, falls Directus den Default nicht nachträgt.
 4. DB-Backup (`scripts/backup.sh --probe`), Lauf gegen die lokale Kopie, dann
    `npm run schema:apply` nach Produktion; Protokoll in `docs/migrationen.md`.
 
-Keine neue Collection, keine neuen Berechtigungen: `learner` hat schon `exercise:create` und
+Für jeden Lauf: DB-Backup, erst gegen die lokale Kopie, Protokoll in `docs/migrationen.md`.
+Keine neuen Berechtigungen: `learner` und Eltern haben schon `exercise:create` und
 `correction:create`.
 
 ## 7. Umsetzungsschritte
 
-1. Schemaänderung (§6)
-2. `createExercise` um `origin` erweitern; `listExercises` liefert es mit
-3. Endpunkt Transkription + Prüfansicht auf `/korrigieren`
-4. Korrektur-Prompt nach `origin` verzweigen
-5. Historie-Kennzeichnung, Folgefrage/Nachschärfen/PDF ausblenden
-6. Hinweise (Upload, Prüfansicht), Nutzungsbedingungen, Datenschutzerklärung, `vvt-tom.md`
-7. `npm run build`, `npm run check`, `grep -rn "getDirectus" src/routes/` leer
+Schritt 1 lässt sich unabhängig ausliefern und behebt einen bestehenden Mangel.
+
+1. **Mehrere Fotos** (§4.5, §6a) — für Generierung und bestehende Korrektur
+2. Schema `origin` (§6b); `createExercise`/`listExercises` erweitern
+3. Route `/eigene-aufgabe`, Menüpunkt auf der Profilkarte
+4. Endpunkt Transkription + Prüfansicht (bei `free_text` inkl. Lösungstranskript)
+5. Korrektur-Prompt nach `origin` und Aufgabentyp, strukturierte Hinweise statt Lösung (§4.4,
+   §4.6); Chat-Vorgabe
+6. Nachbessern: mehrere Korrekturen je Aufgabe, Historie zeigt Durchgänge
+7. Historie-Kennzeichnung, Folgefrage/Nachschärfen/PDF ausblenden
+8. Hinweise (Upload, Prüfansicht), Nutzungsbedingungen, Datenschutzerklärung, `vvt-tom.md`
+9. Nach jedem Schritt `npm run build`, `npm run check`, `grep -rn "getDirectus" src/routes/` leer
 
 ## 8. Offene Fragen
 
-- [ ] Ansatz A bestätigen?
-- [ ] Wer darf das: nur Kinder, nur Eltern, beide? (Rechte gibt es für beide schon.)
-- [ ] Bei Fehlern volle Lösung zeigen oder nur Hinweis + nachbessern lassen?
-- [ ] Einstiegspunkt: Schaltfläche auf `/korrigieren?profil=…` oder eigener Menüpunkt?
-- [ ] Mehrere Fotos speichern oder weiterhin nur das erste (betrifft auch die bestehende Korrektur)?
-- [ ] Freie Textaufgaben (Aufsatz, Übersetzung Latein) gleich mit abdecken oder später?
-- [ ] Neue `CONSENT_VERSION` nötig, wenn die Nutzungsbedingungen ergänzt werden?
+- [ ] Mehrere Fotos: Ansatz M (zwei Junctions) bestätigen?
+- [ ] Hinweise statt Lösung nur bei fremden Aufgaben — oder auch bei den vom Trainer
+      generierten Übungen? (Heute erklären die Korrekturen dort auch die richtige Lösung.)
+- [ ] `task_kind` als eigenes Feld oder nur im Prompt ableiten?

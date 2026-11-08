@@ -10,19 +10,9 @@ import { uploadFile } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
 import { finalText } from '$lib/server/anthropic';
 
-const GRADE_SCALE = `
-Notenschlüssel (bayerisches Gymnasium):
-- Note 1 (sehr gut):       ≥ 87 %
-- Note 2 (gut):            ≥ 75 %
-- Note 3 (befriedigend):   ≥ 60 %
-- Note 4 (ausreichend):    ≥ 45 %
-- Note 5 (mangelhaft):     ≥ 20 %
-- Note 6 (ungenügend):     < 20 %`;
-
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 	const exerciseId = form.get('exerciseId') as string;
-	const showGrade = form.get('showGrade') === 'true';
 	// „Diese Lösung nicht auswerten" — schränkt nur ein; ob überhaupt ausgewertet wird,
 	// entscheidet das Opt-in der Eltern in `upsertInsight`.
 	const evaluate = form.get('evaluate') !== 'false';
@@ -65,7 +55,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 Danach eine **Gesamtauswertung**:
 - Erreichte Punkte gesamt: Y von Z
 - Prozentsatz: X %
-${showGrade ? `- Note: [Note berechnen nach folgendem Schlüssel]\n${GRADE_SCALE}` : ''}
 
 Abschließend 1–2 konkrete **Verbesserungstipps**.
 

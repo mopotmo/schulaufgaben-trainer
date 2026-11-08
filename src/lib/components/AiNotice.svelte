@@ -15,7 +15,7 @@
 
 	const TEXT = {
 		exercises: 'Diese Aufgaben hat eine KI erstellt. Sie kann sich irren — schaut sie zusammen an.',
-		correction: 'Diese Korrektur stammt von einer KI. Sie kann falsch liegen, auch bei der Note. Im Zweifel gilt, was die Lehrkraft sagt.',
+		correction: 'Diese Korrektur stammt von einer KI. Sie kann falsch liegen. Im Zweifel gilt, was die Lehrkraft sagt.',
 		chat: 'Du schreibst hier mit einer KI, nicht mit einem Menschen. Antworten können falsch sein.'
 	} as const;
 </script>

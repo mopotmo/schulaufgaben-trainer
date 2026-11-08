@@ -222,9 +222,11 @@ für Eltern ab.
 
 **Offen: Anhang III Nr. 3 Buchst. b — Hochrisiko?** Die Vorschrift erfasst KI-Systeme, die
 „zur Bewertung von Lernergebnissen verwendet werden sollen, auch wenn diese Ergebnisse dazu
-dienen, den Lernprozess zu steuern". Die App korrigiert Lösungen, schätzt Noten und speist
+dienen, den Lernprozess zu steuern". Die App korrigiert Lösungen, vergibt Punkte und speist
 `learner_insights` in die Auswahl der nächsten Aufgaben zurück — das ist fast wörtlich der
-Tatbestand.
+Tatbestand. Die Notenschätzung (bayerischer Gymnasialschlüssel) ist seit 08.11.2026 entfernt;
+die App gibt keine Noten mehr aus. Das verkleinert die Angriffsfläche, ändert an der Frage
+aber nichts Grundsätzliches.
 
 Dagegen spricht:
 

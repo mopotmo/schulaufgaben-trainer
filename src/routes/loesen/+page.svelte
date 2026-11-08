@@ -34,7 +34,6 @@
 	let durationSeconds = $derived(stopwatchEnabled ? durationMinutes * 60 : 0);
 
 	// Submission
-	let showGrade = $state(false);
 	let evaluate = $state(true);
 	let submitting = $state(false);
 	let submitError = $state('');
@@ -43,10 +42,6 @@
 	let correctionHtml = $derived(
 		correctionResult ? renderMarkdown(correctionResult) : ''
 	);
-
-	// Post-correction grade
-	let gradeText = $state('');
-	let loadingGrade = $state(false);
 
 	// Follow-up chat
 	type ChatMsg = { role: 'user' | 'assistant'; text: string };
@@ -156,7 +151,6 @@
 		const form = new FormData();
 		form.append('exerciseId', data.exercise.id);
 		form.append('answersMeta', JSON.stringify(meta));
-		form.append('showGrade', String(showGrade));
 		form.append('evaluate', String(evaluate));
 		for (const f of files) form.append('solutionFiles', f);
 
@@ -172,23 +166,6 @@
 			submitError = e.message;
 		} finally {
 			submitting = false;
-		}
-	}
-
-	async function requestGrade() {
-		loadingGrade = true;
-		try {
-			const res = await fetch('/api/note', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ correctionId })
-			});
-			const json = await res.json();
-			gradeText = json.grade ?? '';
-		} catch {
-			gradeText = 'Fehler bei der Notenberechnung.';
-		} finally {
-			loadingGrade = false;
 		}
 	}
 
@@ -277,14 +254,6 @@
 					onfocusfield={(i) => (activeField = i)}
 				/>
 
-				<label class="flex items-center gap-3 cursor-pointer select-none">
-					<div class="relative">
-						<input type="checkbox" bind:checked={showGrade} class="sr-only peer" />
-						<div class="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-blue-500 transition-colors"></div>
-						<div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-					</div>
-					<span class="text-sm text-gray-700">Note anzeigen <span class="text-gray-400">(bayerischer Gymnasium-Schlüssel)</span></span>
-				</label>
 
 				{#if data.insightsEnabled}
 					<label class="flex items-center gap-3 cursor-pointer select-none">
@@ -320,18 +289,6 @@
 					{@html correctionHtml}
 				</div>
 
-				<!-- Grade on demand -->
-				{#if !gradeText}
-					<button
-						onclick={requestGrade}
-						disabled={loadingGrade}
-						class="text-sm px-4 py-2 rounded-xl border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
-					>
-						{loadingGrade ? 'Berechne Note…' : 'Note nachträglich berechnen'}
-					</button>
-				{:else}
-					<p class="text-sm font-medium text-gray-700 bg-blue-50 rounded-xl px-4 py-3">{gradeText}</p>
-				{/if}
 
 				<!-- Follow-up chat -->
 				<div class="border-t border-gray-100 pt-4">

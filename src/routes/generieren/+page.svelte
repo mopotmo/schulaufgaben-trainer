@@ -76,7 +76,6 @@
 	let modes = $state<Mode[]>([]);
 	let drawings = $state<Stroke[][]>([]);
 	let canvasRefs = $state<(DrawCanvas | null)[]>([]);
-	let showGrade = $state(false);
 	let submitting = $state(false);
 	let submitError = $state('');
 	let correctionResult = $state('');
@@ -180,7 +179,6 @@
 		const form = new FormData();
 		form.append('exerciseId', exerciseId);
 		form.append('answersMeta', JSON.stringify(meta));
-		form.append('showGrade', String(showGrade));
 		for (const f of files) form.append('solutionFiles', f);
 
 		try {
@@ -690,14 +688,6 @@
 							bind:canvasRefs
 						/>
 
-						<label class="flex items-center gap-3 cursor-pointer select-none">
-							<div class="relative">
-								<input type="checkbox" bind:checked={showGrade} class="sr-only peer" />
-								<div class="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-blue-500 transition-colors"></div>
-								<div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-							</div>
-							<span class="text-sm text-gray-700">Note anzeigen <span class="text-gray-400">(bayerischer Gymnasium-Schlüssel)</span></span>
-						</label>
 
 						{#if submitError}
 							<p class="text-red-500 text-sm">{submitError}</p>

@@ -10,7 +10,6 @@
 
 	let selectedExerciseId = $state(data.exercise?.id ?? '');
 	let solutionFiles = $state<File[]>([]);
-	let showGrade = $state(false);
 	let evaluate = $state(true);
 
 	let loading = $state(false);
@@ -76,7 +75,6 @@
 
 		const form = new FormData();
 		form.append('exerciseId', selectedExerciseId);
-		form.append('showGrade', String(showGrade));
 		form.append('evaluate', String(evaluate));
 		for (const file of solutionFiles) form.append('solutionFiles', file);
 
@@ -183,14 +181,6 @@
 			</p>
 		</div>
 
-		<label class="flex items-center gap-3 cursor-pointer select-none">
-			<div class="relative">
-				<input type="checkbox" bind:checked={showGrade} class="sr-only peer" />
-				<div class="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-blue-500 transition-colors"></div>
-				<div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-			</div>
-			<span class="text-sm text-gray-700">Note anzeigen <span class="text-gray-400">(bayerischer Gymnasium-Schlüssel)</span></span>
-		</label>
 
 		{#if data.insightsEnabled}
 			<label class="flex items-center gap-3 cursor-pointer select-none">

@@ -20,11 +20,6 @@
 		return gesamtMatch?.[1]?.trim() ?? '';
 	}
 
-	function gradeFromCorrection(text: string): string | null {
-		const match = text.match(/Note[:\s]+([1-6](?:[,\.]\d+)?)\s*\(?([^)\n]*)\)?/i);
-		return match ? `Note ${match[1]}${match[2] ? ` (${match[2].trim()})` : ''}` : null;
-	}
-
 	function formatDate(dt: string) {
 		return new Date(dt).toLocaleDateString('de-DE', {
 			day: '2-digit', month: '2-digit', year: 'numeric'
@@ -53,7 +48,6 @@
 			{#each data.exercises as ex}
 				{@const correction = ex.correction}
 				{@const summary = correction ? summaryFromCorrection(correction.correction_result ?? '') : ''}
-				{@const grade = correction ? gradeFromCorrection(correction.correction_result ?? '') : null}
 
 				<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 					<!-- Header row -->
@@ -70,9 +64,6 @@
 							<div class="flex items-center gap-2 mt-1 flex-wrap">
 								<span class="text-xs text-gray-400">{formatDate(ex.created_at)}</span>
 								{#if correction}
-									{#if grade}
-										<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{grade}</span>
-									{/if}
 									{#if summary}
 										<span class="text-xs text-gray-500">{summary}</span>
 									{/if}

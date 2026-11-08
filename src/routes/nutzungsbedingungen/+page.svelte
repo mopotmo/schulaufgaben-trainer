@@ -25,7 +25,6 @@
 	<ul>
 		<li>Die Übungsaufgaben werden von einem KI-Modell erzeugt, nicht von einer Lehrkraft.</li>
 		<li>Eingereichte Lösungen werden von einer KI gelesen und korrigiert — auch handschriftliche.</li>
-		<li>Die angezeigte Note ist eine Schätzung der KI anhand des Korrekturberichts.</li>
 		<li>Wer im Trainer eine Rückfrage stellt, schreibt mit einer KI und nicht mit einem Menschen.</li>
 		<li>
 			Aus Korrekturen und Rückmeldungen leitet das System Hinweise zum Lernstand ab und nutzt sie,
@@ -42,8 +41,7 @@
 	<p>
 		Aufgaben und Korrekturen werden von einem KI-Modell erzeugt. Sie können <strong>fachlich falsch,
 		unvollständig oder unpassend</strong> sein — auch dann, wenn sie überzeugend klingen. Bitte lesen
-		Sie als Eltern gegen, bevor Ihr Kind eine Korrektur als richtig übernimmt. Eine Note, die das
-		System anzeigt, ist eine Schätzung und keine Bewertung.
+		Sie als Eltern gegen, bevor Ihr Kind eine Korrektur als richtig übernimmt.
 	</p>
 
 	<h2>Verfügbarkeit</h2>

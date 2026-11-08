@@ -7,8 +7,11 @@
 	 * Bewusst ohne Modellnamen — die Oberfläche nennt kein Produkt, nur die Tatsache „KI".
 	 */
 	type Props = {
-		/** `exercises` für generierte Aufgaben, `correction` für Korrekturen, `chat` für den Verlauf. */
-		kind: 'exercises' | 'correction' | 'chat';
+		/**
+		 * `exercises` für generierte Aufgaben, `correction` für Korrekturen, `chat` für den Verlauf,
+		 * `transcript` für abgeschriebene fremde Aufgaben.
+		 */
+		kind: 'exercises' | 'correction' | 'chat' | 'transcript';
 		class?: string;
 	};
 	let { kind, class: extraClass = '' }: Props = $props();
@@ -16,6 +19,7 @@
 	const TEXT = {
 		exercises: 'Diese Aufgaben hat eine KI erstellt. Sie kann sich irren — schaut sie zusammen an.',
 		correction: 'Diese Korrektur stammt von einer KI. Sie kann falsch liegen. Im Zweifel gilt, was die Lehrkraft sagt.',
+		transcript: 'Diese Abschrift hat eine KI erstellt. Sie kann sich verlesen — vergleicht sie mit dem Blatt.',
 		chat: 'Du schreibst hier mit einer KI, nicht mit einem Menschen. Antworten können falsch sein.'
 	} as const;
 </script>

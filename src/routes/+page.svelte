@@ -148,6 +148,12 @@
 						Lösung einreichen
 					</a>
 					<a
+						href="/eigene-aufgabe?profil={profile.id}"
+						class="block text-center bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+					>
+						Eigene Aufgabe korrigieren
+					</a>
+					<a
 						href="/historie?profil={profile.id}"
 						class="block text-center bg-gray-50 hover:bg-gray-100 text-gray-500 text-sm font-medium px-4 py-2 rounded-xl transition-colors"
 					>

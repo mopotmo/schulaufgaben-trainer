@@ -116,6 +116,22 @@ export async function updateExerciseContent(
 	);
 }
 
+/**
+ * Prüfansicht einer fremden Aufgabe (Konzept fremde Aufgaben §4, Schritt 3): Transkript, Fach,
+ * Thema und Aufgabentyp nach dem Erfassen von Hand berichtigen. Nur für `origin = 'external'` —
+ * generierte Aufgaben ändert allein der Chat über `updateExerciseContent`.
+ */
+export async function updateExternalExercise(
+	actor: Actor,
+	exerciseId: unknown,
+	data: { generated_content: string; subject: string; topic: string; task_kind: TaskKind }
+): Promise<void> {
+	assertCan(actor, 'exercise:create');
+	const { exercise } = await getExercise(actor, exerciseId);
+	if (exercise.origin !== 'external') error(400, 'Nur eigene Aufgaben lassen sich so bearbeiten');
+	await getDirectus().request(updateItem('exercises', exercise.id, data));
+}
+
 export async function deleteExercise(actor: Actor, exerciseId: unknown): Promise<void> {
 	assertCan(actor, 'exercise:delete');
 	const { exercise } = await getExercise(actor, exerciseId);

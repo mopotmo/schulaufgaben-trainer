@@ -48,6 +48,7 @@
 			{#each data.exercises as ex}
 				{@const correction = ex.correction}
 				{@const summary = correction ? summaryFromCorrection(correction.correction_result ?? '') : ''}
+				{@const external = ex.origin === 'external'}
 
 				<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 					<!-- Header row -->
@@ -60,12 +61,18 @@
 								<span class="font-semibold text-gray-800 text-sm">{ex.subject}</span>
 								<span class="text-gray-300">·</span>
 								<span class="text-gray-600 text-sm truncate">{ex.topic}</span>
+								{#if external}
+									<span class="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Eigene Aufgabe</span>
+								{/if}
 							</div>
 							<div class="flex items-center gap-2 mt-1 flex-wrap">
 								<span class="text-xs text-gray-400">{formatDate(ex.created_at)}</span>
 								{#if correction}
 									{#if summary}
 										<span class="text-xs text-gray-500">{summary}</span>
+									{/if}
+									{#if ex.corrections.length > 1}
+										<span class="text-xs text-gray-400">{ex.corrections.length} Durchgänge</span>
 									{/if}
 								{:else}
 									<span class="text-xs text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">Noch nicht korrigiert</span>
@@ -80,25 +87,46 @@
 						<div class="border-t border-gray-100 px-5 py-4 space-y-4">
 							<!-- Actions -->
 							<div class="flex gap-2 flex-wrap">
-								<a
-									href="/generieren?profil={data.profile.id}"
-									class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
-								>
-									Neue Aufgaben generieren
-								</a>
-								{#if !correction}
+								{#if !external}
 									<a
-										href="/loesen?aufgabe={ex.id}"
+										href="/generieren?profil={data.profile.id}"
 										class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
 									>
-										Im Browser lösen
+										Neue Aufgaben generieren
 									</a>
+								{/if}
+								{#if correction && ex.canResubmit}
+									{#if !external}
+										<a
+											href="/loesen?aufgabe={ex.id}"
+											class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
+										>
+											Im Browser nachbessern
+										</a>
+									{/if}
+									<a
+										href="/korrigieren?aufgabe={ex.id}"
+										class="text-xs bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
+									>
+										Verbesserte Lösung einreichen
+									</a>
+								{/if}
+								{#if !correction}
+									{#if !external}
+										<a
+											href="/loesen?aufgabe={ex.id}"
+											class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
+										>
+											Im Browser lösen
+										</a>
+									{/if}
 									<a
 										href="/korrigieren?aufgabe={ex.id}"
 										class="text-xs bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors"
 									>
 										Lösung einreichen
 									</a>
+									{#if !external}
 									<form method="POST" action="?/replace">
 										<input type="hidden" name="exerciseId" value={ex.id} />
 										<input type="hidden" name="profilId" value={data.profile.id} />
@@ -111,6 +139,7 @@
 											Neu generieren
 										</button>
 									</form>
+									{/if}
 									<form method="POST" action="?/delete" onsubmit={(e) => { if (!confirm('Übung wirklich löschen?')) e.preventDefault(); }}>
 										<input type="hidden" name="exerciseId" value={ex.id} />
 										<input type="hidden" name="profilId" value={data.profile.id} />
@@ -122,25 +151,51 @@
 										</button>
 									</form>
 								{/if}
-								<a
-									href="/api/pdf?exerciseId={ex.id}"
-									target="_blank"
-									class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
-								>
-									PDF öffnen
-								</a>
+								{#if !external}
+									<a
+										href="/api/pdf?exerciseId={ex.id}"
+										target="_blank"
+										class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg transition-colors"
+									>
+										PDF öffnen
+									</a>
+								{/if}
 							</div>
 
-							<!-- Correction result -->
-							{#if correction?.correction_result}
-								<div>
-									<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Korrektur</p>
-									<AiNotice kind="correction" class="mb-2 mt-1" />
-									<div class="prose prose-sm max-w-none bg-gray-50 rounded-xl p-4 overflow-auto max-h-64">
-										{@html renderMarkdown(correction.correction_result)}
+							<!-- Korrekturen, neueste zuerst -->
+							{#if external}
+								<details>
+									<summary class="text-xs font-semibold text-gray-500 uppercase tracking-wide cursor-pointer">Aufgabe</summary>
+									<div class="prose prose-sm max-w-none bg-gray-50 rounded-xl p-4 mt-2 overflow-auto max-h-64">
+										{@html renderMarkdown(ex.generated_content ?? '')}
 									</div>
-								</div>
+								</details>
 							{/if}
+							{#if ex.corrections.length}
+								<AiNotice kind="correction" class="mb-2" />
+							{/if}
+							{#each ex.corrections as c, i (c.id)}
+								{#if c.correction_result}
+									<div>
+										<p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+											{ex.corrections.length > 1 ? `Durchgang ${ex.corrections.length - i}` : 'Korrektur'}
+											<span class="font-normal normal-case text-gray-400">· {formatDate(c.created_at)}</span>
+										</p>
+										{#if i === 0}
+											<div class="prose prose-sm max-w-none bg-gray-50 rounded-xl p-4 overflow-auto max-h-64">
+												{@html renderMarkdown(c.correction_result)}
+											</div>
+										{:else}
+											<details>
+												<summary class="text-xs text-gray-500 cursor-pointer">Anzeigen</summary>
+												<div class="prose prose-sm max-w-none bg-gray-50 rounded-xl p-4 mt-1 overflow-auto max-h-64">
+													{@html renderMarkdown(c.correction_result)}
+												</div>
+											</details>
+										{/if}
+									</div>
+								{/if}
+							{/each}
 						</div>
 					{/if}
 				</div>

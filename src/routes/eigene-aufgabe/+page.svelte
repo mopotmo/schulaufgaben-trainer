@@ -261,6 +261,12 @@
 					<div class="prose prose-sm max-w-none">{@html correctionHtml}</div>
 				</div>
 				<a
+					href="/korrigieren?aufgabe={exerciseId}"
+					class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors"
+				>
+					Verbessert? Neue Fotos einreichen
+				</a>
+				<a
 					href="/historie?profil={data.profile.id}"
 					class="block text-center border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold py-2.5 rounded-xl transition-colors"
 				>

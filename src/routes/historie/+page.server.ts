@@ -2,7 +2,8 @@ import { error, redirect } from '@sveltejs/kit';
 import { requireActor } from '$lib/server/actor';
 import { getProfile } from '$lib/server/repo/profiles';
 import { getExercise, listExercises, deleteExercise } from '$lib/server/repo/exercises';
-import { listCorrectionsForExercises, hasCorrection } from '$lib/server/repo/corrections';
+import { listCorrectionsForExercises, hasCorrection, canResubmit } from '$lib/server/repo/corrections';
+import type { Correction } from '$lib/server/directus';
 import type { Actor } from '$lib/server/authz';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -14,12 +15,18 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const exercises = await listExercises(actor, profile.id, 50);
 	const corrections = await listCorrectionsForExercises(actor, exercises.map((e) => e.id));
 
-	// Pro Aufgabe nur die neueste Korrektur.
-	const latest = new Map(corrections.map((c) => [c.exercise_id, c]));
+	// Alle Durchgänge je Aufgabe, neueste zuerst (`listCorrectionsForExercises` sortiert so).
+	// Früher stand hier `new Map(entries)` — dabei gewinnt der letzte Eintrag, also die älteste
+	// Korrektur. Mit nur einer Korrektur je Aufgabe fiel das nicht auf.
+	const byExercise = new Map<string, Correction[]>();
+	for (const c of corrections) byExercise.set(c.exercise_id, [...(byExercise.get(c.exercise_id) ?? []), c]);
 
 	return {
 		profile,
-		exercises: exercises.map((ex) => ({ ...ex, correction: latest.get(ex.id) ?? null }))
+		exercises: exercises.map((ex) => {
+			const all = byExercise.get(ex.id) ?? [];
+			return { ...ex, correction: all[0] ?? null, corrections: all, canResubmit: canResubmit(ex, profile) };
+		})
 	};
 };
 

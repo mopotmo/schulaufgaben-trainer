@@ -5,7 +5,7 @@ import { logError } from '$lib/server/logger';
 import { upsertInsight } from '$lib/server/learnerInsights';
 import { requireActor } from '$lib/server/actor';
 import { getExercise } from '$lib/server/repo/exercises';
-import { createCorrection } from '$lib/server/repo/corrections';
+import { createCorrection, latestCorrection } from '$lib/server/repo/corrections';
 import { attachCorrectionFiles, readExerciseFiles, type StoredFile } from '$lib/server/repo/files';
 import { HINTS_ONLY_CHAT, HINTS_TOOL, hintsInstruction, markdownInstruction, renderHints, type Mode } from '$lib/server/korrektur';
 import type { ImageType } from '$lib/server/aufgabeErfassen';
@@ -133,6 +133,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			if (validFiles.length > 1) userContent.push({ type: 'text', text: `Seite ${i + 1}:` });
 			userContent.push(block(type, base64));
 		}
+	}
+
+	// Nachbessern (§4.4): Die vorige Korrektur geht mit, damit der nächste Durchgang darauf
+	// aufbaut, statt von vorn anzufangen.
+	const previous = await latestCorrection(actor, exercise.id);
+	if (previous) {
+		userContent.push({
+			type: 'text',
+			text: `Das ist eine überarbeitete Lösung. So lautete die vorige Korrektur:\n\n${previous.correction_result}\n\nBewerte die überarbeitete Lösung vollständig neu. Sag bei Teilaufgaben, die vorher falsch waren, ob sie jetzt stimmen, und lobe Verbesserungen ausdrücklich.`
+		});
 	}
 
 	userContent.push({ type: 'text', text: mode.hintsOnly ? hintsInstruction(mode) : markdownInstruction(mode) });

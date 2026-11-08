@@ -272,10 +272,16 @@
 
 				<button
 					onclick={submitAnswers}
-					disabled={submitting || !!correctionResult}
+					disabled={submitting || (!!correctionResult && !data.canResubmit)}
 					class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-2.5 rounded-xl transition-colors"
 				>
-					{submitting ? 'Korrektur läuft…' : correctionResult ? 'Bereits korrigiert' : 'Korrektur starten'}
+					{submitting
+						? 'Korrektur läuft…'
+						: correctionResult
+							? data.canResubmit
+								? 'Verbessert? Nochmal korrigieren'
+								: 'Bereits korrigiert'
+							: 'Korrektur starten'}
 				</button>
 			</div>
 		</div>

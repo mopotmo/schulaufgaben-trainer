@@ -36,6 +36,21 @@ export async function listCorrectionsForExercises(
 	);
 }
 
+/**
+ * Darf zu dieser Aufgabe eine überarbeitete Lösung eingereicht werden (Konzept fremde Aufgaben
+ * §4.4)? Bei fremden Aufgaben und bei „Nur Hinweise" — sonst bleibt es bei einer Korrektur
+ * im Lösen-Modus, wie bisher.
+ */
+export function canResubmit(exercise: Pick<Exercise, 'origin'>, profile: Pick<Profile, 'hints_only'>): boolean {
+	return exercise.origin === 'external' || profile.hints_only;
+}
+
+/** Die neueste Korrektur einer Aufgabe — für den nächsten Durchgang beim Nachbessern. */
+export async function latestCorrection(actor: Actor, exerciseId: string): Promise<Correction | null> {
+	const all = await listCorrectionsForExercises(actor, [exerciseId]);
+	return all[0] ?? null;
+}
+
 /** Wurde diese Aufgabe schon korrigiert? */
 export async function hasCorrection(actor: Actor, exerciseId: string): Promise<boolean> {
 	const existing = await listCorrectionsForExercises(actor, [exerciseId]);

@@ -83,6 +83,8 @@
 			const json = await res.json();
 			if (!res.ok) throw new Error(json.message ?? 'Fehler bei der Korrektur');
 			correctionResult = json.result;
+			// Für den nächsten Durchgang (Nachbessern) frische Fotos der überarbeiteten Lösung.
+			solutionFiles = [];
 		} catch (e: any) {
 			error = e.message;
 		} finally {
@@ -204,6 +206,8 @@
 		>
 			{#if loading}
 				Korrektur läuft… ({solutionFiles.length} {solutionFiles.length === 1 ? 'Datei' : 'Dateien'})
+			{:else if correctionResult}
+				Verbessert? Neue Fotos hochladen und nochmal korrigieren
 			{:else}
 				Korrektur starten
 			{/if}
@@ -222,7 +226,7 @@
 				<div class="mt-4 pt-4 border-t border-gray-100">
 					<FeedbackWidget type="correction" refId={selectedExerciseId} profileId={exercise?.profile_id ?? ''} />
 				</div>
-				{#if exercise}
+				{#if exercise && exercise.origin !== 'external'}
 					<div class="mt-5 pt-5 border-t border-gray-100 space-y-4">
 						<!-- Nachschärfen -->
 						<div>

@@ -6,7 +6,9 @@ import { upsertInsight } from '$lib/server/learnerInsights';
 import { requireActor } from '$lib/server/actor';
 import { getExercise } from '$lib/server/repo/exercises';
 import { createCorrection } from '$lib/server/repo/corrections';
-import { attachCorrectionFiles } from '$lib/server/repo/files';
+import { attachCorrectionFiles, readExerciseFiles, type StoredFile } from '$lib/server/repo/files';
+import { HINTS_ONLY_CHAT, HINTS_TOOL, hintsInstruction, markdownInstruction, renderHints, type Mode } from '$lib/server/korrektur';
+import type { ImageType } from '$lib/server/aufgabeErfassen';
 import type { RequestHandler } from './$types';
 import { finalText } from '$lib/server/anthropic';
 
@@ -36,96 +38,104 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const hasMeta = !!answersMeta;
 	const hasText = textAnswers.length > 0;
 	const hasFiles = validFiles.length > 0;
+	// Fremde Aufgabe, deren Lösung schon auf den Aufgabenfotos steht (Konzept §4.1): die
+	// gespeicherten Fotos sind die Lösung, nichts wird neu hochgeladen.
+	const useSheet = form.get('useSheet') === 'true';
 
-	if (!exerciseId || (!hasMeta && !hasText && !hasFiles)) {
+	if (!exerciseId || (!hasMeta && !hasText && !hasFiles && !useSheet)) {
 		error(400, 'Aufgabe und Lösung (Text oder Datei) erforderlich');
 	}
 
 	const actor = requireActor(locals);
-	const { exercise } = await getExercise(actor, exerciseId);
+	const { exercise, profile } = await getExercise(actor, exerciseId);
+	if (useSheet && exercise.origin !== 'external') error(400, 'Nur bei eigenen Aufgaben');
+
+	// „Nur Hinweise" kommt aus dem Profil der Aufgabe, nie aus dem Formular (§4.7).
+	const mode: Mode = { origin: exercise.origin, taskKind: exercise.task_kind, hintsOnly: profile.hints_only };
+
+	let stored: StoredFile[] = [];
+	if (exercise.origin === 'external') {
+		try {
+			stored = await readExerciseFiles(actor, exercise.id);
+		} catch (e) {
+			await logError('api/korrigieren/dateien', e, { exerciseId });
+			if (useSheet) error(502, 'Die gespeicherten Fotos konnten nicht geladen werden');
+		}
+	}
+	const sheet = useSheet ? stored.filter((f) => f.role === 'task') : [];
+	const material = stored.filter((f) => f.role === 'material');
+	if (useSheet && sheet.length === 0) error(400, 'Zu dieser Aufgabe sind keine Fotos gespeichert');
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-	const correctionInstruction = `Bitte korrigiere jede Aufgabe einzeln nach folgendem Format:
+	const block = (type: string, data: string): Anthropic.ContentBlockParam =>
+		type === 'application/pdf'
+			? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data } }
+			: { type: 'image', source: { type: 'base64', media_type: type as ImageType, data } };
 
-**Aufgabe X** (erreicht: Y / Z Punkte)
-- Richtig / Teilweise richtig / Falsch
-- Bei Fehlern: kurze Erklärung was falsch war und warum
+	const userContent: Anthropic.ContentBlockParam[] = [
+		{ type: 'text', text: `Hier sind die Originalaufgaben:\n\n${exercise.generated_content}` }
+	];
 
-Danach eine **Gesamtauswertung**:
-- Erreichte Punkte gesamt: Y von Z
-- Prozentsatz: X %
+	if (material.length) {
+		userContent.push({
+			type: 'text',
+			text: 'Material zur Aufgabe (z. B. Bild, Text oder Lösungen aus dem Buch). Sind es Lösungen, prüfe gegen sie:'
+		});
+		for (const f of material) userContent.push(block(f.type, f.data));
+	}
 
-Abschließend 1–2 konkrete **Verbesserungstipps**.
-
-Sei konstruktiv und ermutigend.`;
-
-	let userContent: Anthropic.MessageParam['content'];
-
-	if (hasMeta) {
-		// Browser mode: per-exercise answers, typed and/or handwritten (stylus).
-		userContent = [
-			{
+	if (useSheet) {
+		userContent.push({ type: 'text', text: 'Die Lösung des Schülers steht auf diesen Fotos, zusammen mit der Aufgabe:' });
+		for (const f of sheet) userContent.push(block(f.type, f.data));
+		if (hasText) {
+			userContent.push({
 				type: 'text',
-				text: `Hier sind die Originalaufgaben:\n\n${exercise.generated_content}\n\nEs folgen die Antworten des Schülers, aufgabenweise. Handschriftliche (mit dem Stift geschriebene) Antworten sind jeweils als Bild angehängt.`
-			}
-		];
-
+				text: `So wurde der Text des Schülers abgeschrieben; Lesefehler hat er berichtigt. Bewerte diesen Text, die Fotos dienen nur zur Kontrolle:\n\n${textAnswers}`
+			});
+		}
+	} else if (hasMeta) {
+		// Browser mode: per-exercise answers, typed and/or handwritten (stylus).
+		userContent.push({
+			type: 'text',
+			text: 'Es folgen die Antworten des Schülers, aufgabenweise. Handschriftliche (mit dem Stift geschriebene) Antworten sind jeweils als Bild angehängt.'
+		});
 		let imgIdx = 0;
 		for (const m of answersMeta!) {
 			if (m.kind === 'draw') {
 				const file = validFiles[imgIdx++];
 				userContent.push({ type: 'text', text: `${m.title} (handschriftlich):` });
 				if (file) {
-					const mediaType = (file.type || 'image/png') as
-						| 'image/jpeg'
-						| 'image/png'
-						| 'image/gif'
-						| 'image/webp';
 					const base64 = Buffer.from(await file.arrayBuffer()).toString('base64');
-					userContent.push({
-						type: 'image',
-						source: { type: 'base64', media_type: mediaType, data: base64 }
-					});
+					userContent.push(block(file.type || 'image/png', base64));
 				}
 			} else {
 				userContent.push({ type: 'text', text: `${m.title}:\n${m.text ?? ''}` });
 			}
 		}
-
-		userContent.push({ type: 'text', text: correctionInstruction });
 	} else if (hasText) {
 		// Browser mode: text answers (legacy / other pages)
-		userContent = [
-			{
-				type: 'text',
-				text: `Hier sind die Originalaufgaben:\n\n${exercise.generated_content}\n\nHier sind die Antworten des Schülers (im Browser eingegeben):\n\n${textAnswers}\n\n${correctionInstruction}`
-			}
-		];
+		userContent.push({
+			type: 'text',
+			text: `Hier sind die Antworten des Schülers (im Browser eingegeben):\n\n${textAnswers}`
+		});
 	} else {
 		// Scan mode: image upload
-		userContent = [
-			{
-				type: 'text',
-				text: `Hier sind die Originalaufgaben:\n\n${exercise.generated_content}\n\nEs folgen ${validFiles.length === 1 ? 'ein Bild' : `${validFiles.length} Bilder`} mit der handgeschriebenen Lösung des Schülers.`
-			}
-		];
-
+		userContent.push({
+			type: 'text',
+			text: `Es folgen ${validFiles.length === 1 ? 'ein Bild' : `${validFiles.length} Bilder`} mit der handgeschriebenen Lösung des Schülers.`
+		});
 		for (let i = 0; i < validFiles.length; i++) {
 			const file = validFiles[i];
-			const mediaType = (file.type || 'image/jpeg') as
-				| 'image/jpeg'
-				| 'image/png'
-				| 'image/gif'
-				| 'image/webp';
-			if (!mediaType.startsWith('image/')) continue;
+			const type = file.type || 'image/jpeg';
+			if (!type.startsWith('image/') && type !== 'application/pdf') continue;
 			const base64 = Buffer.from(await file.arrayBuffer()).toString('base64');
 			if (validFiles.length > 1) userContent.push({ type: 'text', text: `Seite ${i + 1}:` });
-			userContent.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } });
+			userContent.push(block(type, base64));
 		}
-
-		userContent.push({ type: 'text', text: correctionInstruction });
 	}
+
+	userContent.push({ type: 'text', text: mode.hintsOnly ? hintsInstruction(mode) : markdownInstruction(mode) });
 
 	let result = '';
 	let tokensUsed = 0;
@@ -133,19 +143,34 @@ Sei konstruktiv und ermutigend.`;
 	try {
 		const stream = await anthropic.messages.stream({
 			model: 'claude-opus-4-8',
-			max_tokens: 4096,
+			max_tokens: mode.taskKind === 'free_text' ? 8192 : 4096,
 			thinking: { type: 'adaptive' },
-			system: 'Du bist ein korrigierender Lehrer. Sei konstruktiv, ermutigend, aber präzise bei Fehlern.',
+			// Erzwungene Werkzeugwahl verträgt sich nicht mit Thinking — deshalb `auto` und die
+			// Anweisung, das Werkzeug zu benutzen. Ohne Werkzeugaufruf kein Ergebnis.
+			...(mode.hintsOnly ? { tools: [HINTS_TOOL], tool_choice: { type: 'auto' as const } } : {}),
+			system: [
+				'Du bist ein korrigierender Lehrer. Sei konstruktiv, ermutigend, aber präzise bei Fehlern.',
+				mode.hintsOnly ? HINTS_ONLY_CHAT : ''
+			]
+				.filter(Boolean)
+				.join('\n\n'),
 			messages: [{ role: 'user', content: userContent }]
 		});
 
 		const message = await stream.finalMessage();
-		result = finalText(message);
+		if (mode.hintsOnly) {
+			const call = message.content.find((b) => b.type === 'tool_use');
+			if (!call) throw new Error(`Keine Werkzeugantwort (stop_reason: ${message.stop_reason})`);
+			result = renderHints(call.input);
+		} else {
+			result = finalText(message);
+		}
 		tokensUsed = (message.usage.input_tokens ?? 0) + (message.usage.output_tokens ?? 0);
 	} catch (e) {
 		await logError('api/korrigieren', e, {
 			exerciseId,
-			mode: hasMeta ? 'browser' : hasText ? 'text' : 'scan'
+			mode: useSheet ? 'sheet' : hasMeta ? 'browser' : hasText ? 'text' : 'scan',
+			hintsOnly: mode.hintsOnly
 		});
 		error(502, 'Fehler bei der Korrektur');
 	}

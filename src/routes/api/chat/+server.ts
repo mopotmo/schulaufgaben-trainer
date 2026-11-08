@@ -5,6 +5,7 @@ import { requireActor } from '$lib/server/actor';
 import { getExercise, updateExerciseContent } from '$lib/server/repo/exercises';
 import type { RequestHandler } from './$types';
 import { finalText } from '$lib/server/anthropic';
+import { HINTS_ONLY_CHAT } from '$lib/server/korrektur';
 
 export type ChatMessage = {
 	role: 'user' | 'assistant';
@@ -80,6 +81,10 @@ Die aktuellen Übungsaufgaben wurden bereits generiert. Wenn der Schüler Änder
 Wenn es eine reine Frage ist, beantworte sie kurz und klar.`
 			: `Du bist ein hilfreicher, geduldiger Lehrer für ${exercise.subject}. Beantworte Fragen zu den Aufgaben klar und einfach, passend für Klasse ${profile?.grade ?? 8}. Wenn der Schüler Änderungen an den Aufgaben möchte, setze sie um.`;
 	}
+
+	// „Nur Hinweise" aus dem Profil der Aufgabe — gilt auch hier, sonst fragt das Kind die Lösung
+	// einfach im Chat ab (Konzept fremde Aufgaben §4.4).
+	if (profile.hints_only) systemPrompt += `\n\n${HINTS_ONLY_CHAT}`;
 
 	const stream = await anthropic.messages.stream({
 		model: 'claude-opus-4-8',

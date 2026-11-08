@@ -3,6 +3,7 @@ import { json, error } from '@sveltejs/kit';
 import Anthropic from '@anthropic-ai/sdk';
 import { requireActor } from '$lib/server/actor';
 import { getCorrection } from '$lib/server/repo/corrections';
+import { HINTS_ONLY_CHAT } from '$lib/server/korrektur';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -12,7 +13,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// Aufgabe und Korrektur kommen aus der Datenbank, nicht aus dem Request:
 	// sonst bestimmt der Client den kompletten Prompt-Inhalt.
 	const actor = requireActor(locals);
-	const { correction, exercise } = await getCorrection(actor, correctionId);
+	const { correction, exercise, profile } = await getCorrection(actor, correctionId);
 
 	const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
@@ -20,7 +21,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const msg = await anthropic.messages.create({
 			model: 'claude-sonnet-4-6',
 			max_tokens: 1024,
-			system: 'Du bist ein hilfreicher Nachhilfelehrer. Beantworte Rückfragen des Schülers zur Korrektur seiner Aufgabe. Sei klar, ermutigend und lehrreich.',
+			system: [
+				'Du bist ein hilfreicher Nachhilfelehrer. Beantworte Rückfragen des Schülers zur Korrektur seiner Aufgabe. Sei klar, ermutigend und lehrreich.',
+				profile.hints_only ? HINTS_ONLY_CHAT : ''
+			]
+				.filter(Boolean)
+				.join('\n\n'),
 			messages: [
 				{
 					role: 'user',

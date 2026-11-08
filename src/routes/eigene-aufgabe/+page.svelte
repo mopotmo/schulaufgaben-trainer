@@ -33,6 +33,32 @@
 	let saving = $state(false);
 	let previewHtml = $derived(content ? renderMarkdown(content) : '');
 
+	// Korrigieren direkt von hier, wenn die Lösung schon auf dem Foto steht
+	let correcting = $state(false);
+	let correctError = $state('');
+	let correction = $state('');
+	let correctionHtml = $derived(correction ? renderMarkdown(correction) : '');
+
+	async function korrigieren() {
+		correcting = true;
+		correctError = '';
+		try {
+			const body = new FormData();
+			body.append('exerciseId', exerciseId);
+			body.append('useSheet', 'true');
+			// Bei freien Texten zählt der berichtigte Lesetext, nicht die Handschrift (§4.6).
+			if (taskKind === 'free_text' && solutionTranscript.trim()) body.append('textAnswers', solutionTranscript);
+			const res = await fetch('/api/korrigieren', { method: 'POST', body });
+			const json = await res.json();
+			if (!res.ok) throw new Error(json.message ?? 'Fehler bei der Korrektur');
+			correction = json.result;
+		} catch (e) {
+			correctError = e instanceof Error ? e.message : 'Fehler bei der Korrektur';
+		} finally {
+			correcting = false;
+		}
+	}
+
 	async function erfassen() {
 		reading = true;
 		readError = '';
@@ -226,14 +252,42 @@
 		</form>
 	{:else}
 		<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
-			<h2 class="text-lg font-semibold text-gray-800">3. Lösung einreichen</h2>
+			<h2 class="text-lg font-semibold text-gray-800">3. Korrigieren lassen</h2>
 			<p class="text-sm text-gray-600">Die Aufgabe ist gespeichert und steht auch in der Übungshistorie.</p>
-			<a
-				href="/korrigieren?aufgabe={exerciseId}"
-				class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors"
-			>
-				Lösung einreichen
-			</a>
+
+			{#if correction}
+				<div>
+					<AiNotice kind="correction" class="mb-3" />
+					<div class="prose prose-sm max-w-none">{@html correctionHtml}</div>
+				</div>
+				<a
+					href="/historie?profil={data.profile.id}"
+					class="block text-center border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold py-2.5 rounded-xl transition-colors"
+				>
+					Zur Übungshistorie
+				</a>
+			{:else}
+				{#if solutionOnSheet && filesSaved}
+					<button
+						onclick={korrigieren}
+						disabled={correcting}
+						class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-2.5 rounded-xl transition-colors"
+					>
+						{correcting ? 'Der Trainer korrigiert …' : 'Lösung vom Foto korrigieren'}
+					</button>
+					{#if correctError}
+						<p class="text-sm text-red-500">{correctError}</p>
+					{/if}
+				{/if}
+				<a
+					href="/korrigieren?aufgabe={exerciseId}"
+					class="block text-center font-semibold py-2.5 rounded-xl transition-colors {solutionOnSheet && filesSaved
+						? 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+						: 'bg-blue-600 hover:bg-blue-700 text-white'}"
+				>
+					{solutionOnSheet && filesSaved ? 'Andere Lösung einreichen' : 'Lösung einreichen'}
+				</a>
+			{/if}
 		</div>
 	{/if}
 </main>

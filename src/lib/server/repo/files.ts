@@ -7,7 +7,8 @@
  * wird. Bis die Zuordnung steht, ist eine Datei verwaist; schlägt das Anlegen fehl, werden die
  * gerade hochgeladenen Dateien wieder gelöscht.
  */
-import { uploadFiles, createItems, readItems, deleteFiles } from '@directus/sdk';
+import { uploadFiles, createItems, readItems, readFiles, deleteFiles } from '@directus/sdk';
+import { DIRECTUS_TOKEN, DIRECTUS_URL } from '$env/static/private';
 import { getDirectus, type ExerciseFileRole } from '../directus';
 import type { Actor } from '../authz';
 import { getExercise } from './exercises';
@@ -112,4 +113,44 @@ export async function listFilesFor(
 		exercises: group(ex, (r) => r.exercise_id, (r) => r.file),
 		corrections: group(co, (r) => r.correction_id, (r) => r.file)
 	};
+}
+
+export type StoredFile = { role: ExerciseFileRole; type: string; data: string };
+
+/**
+ * Die an einer Aufgabe hängenden Dateien samt Inhalt (base64), Aufgabenfotos zuerst, je in
+ * Reihenfolge. Für die Korrektur fremder Aufgaben, wenn die Lösung schon auf dem Foto steht,
+ * und für das Material. Scope über `getExercise`.
+ */
+export async function readExerciseFiles(actor: Actor, exerciseId: unknown): Promise<StoredFile[]> {
+	const { exercise } = await getExercise(actor, exerciseId);
+	const directus = getDirectus();
+	const rows = await directus.request(
+		readItems('exercises_files', {
+			fields: ['file', 'role', 'sort'],
+			filter: { exercise_id: { _eq: exercise.id } },
+			sort: ['sort'],
+			limit: -1
+		})
+	);
+	if (rows.length === 0) return [];
+	const meta = await directus.request(
+		readFiles({ fields: ['id', 'type'], filter: { id: { _in: rows.map((r) => r.file) } }, limit: -1 })
+	);
+	const types = new Map(meta.map((m) => [m.id, m.type ?? '']));
+
+	const ordered = [...rows.filter((r) => r.role !== 'material'), ...rows.filter((r) => r.role === 'material')];
+	return Promise.all(
+		ordered.map(async (r) => {
+			const res = await fetch(new URL(`assets/${r.file}`, DIRECTUS_URL), {
+				headers: { Authorization: `Bearer ${DIRECTUS_TOKEN}` }
+			});
+			if (!res.ok) throw new Error(`Datei konnte nicht geladen werden (${res.status})`);
+			return {
+				role: r.role,
+				type: types.get(r.file) || res.headers.get('content-type') || 'image/jpeg',
+				data: Buffer.from(await res.arrayBuffer()).toString('base64')
+			};
+		})
+	);
 }

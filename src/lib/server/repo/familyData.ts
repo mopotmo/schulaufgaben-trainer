@@ -53,7 +53,7 @@ export async function collectFamilyData(actor: Actor) {
 		profileIds.length
 			? directus.request(
 					readItems('exercises', {
-						fields: ['id', 'profile_id', 'subject', 'topic', 'teacher_notes', 'generated_content', 'created_at'],
+						fields: ['id', 'profile_id', 'origin', 'task_kind', 'subject', 'topic', 'teacher_notes', 'generated_content', 'created_at'],
 						filter: { profile_id: { _in: profileIds } },
 						sort: ['created_at'],
 						limit: -1
@@ -130,6 +130,7 @@ export async function collectFamilyData(actor: Actor) {
 			grade: p.grade,
 			state: p.state,
 			avatar: p.avatar,
+			hints_only: p.hints_only,
 			exercises: exercises
 				.filter((e) => e.profile_id === p.id)
 				.map(({ profile_id: _, ...e }) => ({

@@ -73,7 +73,17 @@ export type Profile = {
 	grade: number;
 	state: string;
 	avatar: string | null;
+	/**
+	 * Korrekturen zeigen nur Hinweise, nicht die richtige Lösung (Konzept fremde Aufgaben §4.7).
+	 * Stellen nur Eltern ein; gelesen wird es serverseitig aus dem Profil der Aufgabe.
+	 */
+	hints_only: boolean;
 };
+
+/** `external`: abfotografierte Aufgabe, nicht im Schulaufgaben Check erzeugt (Konzept §3 A). */
+export type ExerciseOrigin = 'generated' | 'external';
+/** `free_text`: Aufsatz, Erörterung, Übersetzung — ohne eindeutige Lösung (Konzept §4.6). */
+export type TaskKind = 'structured' | 'free_text';
 
 export type Exercise = {
 	id: string;
@@ -84,6 +94,8 @@ export type Exercise = {
 	topic: string;
 	teacher_notes: string;
 	generated_content: string;
+	origin: ExerciseOrigin;
+	task_kind: TaskKind;
 	created_at: string;
 	tokens_used: number | null;
 };

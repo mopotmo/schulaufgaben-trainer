@@ -6,6 +6,7 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let loading = $state(false);
 	let insightsBusy = $state(false);
+	let hintsBusy = $state<string | null>(null);
 
 	const insightsEnhance = () => {
 		insightsBusy = true;
@@ -161,6 +162,62 @@
 			</form>
 		{/if}
 	</div>
+
+	{#if data.children.length}
+		<div id="nur-hinweise" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md mt-6">
+			<h2 class="text-lg font-semibold text-gray-800 mb-2">Nur Hinweise</h2>
+			<p class="text-sm text-gray-600 mb-4">
+				Ist das eingeschaltet, verrät die Korrektur nicht die richtige Lösung. Sie sagt nur, wo
+				etwas nicht stimmt, und gibt einen Hinweis — dein Kind bessert selbst nach. Gilt für
+				erzeugte Aufgaben ebenso wie für eigene, ab der nächsten Korrektur. Dein Kind kann es
+				nicht selbst ändern.
+			</p>
+
+			{#if form?.hintsError}
+				<p class="text-sm text-red-500 mb-3">{form.hintsError}</p>
+			{/if}
+
+			<ul class="divide-y divide-gray-100">
+				{#each data.children as child (child.id)}
+					<li class="flex items-center justify-between gap-3 py-3">
+						<span class="text-sm text-gray-800">
+							{#if child.avatar}<span class="mr-1">{child.avatar}</span>{/if}{child.name}
+						</span>
+						<form
+							method="POST"
+							action="?/setHintsOnly"
+							use:enhance={() => {
+								hintsBusy = child.id;
+								return async ({ update }) => {
+									await update();
+									hintsBusy = null;
+								};
+							}}
+						>
+							<input type="hidden" name="profileId" value={child.id} />
+							<input type="hidden" name="hintsOnly" value={child.hintsOnly ? 'off' : 'on'} />
+							<button
+								type="submit"
+								role="switch"
+								aria-checked={child.hintsOnly}
+								aria-label="Nur Hinweise für {child.name}"
+								disabled={hintsBusy === child.id}
+								class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 {child.hintsOnly
+									? 'bg-blue-600'
+									: 'bg-gray-300'}"
+							>
+								<span
+									class="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform {child.hintsOnly
+										? 'translate-x-5'
+										: 'translate-x-0.5'}"
+								></span>
+							</button>
+						</form>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 
 	<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md mt-6">
 		<h2 class="text-lg font-semibold text-gray-800 mb-2">Meine Daten</h2>

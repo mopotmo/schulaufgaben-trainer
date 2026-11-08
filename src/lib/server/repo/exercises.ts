@@ -5,7 +5,7 @@
  */
 import { readItem, readItems, createItem, updateItem, deleteItem } from '@directus/sdk';
 import { error } from '@sveltejs/kit';
-import { getDirectus, type Exercise, type Profile } from '$lib/server/directus';
+import { getDirectus, type Exercise, type ExerciseOrigin, type Profile, type TaskKind } from '$lib/server/directus';
 import { assertCan, assertInScope, type Actor } from '../authz';
 import { getProfile, requireUuid, resolveProfileGroup } from './profiles';
 
@@ -87,6 +87,9 @@ export type NewExercise = {
 	teacher_notes: string;
 	generated_content: string;
 	tokens_used: number | null;
+	/** Ohne Angabe setzt die Datenbank `generated` bzw. `structured`. */
+	origin?: ExerciseOrigin;
+	task_kind?: TaskKind;
 };
 
 export async function createExercise(

@@ -4,6 +4,7 @@ import { setSession } from '$lib/session';
 import { requireActor } from '$lib/server/actor';
 import { assertCan } from '$lib/server/authz';
 import { getOwnGroup, changePassword } from '$lib/server/repo/groups';
+import { listProfiles, setHintsOnly } from '$lib/server/repo/profiles';
 import { getInsightsConsent, grantInsightsConsent, revokeInsightsConsent } from '$lib/server/repo/consents';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -13,8 +14,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// das Formular und käme bis zum bcrypt-Vergleich — ein Orakel fürs Familienpasswort.
 	assertCan(actor, 'group:manage');
 
-	const [group, insights] = await Promise.all([getOwnGroup(actor), getInsightsConsent(actor)]);
-	return { familyName: group.name, slug: group.slug, insights };
+	const [group, insights, profiles] = await Promise.all([
+		getOwnGroup(actor),
+		getInsightsConsent(actor),
+		listProfiles(actor)
+	]);
+	return {
+		familyName: group.name,
+		slug: group.slug,
+		insights,
+		children: profiles
+			.filter((p) => p.kind === 'learner')
+			.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, hintsOnly: p.hints_only }))
+	};
 };
 
 export const actions: Actions = {
@@ -41,6 +53,22 @@ export const actions: Actions = {
 		assertCan(actor, 'consent:grant');
 		await revokeInsightsConsent(actor);
 		return { insightsChanged: 'off' as const };
+	},
+
+	/**
+	 * „Nur Hinweise" je Kinderprofil (Konzept fremde Aufgaben §4.7). Die Profil-ID kommt aus
+	 * dem Formular — `setHintsOnly` prüft sie gegen den Scope.
+	 */
+	setHintsOnly: async ({ request, locals }) => {
+		const actor = requireActor(locals);
+		assertCan(actor, 'profile:update');
+
+		const form = await request.formData();
+		const value = form.get('hintsOnly');
+		if (value !== 'on' && value !== 'off') return fail(400, { hintsError: 'Ungültige Eingabe.' });
+		const profileId = form.get('profileId');
+		await setHintsOnly(actor, profileId, value === 'on');
+		return { hintsChanged: { profileId: String(profileId), on: value === 'on' } };
 	},
 
 	changePassword: async ({ request, locals, cookies }) => {

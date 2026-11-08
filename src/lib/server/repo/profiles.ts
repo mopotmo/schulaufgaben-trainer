@@ -116,6 +116,19 @@ export async function updateProfile(
 }
 
 /**
+ * Schalter „Nur Hinweise" (Konzept fremde Aufgaben §4.7). Eigene Funktion statt
+ * `updateProfile`, damit das Formular nur dieses eine Feld setzen kann.
+ *
+ * `profile:update` haben nur Eltern — ein angemeldetes Kind kann es nicht selbst abschalten.
+ */
+export async function setHintsOnly(actor: Actor, profileId: unknown, hintsOnly: boolean): Promise<void> {
+	assertCan(actor, 'profile:update');
+	const profile = await getProfile(actor, profileId);
+	if (profile.kind !== 'learner') error(400, 'Nur für Kinderprofile');
+	await getDirectus().request(updateItem('profiles', profile.id, { hints_only: hintsOnly }));
+}
+
+/**
  * Mit dem Profil geht alles, was sich auf das Kind bezieht (DSGVO). Die Datenbank erledigt das
  * meiste selbst (`schema/snapshot.json`):
  * - `memberships`, `exercises`, `learner_insights`: ON DELETE CASCADE,

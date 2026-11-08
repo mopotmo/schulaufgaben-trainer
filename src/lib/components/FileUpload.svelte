@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { shrinkImage } from '$lib/shrinkImage';
+
 	let {
 		files = $bindable<File[]>([]),
 		disabled = false,
@@ -9,10 +11,20 @@
 		label?: string;
 	} = $props();
 
-	function add(e: Event, capture?: string) {
+	let shrinking = $state(false);
+
+	/** Fotos werden beim Auswählen verkleinert (`shrinkImage`), nicht erst beim Absenden. */
+	async function add(e: Event) {
 		const input = e.target as HTMLInputElement;
-		files = [...files, ...Array.from(input.files ?? [])];
+		const picked = Array.from(input.files ?? []);
 		input.value = '';
+		shrinking = true;
+		try {
+			const shrunk = await Promise.all(picked.map(shrinkImage));
+			files = [...files, ...shrunk];
+		} finally {
+			shrinking = false;
+		}
 	}
 
 	function remove(i: number) {
@@ -40,15 +52,15 @@
 
 <div class="flex gap-2">
 	<!-- File picker -->
-	<label class="flex-1 flex items-center gap-2 cursor-pointer border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 hover:border-blue-300 hover:bg-blue-50 transition-colors text-sm text-gray-500 {disabled ? 'pointer-events-none opacity-40' : ''}">
+	<label class="flex-1 flex items-center gap-2 cursor-pointer border-2 border-dashed border-gray-200 rounded-xl px-4 py-3 hover:border-blue-300 hover:bg-blue-50 transition-colors text-sm text-gray-500 {disabled || shrinking ? 'pointer-events-none opacity-40' : ''}">
 		<span class="text-base">📎</span>
-		<span>{files.length === 0 ? label : 'Weitere hinzufügen'}</span>
-		<input type="file" accept="image/*,.pdf" multiple {disabled} onchange={add} class="hidden" />
+		<span>{shrinking ? 'Fotos werden vorbereitet …' : files.length === 0 ? label : 'Weitere hinzufügen'}</span>
+		<input type="file" accept="image/*,.pdf" multiple disabled={disabled || shrinking} onchange={add} class="hidden" />
 	</label>
 
 	<!-- Camera (mobile) -->
-	<label class="flex items-center gap-1.5 cursor-pointer border-2 border-dashed border-gray-200 rounded-xl px-3 py-3 hover:border-blue-300 hover:bg-blue-50 transition-colors text-sm text-gray-500 {disabled ? 'pointer-events-none opacity-40' : ''}" title="Foto aufnehmen">
+	<label class="flex items-center gap-1.5 cursor-pointer border-2 border-dashed border-gray-200 rounded-xl px-3 py-3 hover:border-blue-300 hover:bg-blue-50 transition-colors text-sm text-gray-500 {disabled || shrinking ? 'pointer-events-none opacity-40' : ''}" title="Foto aufnehmen">
 		<span class="text-base">📷</span>
-		<input type="file" accept="image/*" capture="environment" {disabled} onchange={add} class="hidden" />
+		<input type="file" accept="image/*" capture="environment" disabled={disabled || shrinking} onchange={add} class="hidden" />
 	</label>
 </div>

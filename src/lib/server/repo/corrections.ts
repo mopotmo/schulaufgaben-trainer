@@ -43,7 +43,6 @@ export async function hasCorrection(actor: Actor, exerciseId: string): Promise<b
 }
 
 export type NewCorrection = {
-	solution_file: string | null;
 	correction_result: string;
 	tokens_used: number | null;
 };

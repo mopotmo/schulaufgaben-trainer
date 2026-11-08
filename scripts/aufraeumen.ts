@@ -4,7 +4,8 @@
  *
  * 1. Schulbücher: 90 Tage ohne Nutzung, spätestens zum Ende des Schuljahres (Konzept §3.6)
  * 2. Aufgabenblätter und Lösungsfotos: 30 Tage nach dem Upload (Konzept §3.5).
- *    Die Verweise in `exercises` / `corrections` werden geleert, Aufgaben und Korrekturtexte bleiben.
+ *    Die Zuordnungen in `exercises_files` / `corrections_files` verschwinden per Kaskade mit der
+ *    Datei; Aufgaben und Korrekturtexte bleiben.
  * 3. Verwaiste Dateien: 30 Tage nach dem Upload, wenn nichts auf sie verweist
  * 4. `email_tokens`: verbraucht oder abgelaufen, älter als 7 Tage
  * 5. Fehlerprotokolle in `logs`: 30 Tage nach dem Eintrag
@@ -82,9 +83,20 @@ const endpoint = (collection: string) =>
 type Ref = { collection: string; field: string };
 const key = (r: Ref) => `${r.collection}.${r.field}`;
 
-const UPLOAD_REFS: Ref[] = [
-	{ collection: 'exercises', field: 'source_file' },
-	{ collection: 'corrections', field: 'solution_file' }
+/**
+ * Verweise auf Uploads mit 30-Tage-Frist. `nullify`: Feld vor dem Löschen leeren (Altfelder ohne
+ * Fremdschlüssel). Die Junctions hängen per ON DELETE CASCADE an `directus_files` — ihre Zeilen
+ * gehen mit der Datei, ein Leeren wäre falsch (`file` ist Pflicht).
+ *
+ * `exercises.source_file` / `corrections.solution_file` bleiben hier, bis sie in Directus
+ * gelöscht sind (Konzept fremde Aufgaben §6a). Fehlt ein Feld, überspringt `collectRefs` es;
+ * die beiden Zeilen können danach bei Gelegenheit raus.
+ */
+const UPLOAD_REFS: (Ref & { nullify: boolean })[] = [
+	{ collection: 'exercises_files', field: 'file', nullify: false },
+	{ collection: 'corrections_files', field: 'file', nullify: false },
+	{ collection: 'exercises', field: 'source_file', nullify: true },
+	{ collection: 'corrections', field: 'solution_file', nullify: true }
 ];
 const BOOK_REF: Ref = { collection: 'books', field: 'file' };
 
@@ -98,8 +110,20 @@ async function collectRefs(): Promise<Map<string, { ref: Ref; id: string }[]>> {
 		'GET',
 		'/relations'
 	);
+	// Nur die Altfelder dürfen fehlen — sie verschwinden nach der Umstellung auf Junctions, das
+	// Skript auf dem Server soll das ohne neue Kopie überstehen. Jeder andere fehlende Verweis
+	// bricht ab: Übersprungen sähen seine Dateien verwaist aus und würden gelöscht.
+	const existing = new Set(
+		(await api<{ collection: string; field: string }[]>('GET', `/fields${q({ fields: 'collection,field', limit: -1 })}`)).map(key)
+	);
 	const refs = new Map<string, Ref>();
-	for (const r of [...UPLOAD_REFS, BOOK_REF, { collection: 'directus_users', field: 'avatar' }]) refs.set(key(r), r);
+	for (const r of [...UPLOAD_REFS, BOOK_REF, { collection: 'directus_users', field: 'avatar' }]) {
+		if ('nullify' in r && r.nullify && !existing.has(key(r))) {
+			log(`  Altfeld ${key(r)} gibt es nicht mehr — übersprungen`);
+			continue;
+		}
+		refs.set(key(r), r);
+	}
 	for (const r of relations) if (r.related_collection === 'directus_files') refs.set(key(r), r);
 
 	const byFile = new Map<string, { ref: Ref; id: string }[]>();
@@ -178,7 +202,8 @@ async function uploads(handled: Set<string>) {
 	if (!DRY) {
 		// Erst die Verweise leeren, dann die Dateien — unabhängig davon, wie die Relation beim
 		// Löschen eingestellt ist. Aufgabe und Korrekturtext bleiben erhalten.
-		for (const u of UPLOAD_REFS) {
+		// Fehlt ein Altfeld, hat es in `refs` keine Zeilen — dann gibt es nichts zu leeren.
+		for (const u of UPLOAD_REFS.filter((r) => r.nullify)) {
 			const rows = expiredUploads.flatMap((id) => (refs.get(id) ?? []).filter((r) => key(r.ref) === key(u)).map((r) => r.id));
 			if (rows.length) await api('PATCH', `/items/${u.collection}`, { keys: rows, data: { [u.field]: null } });
 		}

@@ -84,7 +84,6 @@ export type Exercise = {
 	topic: string;
 	teacher_notes: string;
 	generated_content: string;
-	source_file: string | null;
 	created_at: string;
 	tokens_used: number | null;
 };
@@ -94,7 +93,6 @@ export type Correction = {
 	exercise_id: string;
 	/** Nur für die Nutzungsstatistik (Insights). Der Scope läuft weiter über `exercise_id`. */
 	group_id: string | null;
-	solution_file: string | null;
 	correction_result: string;
 	created_at: string;
 	tokens_used: number | null;
@@ -163,6 +161,14 @@ export type Book = {
 	last_used_at: string | null;
 };
 
+/**
+ * Hochgeladene Dateien einer Aufgabe bzw. Korrektur (Konzept fremde Aufgaben §4.5).
+ * Löschen der Aufgabe/Korrektur oder der Datei kaskadiert auf die Zeile. Die Dateien selbst
+ * löscht `scripts/aufraeumen.ts` nach `UPLOAD_RETENTION_DAYS`.
+ */
+export type ExerciseFile = { id: string; exercise_id: string; file: string; sort: number | null };
+export type CorrectionFile = { id: string; correction_id: string; file: string; sort: number | null };
+
 type Schema = {
 	groups: Group[];
 	memberships: Membership[];
@@ -171,6 +177,8 @@ type Schema = {
 	profiles: Profile[];
 	exercises: Exercise[];
 	corrections: Correction[];
+	exercises_files: ExerciseFile[];
+	corrections_files: CorrectionFile[];
 	logs: Log[];
 	feedback: Feedback[];
 	learner_insights: LearnerInsight[];

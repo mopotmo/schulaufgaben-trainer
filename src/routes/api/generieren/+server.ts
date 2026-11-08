@@ -8,7 +8,7 @@ import { requireActor } from '$lib/server/actor';
 import { getProfile } from '$lib/server/repo/profiles';
 import { getBook, markBookUsed } from '$lib/server/repo/books';
 import { createExercise } from '$lib/server/repo/exercises';
-import { uploadFile } from '$lib/server/repo/files';
+import { attachExerciseFiles } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
 import { finalText } from '$lib/server/anthropic';
 import { SCHREIBPLATZ_ANWEISUNG } from '$lib/schreibplatz';
@@ -159,25 +159,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(502, 'Fehler bei der Aufgabengenerierung');
 	}
 
-	let sourceFileId: string | null = null;
-	if (sourceFiles.length > 0) {
-		try {
-			const uploadForm = new FormData();
-			uploadForm.append('file', sourceFiles[0]);
-			sourceFileId = await uploadFile(actor, uploadForm);
-		} catch (e) {
-			await logError('api/generieren/upload', e, { profilId });
-		}
-	}
-
 	const exercise = await createExercise(actor, profile.id, {
 		subject,
 		topic,
 		teacher_notes: teacherNotes,
 		generated_content: generatedContent,
-		source_file: sourceFileId,
 		tokens_used: tokensUsed
 	});
+
+	// Alle Seiten, nicht nur die erste. Nicht fatal — die Aufgabe ist schon gespeichert.
+	try {
+		await attachExerciseFiles(actor, exercise.id, sourceFiles);
+	} catch (e) {
+		await logError('api/generieren/upload', e, { profilId, files: sourceFiles.length });
+	}
 
 	// Erst nach erfolgreicher Generierung: Nur dann war das Buch tatsächlich Quelle.
 	// Nicht fatal — die Aufgabe ist schon gespeichert, schlimmstenfalls läuft die Frist früher ab.

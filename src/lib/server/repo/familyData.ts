@@ -19,6 +19,7 @@ import { getDirectus, type Group } from '$lib/server/directus';
 import { assertCan, currentGroupId, type Actor } from '../authz';
 import { listProfiles } from './profiles';
 import { listBooks, deleteBook } from './books';
+import { listFilesFor } from './files';
 import { log } from '../logger';
 
 /** Felder der Gruppe, die in die Auskunft gehören. Ohne Passwort-Hash und Einladungstoken. */
@@ -52,7 +53,7 @@ export async function collectFamilyData(actor: Actor) {
 		profileIds.length
 			? directus.request(
 					readItems('exercises', {
-						fields: ['id', 'profile_id', 'subject', 'topic', 'teacher_notes', 'generated_content', 'source_file', 'created_at'],
+						fields: ['id', 'profile_id', 'subject', 'topic', 'teacher_notes', 'generated_content', 'created_at'],
 						filter: { profile_id: { _in: profileIds } },
 						sort: ['created_at'],
 						limit: -1
@@ -93,7 +94,7 @@ export async function collectFamilyData(actor: Actor) {
 	const corrections = exerciseIds.length
 		? await directus.request(
 				readItems('corrections', {
-					fields: ['exercise_id', 'correction_result', 'solution_file', 'created_at'],
+					fields: ['id', 'exercise_id', 'correction_result', 'created_at'],
 					filter: { exercise_id: { _in: exerciseIds } },
 					sort: ['created_at'],
 					limit: -1
@@ -101,9 +102,11 @@ export async function collectFamilyData(actor: Actor) {
 			)
 		: [];
 
+	// Die IDs stammen aus den eben im Scope gelesenen Aufgaben und Korrekturen.
+	const attached = await listFilesFor(exerciseIds, ids(corrections.map((c) => c.id)));
 	const fileIds = ids([
-		...exercises.map((e) => e.source_file),
-		...corrections.map((c) => c.solution_file),
+		...[...attached.exercises.values()].flat(),
+		...[...attached.corrections.values()].flat(),
 		...books.map((b) => b.file)
 	]);
 	const files = fileIds.length
@@ -131,9 +134,10 @@ export async function collectFamilyData(actor: Actor) {
 				.filter((e) => e.profile_id === p.id)
 				.map(({ profile_id: _, ...e }) => ({
 					...e,
+					files: attached.exercises.get(e.id) ?? [],
 					corrections: corrections
 						.filter((c) => c.exercise_id === e.id)
-						.map(({ exercise_id: __, ...c }) => c)
+						.map(({ exercise_id: __, id, ...c }) => ({ ...c, files: attached.corrections.get(id) ?? [] }))
 				})),
 			learner_insights: insights.filter((i) => i.profile_id === p.id).map(({ profile_id: _, ...i }) => i),
 			feedback: feedback.filter((f) => f.profile_id === p.id).map(({ profile_id: _, ...f }) => f)
@@ -168,7 +172,7 @@ export async function deleteFamily(actor: Actor): Promise<void> {
 	for (const book of data.books) await deleteBook(actor, book.id);
 
 	const uploadIds = ids(
-		data.profiles.flatMap((p) => p.exercises.flatMap((e) => [e.source_file, ...e.corrections.map((c) => c.solution_file)]))
+		data.profiles.flatMap((p) => p.exercises.flatMap((e) => [...e.files, ...e.corrections.flatMap((c) => c.files)]))
 	);
 
 	await directus.request(deleteItem('groups', groupId));

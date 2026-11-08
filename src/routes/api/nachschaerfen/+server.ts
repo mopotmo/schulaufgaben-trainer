@@ -61,7 +61,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			topic: `${exercise.topic} (Nachschärfen: ${mode === 'weak_areas' ? 'Schwache Bereiche' : mode === 'easier' ? 'Leichter' : 'Schwerer'})`,
 			teacher_notes: exercise.teacher_notes,
 			generated_content: generatedContent,
-			source_file: null,
 			tokens_used: tokensUsed
 	});
 

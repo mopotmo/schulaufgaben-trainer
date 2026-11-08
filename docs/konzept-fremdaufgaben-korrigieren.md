@@ -24,6 +24,7 @@ bekommt dieselbe Art Rückmeldung wie bei einer Trainer-Aufgabe.
 | `CONSENT_VERSION` | **Keine neue** Version; Nutzungsbedingungen werden ergänzt, ohne Neueinwilligung |
 | Mehrere Fotos, Ablage | **Zwei Junctions** `exercises_files`, `corrections_files` (Ansatz M, §4.5) |
 | Aufgabentyp | **Eigenes Feld** `exercises.task_kind` (§4.6) |
+| Default „Nur Hinweise" | **Aus**, für neue und bestehende Profile |
 
 ---
 
@@ -225,7 +226,7 @@ es kein „richtig/falsch" je Teilaufgabe.
 
 ### 4.7 Einstellung „Nur Hinweise" je Profil
 
-- Neues Feld `profiles.hints_only` (Boolean, nicht null).
+- Neues Feld `profiles.hints_only` (Boolean, nicht null, Default `false`).
 - Einstellen dürfen **nur Eltern** (`profile:update`; `learner` hat das Recht nicht — sonst
   schaltet das Kind es selbst ab). Ort: `/einstellungen`, je Kinderprofil ein Schalter.
   Heute gibt es dort keine Profilbearbeitung; `updateProfile` existiert im Repo, wird aber von
@@ -290,7 +291,7 @@ Zwei getrennte Migrationen, in dieser Reihenfolge:
 
 1. In der Probe: `exercises.origin`, Typ String, Dropdown `generated`/`external`,
    Default `generated`, nicht null; `exercises.task_kind` (`structured`/`free_text`, Default
-   `structured`, nicht null); `profiles.hints_only` (Boolean, Default siehe §8).
+   `structured`, nicht null); `profiles.hints_only` (Boolean, Default `false`).
 2. `npm run schema:pull`, committen; Typ `Exercise` in `src/lib/server/directus.ts` ergänzen.
 3. Bestand: Default greift für neue Zeilen; vorhandene Zeilen per idempotentem Skript
    (`scripts/`, `--dry`) auf `generated` setzen, falls Directus den Default nicht nachträgt.
@@ -319,7 +320,5 @@ Schritt 1 lässt sich unabhängig ausliefern und behebt einen bestehenden Mangel
 
 ## 8. Offene Fragen
 
-- [ ] Default für `profiles.hints_only`: Empfehlung **an** für neue Profile (passt zur
-      Entscheidung, dass Hausaufgaben nicht vorgelöst werden). Bestehende Profile: **aus**
-      lassen, damit sich für laufende Profile nichts unbemerkt ändert, und die Eltern per Hinweis
-      in den Einstellungen auf den neuen Schalter aufmerksam machen — oder ebenfalls an?
+Keine. Default für `profiles.hints_only` ist **aus** (entschieden 08.11.2026), für neue und
+bestehende Profile; ein Hinweis in den Einstellungen macht Eltern auf den Schalter aufmerksam.

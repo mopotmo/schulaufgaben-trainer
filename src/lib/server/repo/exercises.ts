@@ -86,7 +86,6 @@ export type NewExercise = {
 	topic: string;
 	teacher_notes: string;
 	generated_content: string;
-	source_file: string | null;
 	tokens_used: number | null;
 };
 

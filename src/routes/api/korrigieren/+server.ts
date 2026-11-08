@@ -6,7 +6,7 @@ import { upsertInsight } from '$lib/server/learnerInsights';
 import { requireActor } from '$lib/server/actor';
 import { getExercise } from '$lib/server/repo/exercises';
 import { createCorrection } from '$lib/server/repo/corrections';
-import { uploadFile } from '$lib/server/repo/files';
+import { attachCorrectionFiles } from '$lib/server/repo/files';
 import type { RequestHandler } from './$types';
 import { finalText } from '$lib/server/anthropic';
 
@@ -150,22 +150,18 @@ Sei konstruktiv und ermutigend.`;
 		error(502, 'Fehler bei der Korrektur');
 	}
 
-	let solutionFileId: string | null = null;
-	if (hasFiles) {
-		try {
-			const uploadForm = new FormData();
-			uploadForm.append('file', validFiles[0]);
-			solutionFileId = await uploadFile(actor, uploadForm);
-		} catch (e) {
-			await logError('api/korrigieren/upload', e, { exerciseId });
-		}
-	}
-
 	const correction = await createCorrection(actor, exercise.id, {
-		solution_file: solutionFileId,
 		correction_result: result,
 		tokens_used: tokensUsed
 	});
+
+	// Alle Seiten bzw. Stift-Antworten, nicht nur die erste. Nicht fatal — der Korrekturtext ist
+	// schon gespeichert.
+	try {
+		await attachCorrectionFiles(actor, correction.id, validFiles);
+	} catch (e) {
+		await logError('api/korrigieren/upload', e, { exerciseId, files: validFiles.length });
+	}
 
 	// Insights asynchron extrahieren — nicht auf Ergebnis warten
 	if (evaluate) {

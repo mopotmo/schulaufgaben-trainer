@@ -13,6 +13,8 @@
 
 	// Erfassen
 	let files = $state<File[]>([]);
+	let material = $state<File[]>([]);
+	let showMaterial = $state(false);
 	let text = $state('');
 	let reading = $state(false);
 	let readError = $state('');
@@ -39,6 +41,7 @@
 			body.append('profileId', data.profile.id);
 			body.append('text', text);
 			for (const f of files) body.append('files', f);
+			for (const f of material) body.append('material', f);
 			const res = await fetch('/api/aufgabe-erfassen', { method: 'POST', body });
 			const json = await res.json();
 			if (!res.ok) throw new Error(json.message ?? 'Fehler beim Lesen');
@@ -82,6 +85,22 @@
 					Lösung. Namen und Schule werden beim Abschreiben weggelassen.
 				</p>
 				<FileUpload bind:files disabled={reading} label="Fotos oder PDF auswählen" />
+			</div>
+
+			<div>
+				{#if showMaterial || material.length}
+					<h3 class="text-sm font-medium text-gray-700 mb-1">Material zur Aufgabe <span class="text-gray-400 font-normal">(optional)</span></h3>
+					<p class="text-sm text-gray-600 mb-3">
+						Was zur Aufgabe gehört, aber nicht auf dem Blatt steht: das Bild zur Bildbeschreibung,
+						der Text zur Inhaltsangabe oder die Lösungen hinten im Buch. Wird nicht abgeschrieben,
+						hilft aber bei der Korrektur.
+					</p>
+					<FileUpload bind:files={material} disabled={reading} label="Material auswählen" />
+				{:else}
+					<button type="button" onclick={() => (showMaterial = true)} class="text-sm text-blue-600 hover:underline">
+						+ Material zur Aufgabe hinzufügen (Bild, Text, Lösungen aus dem Buch)
+					</button>
+				{/if}
 			</div>
 
 			<div>

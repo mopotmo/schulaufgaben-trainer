@@ -128,6 +128,10 @@ eine Aufgabe immer einem Profil gehört. `profil` aus der Query wird wie überal
   Lösung mit auf dem Blatt, verweist die Korrektur in Schritt 5 auf dieselben Dateien, statt
   sie erneut hochzuladen.
 
+- **Material zur Aufgabe** (optional, entschieden 08.11.2026): Bild zur Bildbeschreibung, Text
+  zur Inhaltsangabe, Lösungen aus dem Buchanhang. Wird nicht abgeschrieben, nur gespeichert
+  (`exercises_files.role = 'material'`, sonst `task`) und der Korrektur mitgegeben.
+
 ### 4.2 Korrektur-Prompt für `origin = 'external'`
 
 - **Keine Punkte vorgegeben** → Format „Richtig / Teilweise richtig / Falsch" je Teilaufgabe,

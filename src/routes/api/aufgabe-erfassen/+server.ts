@@ -22,10 +22,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const profile = await getProfile(actor, form.get('profileId'));
 
 	const text = ((form.get('text') as string | null) ?? '').trim();
-	const files = (form.getAll('files') as File[]).filter((f) => f instanceof File && f.size > 0);
+	const pick = (name: string) => (form.getAll(name) as File[]).filter((f) => f instanceof File && f.size > 0);
+	const files = pick('files');
+	// Zusatzmaterial (Bild zur Bildbeschreibung, Lösungen aus dem Buch) wird nicht abgeschrieben,
+	// nur gespeichert — die Korrektur bekommt es mit.
+	const material = pick('material');
 	if (files.length === 0 && !text) error(400, 'Bitte ein Foto hochladen oder die Aufgabe eintippen');
-	if (files.length > MAX_FILES) error(400, `Höchstens ${MAX_FILES} Dateien`);
-	for (const f of files) {
+	if (files.length + material.length > MAX_FILES) error(400, `Höchstens ${MAX_FILES} Dateien`);
+	for (const f of [...files, ...material]) {
 		if (!IMAGE_TYPES.includes(f.type as ImageType) && f.type !== 'application/pdf') {
 			error(400, `Dateityp nicht unterstützt: ${f.name}`);
 		}
@@ -70,9 +74,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	let filesSaved = true;
 	try {
 		await attachExerciseFiles(actor, exercise.id, files);
+		await attachExerciseFiles(actor, exercise.id, material, 'material');
 	} catch (e) {
 		filesSaved = false;
-		await logError('api/aufgabe-erfassen/upload', e, { files: files.length });
+		await logError('api/aufgabe-erfassen/upload', e, { files: files.length, material: material.length });
 	}
 
 	return json({

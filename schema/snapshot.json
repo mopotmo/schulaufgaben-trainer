@@ -2442,6 +2442,61 @@
 		},
 		{
 			"collection": "exercises_files",
+			"field": "role",
+			"meta": {
+				"collection": "exercises_files",
+				"conditions": null,
+				"display": "labels",
+				"display_options": null,
+				"field": "role",
+				"group": null,
+				"hidden": false,
+				"interface": "select-dropdown",
+				"note": "task = Foto der Aufgabe (ggf. mit Lösung), material = Zusatzmaterial wie Bild, Text oder Lösungen aus dem Buch (Konzept fremde Aufgaben §4.1)",
+				"options": {
+					"choices": [
+						{
+							"text": "Aufgabe",
+							"value": "task"
+						},
+						{
+							"text": "Material",
+							"value": "material"
+						}
+					]
+				},
+				"readonly": false,
+				"required": true,
+				"searchable": true,
+				"sort": 5,
+				"special": null,
+				"translations": null,
+				"validation": null,
+				"validation_message": null,
+				"width": "full"
+			},
+			"schema": {
+				"data_type": "character varying",
+				"default_value": "task",
+				"foreign_key_column": null,
+				"foreign_key_table": null,
+				"generation_expression": null,
+				"has_auto_increment": false,
+				"is_generated": false,
+				"is_indexed": false,
+				"is_nullable": false,
+				"is_primary_key": false,
+				"is_unique": false,
+				"max_length": 255,
+				"name": "role",
+				"numeric_precision": null,
+				"numeric_scale": null,
+				"table": "exercises_files"
+			},
+			"type": "string"
+		},
+		{
+			"collection": "exercises_files",
 			"field": "sort",
 			"meta": {
 				"collection": "exercises_files",
@@ -2696,61 +2751,6 @@
 		},
 		{
 			"collection": "exercises",
-			"field": "origin",
-			"meta": {
-				"collection": "exercises",
-				"conditions": null,
-				"display": "labels",
-				"display_options": null,
-				"field": "origin",
-				"group": null,
-				"hidden": false,
-				"interface": "select-dropdown",
-				"note": "generated = im Schulaufgaben Check erzeugt, external = fremde Aufgabe abfotografiert (Konzept fremde Aufgaben §3 A)",
-				"options": {
-					"choices": [
-						{
-							"text": "Generiert",
-							"value": "generated"
-						},
-						{
-							"text": "Fremde Aufgabe",
-							"value": "external"
-						}
-					]
-				},
-				"readonly": false,
-				"required": true,
-				"searchable": true,
-				"sort": 12,
-				"special": null,
-				"translations": null,
-				"validation": null,
-				"validation_message": null,
-				"width": "full"
-			},
-			"schema": {
-				"data_type": "character varying",
-				"default_value": "generated",
-				"foreign_key_column": null,
-				"foreign_key_table": null,
-				"generation_expression": null,
-				"has_auto_increment": false,
-				"is_generated": false,
-				"is_indexed": false,
-				"is_nullable": false,
-				"is_primary_key": false,
-				"is_unique": false,
-				"max_length": 255,
-				"name": "origin",
-				"numeric_precision": null,
-				"numeric_scale": null,
-				"table": "exercises"
-			},
-			"type": "string"
-		},
-		{
-			"collection": "exercises",
 			"field": "profile_id",
 			"meta": {
 				"collection": "exercises",
@@ -2833,61 +2833,6 @@
 				"is_unique": false,
 				"max_length": 255,
 				"name": "subject",
-				"numeric_precision": null,
-				"numeric_scale": null,
-				"table": "exercises"
-			},
-			"type": "string"
-		},
-		{
-			"collection": "exercises",
-			"field": "task_kind",
-			"meta": {
-				"collection": "exercises",
-				"conditions": null,
-				"display": "labels",
-				"display_options": null,
-				"field": "task_kind",
-				"group": null,
-				"hidden": false,
-				"interface": "select-dropdown",
-				"note": "structured = Aufgaben mit eindeutiger Lösung, free_text = Aufsatz, Erörterung, Übersetzung (Konzept fremde Aufgaben §4.6)",
-				"options": {
-					"choices": [
-						{
-							"text": "Strukturiert",
-							"value": "structured"
-						},
-						{
-							"text": "Freier Text",
-							"value": "free_text"
-						}
-					]
-				},
-				"readonly": false,
-				"required": true,
-				"searchable": true,
-				"sort": 13,
-				"special": null,
-				"translations": null,
-				"validation": null,
-				"validation_message": null,
-				"width": "full"
-			},
-			"schema": {
-				"data_type": "character varying",
-				"default_value": "structured",
-				"foreign_key_column": null,
-				"foreign_key_table": null,
-				"generation_expression": null,
-				"has_auto_increment": false,
-				"is_generated": false,
-				"is_indexed": false,
-				"is_nullable": false,
-				"is_primary_key": false,
-				"is_unique": false,
-				"max_length": 255,
-				"name": "task_kind",
 				"numeric_precision": null,
 				"numeric_scale": null,
 				"table": "exercises"
@@ -5173,52 +5118,6 @@
 				"table": "profiles"
 			},
 			"type": "uuid"
-		},
-		{
-			"collection": "profiles",
-			"field": "hints_only",
-			"meta": {
-				"collection": "profiles",
-				"conditions": null,
-				"display": "boolean",
-				"display_options": null,
-				"field": "hints_only",
-				"group": null,
-				"hidden": false,
-				"interface": "boolean",
-				"note": "Korrektur zeigt nur Hinweise statt der richtigen Lösung. Stellen nur Eltern ein (Konzept fremde Aufgaben §4.7)",
-				"options": null,
-				"readonly": false,
-				"required": true,
-				"searchable": true,
-				"sort": 10,
-				"special": [
-					"cast-boolean"
-				],
-				"translations": null,
-				"validation": null,
-				"validation_message": null,
-				"width": "full"
-			},
-			"schema": {
-				"data_type": "boolean",
-				"default_value": false,
-				"foreign_key_column": null,
-				"foreign_key_table": null,
-				"generation_expression": null,
-				"has_auto_increment": false,
-				"is_generated": false,
-				"is_indexed": false,
-				"is_nullable": false,
-				"is_primary_key": false,
-				"is_unique": false,
-				"max_length": null,
-				"name": "hints_only",
-				"numeric_precision": null,
-				"numeric_scale": null,
-				"table": "profiles"
-			},
-			"type": "boolean"
 		},
 		{
 			"collection": "profiles",

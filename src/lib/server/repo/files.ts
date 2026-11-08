@@ -8,7 +8,7 @@
  * gerade hochgeladenen Dateien wieder gelöscht.
  */
 import { uploadFiles, createItems, readItems, deleteFiles } from '@directus/sdk';
-import { getDirectus } from '../directus';
+import { getDirectus, type ExerciseFileRole } from '../directus';
 import type { Actor } from '../authz';
 import { getExercise } from './exercises';
 import { getCorrection } from './corrections';
@@ -32,14 +32,22 @@ async function upload(files: File[]): Promise<string[]> {
 	return ids;
 }
 
-/** Hängt alle Dateien in Reihenfolge an die Aufgabe (Aufgabenblatt, Buchseiten). */
-export async function attachExerciseFiles(actor: Actor, exerciseId: unknown, files: File[]): Promise<string[]> {
+/**
+ * Hängt alle Dateien in Reihenfolge an die Aufgabe (Aufgabenblatt, Buchseiten). `material` nur
+ * bei fremden Aufgaben: Zusatz, der nicht abgeschrieben, aber bei der Korrektur mitgegeben wird.
+ */
+export async function attachExerciseFiles(
+	actor: Actor,
+	exerciseId: unknown,
+	files: File[],
+	role: ExerciseFileRole = 'task'
+): Promise<string[]> {
 	if (files.length === 0) return [];
 	const { exercise } = await getExercise(actor, exerciseId);
 	const ids = await upload(files);
 	try {
 		await getDirectus().request(
-			createItems('exercises_files', ids.map((file, sort) => ({ exercise_id: exercise.id, file, sort })))
+			createItems('exercises_files', ids.map((file, sort) => ({ exercise_id: exercise.id, file, sort, role })))
 		);
 	} catch (e) {
 		await getDirectus().request(deleteFiles(ids)).catch(() => undefined);

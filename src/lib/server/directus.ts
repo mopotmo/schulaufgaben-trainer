@@ -178,7 +178,15 @@ export type Book = {
  * Löschen der Aufgabe/Korrektur oder der Datei kaskadiert auf die Zeile. Die Dateien selbst
  * löscht `scripts/aufraeumen.ts` nach `UPLOAD_RETENTION_DAYS`.
  */
-export type ExerciseFile = { id: string; exercise_id: string; file: string; sort: number | null };
+/** `material`: Zusatz zu einer fremden Aufgabe — Bild, Text oder Lösungen aus dem Buch. */
+export type ExerciseFileRole = 'task' | 'material';
+export type ExerciseFile = {
+	id: string;
+	exercise_id: string;
+	file: string;
+	sort: number | null;
+	role: ExerciseFileRole;
+};
 export type CorrectionFile = { id: string; correction_id: string; file: string; sort: number | null };
 
 type Schema = {

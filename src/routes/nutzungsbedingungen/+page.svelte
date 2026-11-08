@@ -3,7 +3,7 @@
 	import { OPERATOR, PROJECT } from '$lib/config';
 </script>
 
-<LegalPage title="Nutzungsbedingungen" updated="September 2026">
+<LegalPage title="Nutzungsbedingungen" updated="November 2026">
 	<h2>Was das hier ist</h2>
 	<p>
 		{PROJECT.name} ist ein privates, kostenloses Angebot zum Üben von Schulaufgaben. Es steht in
@@ -25,6 +25,16 @@
 	<ul>
 		<li>Die Übungsaufgaben werden von einem KI-Modell erzeugt, nicht von einer Lehrkraft.</li>
 		<li>Eingereichte Lösungen werden von einer KI gelesen und korrigiert — auch handschriftliche.</li>
+		<li>
+			Auch eigene Aufgaben lassen sich korrigieren: Hausaufgaben, Arbeitsblätter oder Buchseiten
+			werden fotografiert, eine KI schreibt die Aufgabenstellung ab und korrigiert die Lösung. Die
+			Abschrift kann Lesefehler enthalten, die Korrektur kann falsch sein — auch hier gilt im Zweifel,
+			was die Lehrkraft sagt.
+		</li>
+		<li>
+			Eltern können je Kind „Nur Hinweise" einschalten. Die Korrektur nennt dann nicht die richtige
+			Lösung, sondern zeigt, wo etwas nicht stimmt. Das ist eine Vorgabe an die KI und keine Garantie.
+		</li>
 		<li>Wer im Trainer eine Rückfrage stellt, schreibt mit einer KI und nicht mit einem Menschen.</li>
 		<li>
 			Aus Korrekturen und Rückmeldungen leitet das System Hinweise zum Lernstand ab und nutzt sie,
@@ -73,6 +83,13 @@
 			danach noch bis zu 30 Tage vorhanden sein.
 		</li>
 	</ul>
+
+	<h2>Fotografierte Aufgaben und Material</h2>
+	<p>
+		Für fotografierte Arbeitsblätter, Buchseiten und Material zur Aufgabe gilt dasselbe wie für
+		Schulbücher: nur für den eigenen Gebrauch der Familie, keine Weitergabe. Die Fotos werden nach
+		30 Tagen automatisch gelöscht.
+	</p>
 
 	<h2>Fragen</h2>
 	<p>

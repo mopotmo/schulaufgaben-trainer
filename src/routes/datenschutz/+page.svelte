@@ -12,7 +12,7 @@
 	import { CONSENT_VERSION } from '$lib/legal';
 </script>
 
-<LegalPage title="Datenschutzerklärung" updated="Oktober 2026">
+<LegalPage title="Datenschutzerklärung" updated="November 2026">
 	<p>Informationen nach Art. 13 DSGVO. Textversion: <code>{CONSENT_VERSION}</code></p>
 
 	<h2>1. Verantwortlicher</h2>
@@ -77,10 +77,10 @@
 
 	<h2>5. Welche Daten verarbeitet werden</h2>
 	<ul>
-		<li><strong>Profil des Kindes:</strong> Anzeigename (Vorname oder Spitzname), Schulart, Jahrgangsstufe, Bundesland, ein Emoji als Avatar</li>
+		<li><strong>Profil des Kindes:</strong> Anzeigename (Vorname oder Spitzname), Schulart, Jahrgangsstufe, Bundesland, ein Emoji als Avatar, die Einstellung „Nur Hinweise"</li>
 		<li><strong>Eingaben:</strong> Fach, Thema, Hinweise der Lehrkraft, gewünschter Umfang</li>
-		<li><strong>Hochgeladene Dateien:</strong> Fotos oder PDFs von Aufgabenblättern und handschriftlichen Lösungen, Schulbücher als PDF</li>
-		<li><strong>Erzeugte Inhalte:</strong> Übungsaufgaben, Korrekturtexte</li>
+		<li><strong>Hochgeladene Dateien:</strong> Fotos oder PDFs von Aufgabenblättern, Hausaufgaben, Buchseiten und handschriftlichen Lösungen, Material zu einer Aufgabe (z. B. ein Bild oder ein Text), Schulbücher als PDF</li>
+		<li><strong>Erzeugte Inhalte:</strong> Übungsaufgaben, Abschriften fotografierter Aufgaben, Korrekturtexte</li>
 		<li><strong>Lernerkenntnisse</strong> (nur mit gesonderter Einwilligung, Abschnitt 4): Stärken, Schwächen, Hinweise zur Arbeitsweise und Schwierigkeitseinschätzung je Kind und Fach</li>
 		<li><strong>Rückmeldungen:</strong> Daumen hoch oder runter und ein freiwilliger Kommentar zu Aufgaben, Korrekturen oder dem Chat, dazu für {FEEDBACK_LINK_DAYS} Tage der Bezug zum Profil und zur Aufgabe, um bei Ihnen nachfragen zu können</li>
 		<li><strong>Kontaktdaten der einwilligenden Person:</strong> Name und E-Mail-Adresse, Zeitpunkt der Bestätigung der Adresse</li>
@@ -90,6 +90,13 @@
 	<p>
 		Es werden bewusst <strong>keine Nachnamen der Kinder, keine Geburtsdaten und keine Schulnamen</strong>
 		im Klartext erhoben.
+	</p>
+	<p>
+		Auf fotografierten Arbeitsblättern stehen oft Name, Klasse, Schule oder der Name der Lehrkraft.
+		Wir bitten darum, diese Angaben vor dem Fotografieren abzudecken. Beim Abschreiben lässt die KI
+		sie weg, sodass sie nicht in der gespeicherten Aufgabe landen. Auf dem Foto selbst bleiben sie
+		bis zu dessen Löschung nach {UPLOAD_RETENTION_DAYS} Tagen, und mit dem Foto werden sie an den
+		KI-Anbieter übermittelt.
 	</p>
 
 	<h2>6. Empfänger</h2>
@@ -131,7 +138,7 @@
 
 	<h2>9. Speicherdauer</h2>
 	<ul>
-		<li>Hochgeladene Aufgabenblätter und Lösungen: {UPLOAD_RETENTION_DAYS} Tage, danach automatische Löschung</li>
+		<li>Hochgeladene Aufgabenblätter, Fotos eigener Aufgaben, Material und Lösungen: {UPLOAD_RETENTION_DAYS} Tage, danach automatische Löschung</li>
 		<li>
 			Hochgeladene Schulbücher: bis sie 90 Tage lang nicht zum Erzeugen von Aufgaben genutzt wurden,
 			spätestens bis zum Ende des Schuljahres am 31. August

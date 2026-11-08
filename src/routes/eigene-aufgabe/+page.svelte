@@ -108,7 +108,8 @@
 				<h2 class="text-lg font-semibold text-gray-800 mb-1">1. Aufgabe fotografieren</h2>
 				<p class="text-sm text-gray-600 mb-3">
 					Ein Foto pro Seite. Hast du die Aufgabe schon gelöst, fotografiere sie einfach mit deiner
-					Lösung. Namen und Schule werden beim Abschreiben weggelassen.
+					Lösung. <strong>Deck Name, Klasse und Schule vorher ab</strong> oder schneide sie weg — beim
+					Abschreiben lässt der Trainer sie zwar weg, auf dem Foto stehen sie aber noch.
 				</p>
 				<FileUpload bind:files disabled={reading} label="Fotos oder PDF auswählen" />
 			</div>
